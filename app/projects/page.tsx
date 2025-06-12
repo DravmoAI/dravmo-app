@@ -9,6 +9,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { CreateProjectModal } from "@/components/create-project-modal"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import { getSupabaseClient } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
 
 interface Project {
   id: string
@@ -24,20 +26,29 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
+  const supabase = getSupabaseClient()
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession()
+      if (!data.session) {
+        router.push("/login")
+      }
+    }
+
+    checkAuth()
+  }, [router])
 
   const fetchProjects = async () => {
     try {
       const response = await fetch("/api/projects")
       if (!response.ok) {
-        if (response.status === 401) {
-          // Redirect to login if unauthorized
-          window.location.href = "/login"
-          return
-        }
         throw new Error("Failed to fetch projects")
       }
       const { projects } = await response.json()
-      setProjects(projects)
+      setProjects(projects || [])
     } catch (error) {
       console.error("Error fetching projects:", error)
     } finally {
