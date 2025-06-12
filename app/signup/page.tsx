@@ -7,10 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { getSupabaseClient } from "@/lib/supabase"
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -25,7 +26,22 @@ export default function SignupPage() {
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [success, setSuccess] = useState("")
   const router = useRouter()
+  const supabase = getSupabaseClient()
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        router.push("/dashboard")
+      }
+    }
+    checkUser()
+  }, [router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -80,25 +96,70 @@ export default function SignupPage() {
     }
 
     setIsLoading(true)
+    setErrors({})
+    setSuccess("")
 
-    // Mock user registration - in a real app, you'd call your API
-    setTimeout(() => {
-      // Mock successful registration
-      const userData = {
+    try {
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
-        name: `${formData.firstName} ${formData.lastName}`,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        hasCompletedPersona: false,
-        createdAt: new Date().toISOString(),
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            full_name: `${formData.firstName} ${formData.lastName}`,
+          },
+        },
+      })
+
+      if (error) {
+        setErrors({ general: error.message })
+        return
       }
 
-      localStorage.setItem("user", JSON.stringify(userData))
+      if (data.user) {
+        // Profile creation is handled by a server action or API route
+        // that uses Prisma. The trigger in Supabase will create a basic profile,
+        // but we'll update it with our complete data via API
 
-      // Redirect to persona setup for new users
-      router.push("/persona")
+        try {
+          const response = await fetch("/api/profile", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: data.user.id,
+              email: formData.email,
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              fullName: `${formData.firstName} ${formData.lastName}`,
+              hasCompletedPersona: false,
+            }),
+          })
+
+          if (!response.ok) {
+            throw new Error("Failed to create profile")
+          }
+        } catch (profileError) {
+          console.error("Profile creation error:", profileError)
+          // Continue with the flow even if profile creation fails
+          // The profile will be created by the Supabase trigger
+        }
+
+        if (data.user.email_confirmed_at) {
+          // User is automatically confirmed, redirect to persona setup
+          router.push("/persona")
+        } else {
+          // User needs to confirm email
+          setSuccess("Please check your email and click the confirmation link to complete your registration.")
+        }
+      }
+    } catch (err) {
+      setErrors({ general: "An unexpected error occurred. Please try again." })
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -120,6 +181,20 @@ export default function SignupPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignup} className="space-y-4">
+              {errors.general && (
+                <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+                  <AlertCircle className="h-4 w-4" />
+                  {errors.general}
+                </div>
+              )}
+
+              {success && (
+                <div className="flex items-center gap-2 p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+                  <CheckCircle className="h-4 w-4" />
+                  {success}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First name</Label>
@@ -248,12 +323,6 @@ export default function SignupPage() {
             </div>
           </CardContent>
         </Card>
-
-        <div className="mt-8 text-center">
-          <p className="text-xs text-muted-foreground">
-            By signing up, you'll be redirected to set up your design persona
-          </p>
-        </div>
       </div>
     </div>
   )
