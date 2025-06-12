@@ -7,6 +7,16 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const profile = await prisma.profile.findUnique({
       where: { id },
+      include: {
+        persona: {
+          include: {
+            personaCard: true,
+            personaVibes: true,
+            personaKeywords: true,
+            personaMoodboards: true,
+          },
+        },
+      },
     })
 
     if (!profile) {

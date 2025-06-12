@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+import { useState, useEffect, useRef } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,67 +11,68 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Camera, Eye, EyeOff, Save } from "lucide-react"
-import { useState, useEffect } from "react"
+import { Camera, Eye, EyeOff, Save, Loader2, AlertCircle, CheckCircle } from "lucide-react"
 import Link from "next/link"
-
-interface User {
-  email: string
-  name: string
-  firstName?: string
-  lastName?: string
-  profileImage?: string
-  createdAt?: string
-}
-
-interface PersonaData {
-  selectedPersona: string
-  sliders: {
-    colorBoldness: number
-    typefaceTemperament: number
-    spacingAiriness: number
-    motionDrama: number
-  }
-  selectedKeywords: string[]
-  completedAt: string
-}
+import { getSupabaseClient } from "@/lib/supabase"
+import { uploadFile, STORAGE_BUCKETS } from "@/lib/supabase-storage"
+import { v4 as uuidv4 } from "uuid"
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null)
-  const [persona, setPersona] = useState<PersonaData | null>(null)
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [persona, setPersona] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   })
 
+  const supabase = getSupabaseClient()
+
   useEffect(() => {
-    // Load user data
-    const userData = localStorage.getItem("user")
-    if (userData) {
-      const parsedUser = JSON.parse(userData)
-      setUser(parsedUser)
-      setFormData({
-        firstName: parsedUser.firstName || "",
-        lastName: parsedUser.lastName || "",
-        email: parsedUser.email || "",
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      })
+    const fetchUserData = async () => {
+      try {
+        // Get current user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) {
+          return
+        }
+        setUser(user)
+
+        // Fetch user profile with persona
+        const response = await fetch(`/api/profile/${user.id}`)
+        if (response.ok) {
+          const { profile } = await response.json()
+          setProfile(profile)
+          setPersona(profile?.persona)
+
+          setFormData({
+            fullName: profile?.fullName || "",
+            email: user.email || "",
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+          })
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err)
+        setError("Failed to load profile data")
+      }
     }
 
-    // Load persona data
-    const personaData = localStorage.getItem("userPersona")
-    if (personaData) {
-      setPersona(JSON.parse(personaData))
-    }
+    fetchUserData()
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,45 +83,122 @@ export default function ProfilePage() {
     }))
   }
 
-  const handleSaveProfile = () => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
+  const handleSaveProfile = async () => {
+    if (!user || !profile) return
+
+    setIsLoading(true)
+    setError("")
+    setSuccess("")
+
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: user.id,
+          fullName: formData.fullName,
+          avatarUrl: profile.avatarUrl,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile")
       }
-      localStorage.setItem("user", JSON.stringify(updatedUser))
-      setUser(updatedUser)
+
+      const { profile: updatedProfile } = await response.json()
+      setProfile(updatedProfile)
       setIsEditing(false)
+      setSuccess("Profile updated successfully")
+    } catch (err) {
+      console.error("Error updating profile:", err)
+      setError("Failed to update profile")
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handlePasswordChange = () => {
-    // In a real app, you would validate the current password and update it
-    alert("Password updated successfully!")
-    setFormData((prev) => ({
-      ...prev,
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    }))
+  const handlePasswordChange = async () => {
+    if (!user) return
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    if (formData.newPassword.length < 6) {
+      setError("Password must be at least 6 characters")
+      return
+    }
+
+    setIsLoading(true)
+    setError("")
+    setSuccess("")
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: formData.newPassword,
+      })
+
+      if (error) {
+        throw error
+      }
+
+      setSuccess("Password updated successfully")
+      setFormData((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }))
+    } catch (err: any) {
+      console.error("Error updating password:", err)
+      setError(err.message || "Failed to update password")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const imageUrl = event.target?.result as string
-        if (user) {
-          const updatedUser = { ...user, profileImage: imageUrl }
-          localStorage.setItem("user", JSON.stringify(updatedUser))
-          setUser(updatedUser)
-        }
+    if (!file || !user) return
+
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const fileName = `${user.id}/${uuidv4()}-${file.name.replace(/\s+/g, "-")}`
+      const { url, error } = await uploadFile(STORAGE_BUCKETS.AVATARS, fileName, file)
+
+      if (error) throw error
+      if (!url) throw new Error("Failed to upload image")
+
+      // Update profile with new avatar URL
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: user.id,
+          fullName: profile.fullName,
+          avatarUrl: url,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile")
       }
-      reader.readAsDataURL(file)
+
+      const { profile: updatedProfile } = await response.json()
+      setProfile(updatedProfile)
+      setSuccess("Profile image updated successfully")
+    } catch (err) {
+      console.error("Error uploading profile image:", err)
+      setError("Failed to upload profile image")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -133,14 +212,8 @@ export default function ProfilePage() {
   }
 
   const getPersonaName = (personaId: string) => {
-    const personas: Record<string, string> = {
-      minimalist: "Minimalist Maverick",
-      color: "Color Rebel",
-      layout: "Layout Architect",
-      motion: "Motion Maestro",
-      accessibility: "Accessibility Advocate",
-    }
-    return personas[personaId] || personaId
+    if (!persona?.personaCard) return personaId
+    return persona.personaCard.personaCardName
   }
 
   if (!user) {
@@ -154,6 +227,20 @@ export default function ProfilePage() {
           <h2 className="text-3xl font-bold">Profile Settings</h2>
           <p className="text-muted-foreground">Manage your account settings and preferences</p>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+            <AlertCircle className="h-4 w-4" />
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="flex items-center gap-2 p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+            <CheckCircle className="h-4 w-4" />
+            {success}
+          </div>
+        )}
 
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList>
@@ -171,8 +258,13 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-6">
                   <div className="relative">
                     <Avatar className="h-20 w-20">
-                      <AvatarImage src={user.profileImage || "/placeholder.svg"} alt={user.name} />
-                      <AvatarFallback className="text-lg">{getInitials(user.name)}</AvatarFallback>
+                      <AvatarImage
+                        src={profile?.avatarUrl || "/placeholder-user.jpg"}
+                        alt={profile?.fullName || "User"}
+                      />
+                      <AvatarFallback className="text-lg">
+                        {profile?.fullName ? getInitials(profile.fullName) : "U"}
+                      </AvatarFallback>
                     </Avatar>
                     <label
                       htmlFor="profile-image"
@@ -185,41 +277,31 @@ export default function ProfilePage() {
                       type="file"
                       accept="image/*"
                       className="hidden"
+                      ref={fileInputRef}
                       onChange={handleProfileImageUpload}
+                      disabled={isLoading}
                     />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold">{user.name}</h3>
+                    <h3 className="text-xl font-bold">{profile?.fullName || "User"}</h3>
                     <p className="text-muted-foreground">{user.email}</p>
-                    {user.createdAt && (
+                    {profile?.createdAt && (
                       <p className="text-sm text-muted-foreground">
-                        Member since {new Date(user.createdAt).toLocaleDateString()}
+                        Member since {new Date(profile.createdAt).toLocaleDateString()}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    disabled={!isEditing || isLoading}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -229,19 +311,38 @@ export default function ProfilePage() {
                     name="email"
                     type="email"
                     value={formData.email}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
+                    disabled={true} // Email cannot be changed
                   />
+                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                 </div>
 
                 <div className="flex gap-2">
                   {isEditing ? (
                     <>
-                      <Button onClick={handleSaveProfile} className="gap-2">
-                        <Save className="h-4 w-4" />
-                        Save Changes
+                      <Button onClick={handleSaveProfile} className="gap-2" disabled={isLoading}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4" />
+                            Save Changes
+                          </>
+                        )}
                       </Button>
-                      <Button variant="outline" onClick={() => setIsEditing(false)}>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditing(false)
+                          setFormData((prev) => ({
+                            ...prev,
+                            fullName: profile?.fullName || "",
+                          }))
+                        }}
+                        disabled={isLoading}
+                      >
                         Cancel
                       </Button>
                     </>
@@ -260,7 +361,7 @@ export default function ProfilePage() {
                   <CardTitle>Design Persona</CardTitle>
                   <Link href="/persona">
                     <Button variant="outline" size="sm">
-                      Update Persona
+                      {persona ? "Update Persona" : "Create Persona"}
                     </Button>
                   </Link>
                 </div>
@@ -271,45 +372,72 @@ export default function ProfilePage() {
                     <div>
                       <h3 className="font-bold mb-2">Selected Persona</h3>
                       <Badge variant="secondary" className="text-sm">
-                        {getPersonaName(persona.selectedPersona)}
+                        {persona.personaCard?.personaCardName || "Custom Persona"}
                       </Badge>
                     </div>
 
-                    <div>
-                      <h3 className="font-bold mb-4">Design Preferences</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Color Boldness</Label>
-                          <div className="text-sm text-muted-foreground">{persona.sliders.colorBoldness}%</div>
-                        </div>
-                        <div>
-                          <Label>Typeface Temperament</Label>
-                          <div className="text-sm text-muted-foreground">{persona.sliders.typefaceTemperament}%</div>
-                        </div>
-                        <div>
-                          <Label>Spacing Airiness</Label>
-                          <div className="text-sm text-muted-foreground">{persona.sliders.spacingAiriness}%</div>
-                        </div>
-                        <div>
-                          <Label>Motion Drama</Label>
-                          <div className="text-sm text-muted-foreground">{persona.sliders.motionDrama}%</div>
+                    {persona.personaVibes && persona.personaVibes.length > 0 && (
+                      <div>
+                        <h3 className="font-bold mb-4">Design Preferences</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Color Boldness</Label>
+                            <div className="text-sm text-muted-foreground">
+                              {persona.personaVibes[0].colorBoldness}%
+                            </div>
+                          </div>
+                          <div>
+                            <Label>Typeface Temperament</Label>
+                            <div className="text-sm text-muted-foreground">
+                              {persona.personaVibes[0].typeTemperament}%
+                            </div>
+                          </div>
+                          <div>
+                            <Label>Spacing Airiness</Label>
+                            <div className="text-sm text-muted-foreground">
+                              {persona.personaVibes[0].spacingAiriness}%
+                            </div>
+                          </div>
+                          <div>
+                            <Label>Motion Drama</Label>
+                            <div className="text-sm text-muted-foreground">{persona.personaVibes[0].motionDrama}%</div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
-                    <div>
-                      <h3 className="font-bold mb-2">Style Keywords</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {persona.selectedKeywords.map((keyword) => (
-                          <Badge key={keyword} variant="outline">
-                            {keyword}
-                          </Badge>
-                        ))}
+                    {persona.personaKeywords && persona.personaKeywords.length > 0 && (
+                      <div>
+                        <h3 className="font-bold mb-2">Style Keywords</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {persona.personaKeywords.map((keyword: any) => (
+                            <Badge key={keyword.id} variant="outline">
+                              {keyword.keyword}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {persona.personaMoodboards && persona.personaMoodboards.length > 0 && (
+                      <div>
+                        <h3 className="font-bold mb-2">Moodboard</h3>
+                        <div className="grid grid-cols-3 gap-2">
+                          {persona.personaMoodboards.map((moodboard: any) => (
+                            <div key={moodboard.id} className="relative">
+                              <img
+                                src={moodboard.snapshotUrl || "/placeholder.svg"}
+                                alt="Moodboard image"
+                                className="w-full h-20 object-cover rounded"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="text-xs text-muted-foreground">
-                      Persona completed on {new Date(persona.completedAt).toLocaleDateString()}
+                      Persona created on {new Date(persona.createdAt).toLocaleDateString()}
                     </div>
                   </>
                 ) : (
@@ -332,29 +460,6 @@ export default function ProfilePage() {
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="currentPassword"
-                        name="currentPassword"
-                        type={showCurrentPassword ? "text" : "password"}
-                        value={formData.currentPassword}
-                        onChange={handleInputChange}
-                        placeholder="Enter current password"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      >
-                        {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
                     <Label htmlFor="newPassword">New Password</Label>
                     <div className="relative">
                       <Input
@@ -364,6 +469,7 @@ export default function ProfilePage() {
                         value={formData.newPassword}
                         onChange={handleInputChange}
                         placeholder="Enter new password"
+                        disabled={isLoading}
                       />
                       <Button
                         type="button"
@@ -371,6 +477,7 @@ export default function ProfilePage() {
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowNewPassword(!showNewPassword)}
+                        disabled={isLoading}
                       >
                         {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
@@ -386,19 +493,23 @@ export default function ProfilePage() {
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       placeholder="Confirm new password"
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
 
                 <Button
                   onClick={handlePasswordChange}
-                  disabled={
-                    !formData.currentPassword ||
-                    !formData.newPassword ||
-                    formData.newPassword !== formData.confirmPassword
-                  }
+                  disabled={isLoading || !formData.newPassword || formData.newPassword !== formData.confirmPassword}
                 >
-                  Update Password
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating Password...
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
                 </Button>
               </CardContent>
             </Card>

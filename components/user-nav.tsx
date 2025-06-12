@@ -1,5 +1,8 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,16 +15,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { User, LogOut, CreditCard } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
 import { getSupabaseClient } from "@/lib/supabase"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
-import type { Profile } from "@prisma/client"
 
 export function UserNav() {
-  const [user, setUser] = useState<SupabaseUser | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
   const router = useRouter()
   const supabase = getSupabaseClient()
 
@@ -90,6 +88,7 @@ export function UserNav() {
         .map((n: string) => n[0])
         .join("")
         .toUpperCase()
+        .slice(0, 2)
     : user.email?.[0]?.toUpperCase() || "U"
 
   return (
@@ -125,9 +124,11 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+        <DropdownMenuItem asChild>
+          <Link href="/logout" className="cursor-pointer">
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Log out</span>
+          </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

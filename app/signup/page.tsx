@@ -12,6 +12,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { getSupabaseClient } from "@/lib/supabase"
+import { initStorageBuckets } from "@/lib/supabase-storage"
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -41,6 +42,9 @@ export default function SignupPage() {
       }
     }
     checkUser()
+
+    // Initialize storage buckets
+    initStorageBuckets()
   }, [router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,6 +104,7 @@ export default function SignupPage() {
     setSuccess("")
 
     try {
+      // 1. Create user with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -118,10 +123,7 @@ export default function SignupPage() {
       }
 
       if (data.user) {
-        // Profile creation is handled by a server action or API route
-        // that uses Prisma. The trigger in Supabase will create a basic profile,
-        // but we'll update it with our complete data via API
-
+        // 2. Create profile in database
         try {
           const response = await fetch("/api/profile", {
             method: "POST",
@@ -131,28 +133,25 @@ export default function SignupPage() {
             body: JSON.stringify({
               id: data.user.id,
               email: formData.email,
-              firstName: formData.firstName,
-              lastName: formData.lastName,
               fullName: `${formData.firstName} ${formData.lastName}`,
-              hasCompletedPersona: false,
             }),
           })
 
           if (!response.ok) {
             throw new Error("Failed to create profile")
           }
+
+          // 3. Check if email confirmation is required
+          if (data.user.email_confirmed_at) {
+            // User is automatically confirmed, redirect to persona setup
+            router.push("/persona")
+          } else {
+            // User needs to confirm email
+            setSuccess("Please check your email and click the confirmation link to complete your registration.")
+          }
         } catch (profileError) {
           console.error("Profile creation error:", profileError)
-          // Continue with the flow even if profile creation fails
-          // The profile will be created by the Supabase trigger
-        }
-
-        if (data.user.email_confirmed_at) {
-          // User is automatically confirmed, redirect to persona setup
-          router.push("/persona")
-        } else {
-          // User needs to confirm email
-          setSuccess("Please check your email and click the confirmation link to complete your registration.")
+          setErrors({ general: "Failed to create profile. Please try again." })
         }
       }
     } catch (err) {

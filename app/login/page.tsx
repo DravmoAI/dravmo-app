@@ -34,7 +34,7 @@ export default function LoginPage() {
           const response = await fetch(`/api/profile/${user.id}`)
           if (response.ok) {
             const data = await response.json()
-            if (data.profile?.hasCompletedPersona) {
+            if (data.profile?.persona) {
               router.push("/dashboard")
             } else {
               router.push("/persona")
@@ -71,7 +71,7 @@ export default function LoginPage() {
           const response = await fetch(`/api/profile/${data.user.id}`)
           if (response.ok) {
             const profileData = await response.json()
-            if (profileData.profile?.hasCompletedPersona) {
+            if (profileData.profile?.persona) {
               router.push("/dashboard")
             } else {
               router.push("/persona")
