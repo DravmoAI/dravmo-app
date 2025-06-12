@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Plus, Eye, MessageSquare, Upload } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 interface Screen {
   id: string
@@ -30,57 +30,39 @@ interface Project {
 
 export default function ProjectDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const projectId = params.id as string
   const [project, setProject] = useState<Project | null>(null)
   const [screens, setScreens] = useState<Screen[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchProjectData = async () => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`)
+      if (!response.ok) {
+        if (response.status === 404) {
+          router.push("/projects")
+          return
+        }
+        throw new Error("Failed to fetch project")
+      }
+      const { project, screens } = await response.json()
+      setProject(project)
+      setScreens(screens)
+    } catch (error) {
+      console.error("Error fetching project:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    // Mock project data
-    const mockProject: Project = {
-      id: projectId,
-      name: "Praktika Landing Page",
-      createdAt: "2024-01-15",
-      updatedAt: "2024-01-20",
-      status: "active",
-    }
-
-    // Mock screens data
-    const mockScreens: Screen[] = [
-      {
-        id: "1",
-        projectId,
-        sourceUrl: "/placeholder.svg?height=400&width=300",
-        sourceType: "upload",
-        createdAt: "2024-01-15",
-        updatedAt: "2024-01-20",
-        feedbackCount: 3,
-        lastFeedback: "2024-01-20",
-      },
-      {
-        id: "2",
-        projectId,
-        sourceUrl: "/placeholder.svg?height=400&width=300",
-        sourceType: "figma",
-        createdAt: "2024-01-16",
-        updatedAt: "2024-01-19",
-        feedbackCount: 2,
-        lastFeedback: "2024-01-19",
-      },
-      {
-        id: "3",
-        projectId,
-        sourceUrl: "/placeholder.svg?height=400&width=300",
-        sourceType: "upload",
-        createdAt: "2024-01-17",
-        updatedAt: "2024-01-18",
-        feedbackCount: 1,
-        lastFeedback: "2024-01-18",
-      },
-    ]
-
-    setProject(mockProject)
-    setScreens(mockScreens)
+    fetchProjectData()
   }, [projectId])
+
+  const handleAddScreen = () => {
+    router.push(`/upload?projectId=${projectId}`)
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -90,8 +72,24 @@ export default function ProjectDetailPage() {
     })
   }
 
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Loading project...</div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   if (!project) {
-    return <DashboardLayout>Loading...</DashboardLayout>
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Project not found</div>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   return (
@@ -118,12 +116,10 @@ export default function ProjectDetailPage() {
               <span>Screens: {screens.length}</span>
             </div>
           </div>
-          <Link href="/upload">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Screen
-            </Button>
-          </Link>
+          <Button className="gap-2" onClick={handleAddScreen}>
+            <Plus className="h-4 w-4" />
+            Add Screen
+          </Button>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -181,9 +177,7 @@ export default function ProjectDetailPage() {
         {screens.length === 0 && (
           <div className="text-center py-12">
             <div className="text-muted-foreground mb-4">No screens in this project yet</div>
-            <Link href="/upload">
-              <Button>Add Your First Screen</Button>
-            </Link>
+            <Button onClick={handleAddScreen}>Add Your First Screen</Button>
           </div>
         )}
       </div>

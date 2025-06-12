@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, Plus, Eye, Trash2, Edit } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { CreateProjectModal } from "@/components/create-project-modal"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 
@@ -21,52 +22,55 @@ interface Project {
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch("/api/projects?userId=temp-user-id") // TODO: Replace with actual user ID
+      if (!response.ok) {
+        throw new Error("Failed to fetch projects")
+      }
+      const { projects } = await response.json()
+      setProjects(projects)
+    } catch (error) {
+      console.error("Error fetching projects:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    // Mock projects data - in a real app, this would come from your API
-    const mockProjects: Project[] = [
-      {
-        id: "1",
-        name: "Praktika Landing Page",
-        createdAt: "2024-01-15",
-        updatedAt: "2024-01-20",
-        screenCount: 5,
-        lastFeedback: "2024-01-20",
-        status: "active",
-      },
-      {
-        id: "2",
-        name: "Wrek Burkley Sign Up",
-        createdAt: "2024-01-10",
-        updatedAt: "2024-01-18",
-        screenCount: 3,
-        lastFeedback: "2024-01-18",
-        status: "active",
-      },
-      {
-        id: "3",
-        name: "Mobile App Redesign",
-        createdAt: "2024-01-05",
-        updatedAt: "2024-01-15",
-        screenCount: 12,
-        lastFeedback: "2024-01-15",
-        status: "active",
-      },
-      {
-        id: "4",
-        name: "E-commerce Dashboard",
-        createdAt: "2023-12-20",
-        updatedAt: "2023-12-25",
-        screenCount: 8,
-        lastFeedback: "2023-12-25",
-        status: "archived",
-      },
-    ]
-    setProjects(mockProjects)
+    fetchProjects()
   }, [])
 
-  const handleDeleteProject = (projectId: string) => {
-    setProjects(projects.filter((p) => p.id !== projectId))
+  const handleDeleteProject = async (projectId: string) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete project")
+      }
+
+      setProjects(projects.filter((p) => p.id !== projectId))
+    } catch (error) {
+      console.error("Error deleting project:", error)
+    }
+  }
+
+  const handleProjectCreated = (newProject: any) => {
+    const transformedProject: Project = {
+      id: newProject.id,
+      name: newProject.name,
+      createdAt: newProject.createdAt,
+      updatedAt: newProject.updatedAt,
+      screenCount: 0,
+      lastFeedback: newProject.updatedAt,
+      status: "active",
+    }
+    setProjects([transformedProject, ...projects])
   }
 
   const formatDate = (dateString: string) => {
@@ -77,6 +81,16 @@ export default function ProjectsPage() {
     })
   }
 
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Loading projects...</div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -85,12 +99,10 @@ export default function ProjectsPage() {
             <h2 className="text-3xl font-bold">Projects</h2>
             <p className="text-muted-foreground">Manage your design projects and feedback history</p>
           </div>
-          <Link href="/upload">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Project
-            </Button>
-          </Link>
+          <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="h-4 w-4" />
+            New Project
+          </Button>
         </div>
 
         <div className="grid gap-6">
@@ -163,11 +175,15 @@ export default function ProjectsPage() {
         {projects.length === 0 && (
           <div className="text-center py-12">
             <div className="text-muted-foreground mb-4">No projects yet</div>
-            <Link href="/upload">
-              <Button>Create Your First Project</Button>
-            </Link>
+            <Button onClick={() => setIsCreateModalOpen(true)}>Create Your First Project</Button>
           </div>
         )}
+
+        <CreateProjectModal
+          open={isCreateModalOpen}
+          onOpenChange={setIsCreateModalOpen}
+          onProjectCreated={handleProjectCreated}
+        />
       </div>
     </DashboardLayout>
   )
