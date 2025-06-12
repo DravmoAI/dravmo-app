@@ -13,6 +13,7 @@ import { Upload, LinkIcon, ArrowRight } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { uploadToSupabase } from "@/lib/supabase-storage"
+import { getSupabaseClient } from "@/lib/supabase"
 
 interface Project {
   id: string
@@ -31,20 +32,48 @@ export default function UploadPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [activeTab, setActiveTab] = useState("upload")
+  const [userId, setUserId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const supabase = getSupabaseClient()
 
+  // Get the authenticated user
   useEffect(() => {
-    fetchProjects()
-  }, [])
+    const getUser = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (session?.user) {
+        setUserId(session.user.id)
+      } else {
+        router.push("/login")
+      }
+    }
+    getUser()
+  }, [router, supabase])
+
+  // Fetch projects when userId is available
+  useEffect(() => {
+    if (userId) {
+      fetchProjects()
+    }
+  }, [userId])
 
   const fetchProjects = async () => {
+    if (!userId) return
+
     try {
-      const response = await fetch("/api/projects?userId=temp-user-id") // TODO: Replace with actual user ID
+      setIsLoading(true)
+      const response = await fetch(`/api/projects?userId=${userId}`)
       if (response.ok) {
         const { projects } = await response.json()
-        setProjects(projects)
+        setProjects(projects || [])
+      } else {
+        console.error("Failed to fetch projects")
       }
     } catch (error) {
       console.error("Error fetching projects:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -55,7 +84,22 @@ export default function UploadPage() {
     }
   }
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setUploadedFile(e.dataTransfer.files[0])
+    }
+  }
+
   const createProject = async (name: string) => {
+    if (!userId) {
+      throw new Error("User not authenticated")
+    }
+
     try {
       const response = await fetch("/api/projects", {
         method: "POST",
@@ -64,7 +108,7 @@ export default function UploadPage() {
         },
         body: JSON.stringify({
           name,
-          userId: "temp-user-id", // TODO: Replace with actual user ID
+          userId,
         }),
       })
 
@@ -117,6 +161,12 @@ export default function UploadPage() {
       return
     }
 
+    if (!userId) {
+      alert("You must be logged in to upload screens")
+      router.push("/login")
+      return
+    }
+
     setIsUploading(true)
 
     try {
@@ -153,6 +203,16 @@ export default function UploadPage() {
     }
   }
 
+  if (isLoading || !userId) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto space-y-8">
@@ -182,6 +242,9 @@ export default function UploadPage() {
                   ))}
                 </SelectContent>
               </Select>
+              {projects.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">No projects found. Create a new one below.</p>
+              )}
             </div>
 
             <div className="text-center text-sm text-muted-foreground">or</div>
@@ -215,7 +278,11 @@ export default function UploadPage() {
               </TabsList>
 
               <TabsContent value="upload" className="space-y-4">
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
+                <div
+                  className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center"
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                >
                   <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" id="file-upload" />
                   <label htmlFor="file-upload" className="cursor-pointer">
                     <div className="space-y-4">

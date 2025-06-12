@@ -10,6 +10,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "ProjectId, sourceUrl, and sourceType are required" }, { status: 400 })
     }
 
+    // Check if the project exists
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+    })
+
+    if (!project) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 })
+    }
+
+    // Create the screen
     const screen = await prisma.screen.create({
       data: {
         projectId,
@@ -22,7 +32,7 @@ export async function POST(request: Request) {
     const mockFeedbackQuery = await prisma.feedbackQuery.create({
       data: {
         screenId: screen.id,
-        designMasterId: "mock-master-id", // We'll need to create a mock design master
+        designMasterId: "mock-design-master", // We'll need to create a mock design master
         industry: "Technology",
         productType: "Mobile App",
         purpose: "User Interface",
