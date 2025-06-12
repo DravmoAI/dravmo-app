@@ -101,22 +101,31 @@ export async function PUT(request: Request) {
         })
 
         // Update or create persona vibe
-        await tx.personaVibe.upsert({
-          where: { personaId: id }, // Fix: Use personaId instead of id
-          update: {
-            colorBoldness,
-            typeTemperament,
-            spacingAiriness,
-            motionDrama,
-          },
-          create: {
-            personaId: id,
-            colorBoldness,
-            typeTemperament,
-            spacingAiriness,
-            motionDrama,
-          },
+        const existingVibe = await tx.personaVibe.findFirst({
+          where: { personaId: id },
         })
+
+        if (existingVibe) {
+          await tx.personaVibe.update({
+            where: { id: existingVibe.id },
+            data: {
+              colorBoldness,
+              typeTemperament,
+              spacingAiriness,
+              motionDrama,
+            },
+          })
+        } else {
+          await tx.personaVibe.create({
+            data: {
+              personaId: id,
+              colorBoldness,
+              typeTemperament,
+              spacingAiriness,
+              motionDrama,
+            },
+          })
+        }
 
         // Delete existing keywords and create new ones
         await tx.personaKeyword.deleteMany({
