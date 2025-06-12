@@ -27,8 +27,13 @@ export default function ProjectsPage() {
 
   const fetchProjects = async () => {
     try {
-      const response = await fetch("/api/projects?userId=temp-user-id") // TODO: Replace with actual user ID
+      const response = await fetch("/api/projects")
       if (!response.ok) {
+        if (response.status === 401) {
+          // Redirect to login if unauthorized
+          window.location.href = "/login"
+          return
+        }
         throw new Error("Failed to fetch projects")
       }
       const { projects } = await response.json()

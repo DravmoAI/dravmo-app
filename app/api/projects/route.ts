@@ -1,14 +1,23 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getSupabaseClient } from "@/lib/supabase"
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId") || "temp-user-id" // TODO: Get from auth
+    // Get the authenticated user from Supabase
+    const supabase = getSupabaseClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
     const projects = await prisma.project.findMany({
       where: {
-        userId,
+        userId: user.id,
       },
       include: {
         screens: {
@@ -53,17 +62,28 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { name, userId } = body
+    // Get the authenticated user from Supabase
+    const supabase = getSupabaseClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!name || !userId) {
-      return NextResponse.json({ error: "Name and userId are required" }, { status: 400 })
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { name } = body
+
+    if (!name) {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 })
     }
 
     const project = await prisma.project.create({
       data: {
         name,
-        userId,
+        userId: user.id, // Use the authenticated user's ID from Supabase
       },
     })
 

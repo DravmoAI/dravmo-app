@@ -38,12 +38,12 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
         },
         body: JSON.stringify({
           name: projectName.trim(),
-          userId: "temp-user-id", // TODO: Replace with actual user ID from auth
         }),
       })
 
       if (!response.ok) {
-        throw new Error("Failed to create project")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to create project")
       }
 
       const { project } = await response.json()
@@ -53,6 +53,7 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
     } catch (error) {
       console.error("Error creating project:", error)
       // TODO: Add proper error handling/toast
+      alert("Failed to create project. Please try again.")
     } finally {
       setIsLoading(false)
     }
