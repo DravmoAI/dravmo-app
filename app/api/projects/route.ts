@@ -1,32 +1,14 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { createClient } from "@supabase/supabase-js"
 
 export async function GET(request: Request) {
   try {
-    // Get the auth token from cookies
-    const cookieHeader = request.headers.get("cookie") || ""
-    const cookies = Object.fromEntries(
-      cookieHeader.split("; ").map((cookie) => {
-        const [name, value] = cookie.split("=")
-        return [name, value]
-      }),
-    )
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get("userId")
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-    // Get the session from the cookie
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session?.user) {
-      return NextResponse.json({ projects: [] }, { status: 200 })
+    if (!userId) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
-
-    const userId = session.user.id
 
     const projects = await prisma.project.findMany({
       where: {
@@ -76,35 +58,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name } = body
+    const { name, userId } = body
 
-    if (!name) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 })
+    if (!name || !userId) {
+      return NextResponse.json({ error: "Name and userId are required" }, { status: 400 })
     }
-
-    // Get the auth token from cookies
-    const cookieHeader = request.headers.get("cookie") || ""
-    const cookies = Object.fromEntries(
-      cookieHeader.split("; ").map((cookie) => {
-        const [name, value] = cookie.split("=")
-        return [name, value]
-      }),
-    )
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-    // Get the session from the cookie
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const userId = session.user.id
 
     const project = await prisma.project.create({
       data: {

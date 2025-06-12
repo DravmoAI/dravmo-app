@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { getSupabaseClient } from "@/lib/supabase"
 
 interface CreateProjectModalProps {
   open: boolean
@@ -24,10 +25,24 @@ interface CreateProjectModalProps {
 export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: CreateProjectModalProps) {
   const [projectName, setProjectName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+  const supabase = getSupabaseClient()
+
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (session?.user) {
+        setUserId(session.user.id)
+      }
+    }
+    getUser()
+  }, [supabase])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!projectName.trim()) return
+    if (!projectName.trim() || !userId) return
 
     setIsLoading(true)
     try {
@@ -38,6 +53,7 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
         },
         body: JSON.stringify({
           name: projectName.trim(),
+          userId: userId,
         }),
       })
 
@@ -83,7 +99,7 @@ export function CreateProjectModal({ open, onOpenChange, onProjectCreated }: Cre
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !projectName.trim()}>
+            <Button type="submit" disabled={isLoading || !projectName.trim() || !userId}>
               {isLoading ? "Creating..." : "Create Project"}
             </Button>
           </DialogFooter>

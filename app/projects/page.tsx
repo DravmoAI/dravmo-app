@@ -26,24 +26,31 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
   const router = useRouter()
   const supabase = getSupabaseClient()
 
   useEffect(() => {
-    // Check if user is authenticated
+    // Check if user is authenticated and get user ID
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession()
-      if (!data.session) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session?.user) {
         router.push("/login")
+        return
       }
+      setUserId(session.user.id)
     }
 
     checkAuth()
-  }, [router])
+  }, [router, supabase])
 
   const fetchProjects = async () => {
+    if (!userId) return
+
     try {
-      const response = await fetch("/api/projects")
+      const response = await fetch(`/api/projects?userId=${userId}`)
       if (!response.ok) {
         throw new Error("Failed to fetch projects")
       }
@@ -57,8 +64,10 @@ export default function ProjectsPage() {
   }
 
   useEffect(() => {
-    fetchProjects()
-  }, [])
+    if (userId) {
+      fetchProjects()
+    }
+  }, [userId])
 
   const handleDeleteProject = async (projectId: string) => {
     try {
@@ -97,7 +106,7 @@ export default function ProjectsPage() {
     })
   }
 
-  if (isLoading) {
+  if (isLoading || !userId) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
