@@ -12,8 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Upload, LinkIcon, ArrowRight } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { uploadToSupabase } from "@/lib/supabase-storage"
+import { uploadFile, STORAGE_BUCKETS } from "@/lib/supabase-storage"
 import { getSupabaseClient } from "@/lib/supabase"
+import { v4 as uuidv4 } from "uuid"
 
 interface Project {
   id: string
@@ -181,9 +182,18 @@ export default function UploadPage() {
       let sourceType = ""
 
       if (uploadedFile) {
-        // Upload file to Supabase
-        const uploadedUrl = await uploadToSupabase(uploadedFile, "screens")
-        sourceUrl = uploadedUrl
+        // Generate a unique file path
+        const fileExt = uploadedFile.name.split(".").pop()
+        const filePath = `${userId}/${uuidv4()}.${fileExt}`
+
+        // Upload file to Supabase storage
+        const { url, error } = await uploadFile(STORAGE_BUCKETS.SCREENS, filePath, uploadedFile)
+
+        if (error || !url) {
+          throw new Error("Failed to upload file to storage")
+        }
+
+        sourceUrl = url
         sourceType = "upload"
       } else if (figmaUrl) {
         sourceUrl = figmaUrl
