@@ -23,59 +23,84 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "ScreenId is required" }, { status: 400 })
     }
 
-    // Create the feedback query
+    // First, verify the screen exists
+    const screen = await prisma.screen.findUnique({
+      where: { id: screenId },
+    })
+
+    if (!screen) {
+      return NextResponse.json({ error: "Screen not found" }, { status: 404 })
+    }
+
+    // Create the feedback query with proper relations
     const feedbackQuery = await prisma.feedbackQuery.create({
       data: {
-        screenId,
-        designMasterId: designMasterId || null, // Make designMasterId optional
+        screen: {
+          connect: { id: screenId },
+        },
+        designMaster: designMasterId
+          ? {
+              connect: { id: designMasterId },
+            }
+          : undefined,
         industry,
         productType,
         purpose,
         audience,
         ageGroup,
         brandPersonality,
-        platform: platform || "Web", // Default to Web if not provided
+        platform: platform || "Web",
       },
     })
 
-    // Create the select analyzers for topics, subtopics, and points
+    // Create the select analyzers for topics
     if (selectedTopics && selectedTopics.length > 0) {
+      const topicAnalyzers = selectedTopics.map((topicId: string) => ({
+        feedbackQueryId: feedbackQuery.id,
+        topicId,
+        subtopicId: "", // Use empty string instead of null
+        pointId: "", // Use empty string instead of null
+      }))
+
       await prisma.selectAnalyzer.createMany({
-        data: selectedTopics.map((topicId: string) => ({
-          feedbackQueryId: feedbackQuery.id,
-          topicId,
-          subtopicId: null,
-          pointId: null,
-        })),
+        data: topicAnalyzers,
       })
     }
 
+    // Create the select analyzers for subtopics
     if (selectedSubtopics && selectedSubtopics.length > 0) {
+      const subtopicAnalyzers = selectedSubtopics.map((subtopicId: string) => ({
+        feedbackQueryId: feedbackQuery.id,
+        topicId: "", // Use empty string instead of null
+        subtopicId,
+        pointId: "", // Use empty string instead of null
+      }))
+
       await prisma.selectAnalyzer.createMany({
-        data: selectedSubtopics.map((subtopicId: string) => ({
-          feedbackQueryId: feedbackQuery.id,
-          topicId: null,
-          subtopicId,
-          pointId: null,
-        })),
+        data: subtopicAnalyzers,
       })
     }
 
+    // Create the select analyzers for points
     if (selectedPoints && selectedPoints.length > 0) {
+      const pointAnalyzers = selectedPoints.map((pointId: string) => ({
+        feedbackQueryId: feedbackQuery.id,
+        topicId: "", // Use empty string instead of null
+        subtopicId: "", // Use empty string instead of null
+        pointId,
+      }))
+
       await prisma.selectAnalyzer.createMany({
-        data: selectedPoints.map((pointId: string) => ({
-          feedbackQueryId: feedbackQuery.id,
-          topicId: null,
-          subtopicId: null,
-          pointId,
-        })),
+        data: pointAnalyzers,
       })
     }
 
     // Create a mock feedback result
     const feedbackResult = await prisma.feedbackResult.create({
       data: {
-        queryId: feedbackQuery.id,
+        feedbackQuery: {
+          connect: { id: feedbackQuery.id },
+        },
         feedbackSummary:
           "This design shows strong visual hierarchy and clean typography. The color palette is well-balanced and creates good contrast for readability. Consider improving the spacing between elements for better visual breathing room. The interactive elements are clearly defined and follow modern UI patterns. Overall, this is a solid design foundation with room for minor refinements.",
         version: "1.0",
