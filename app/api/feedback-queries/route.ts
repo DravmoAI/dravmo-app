@@ -1,9 +1,15 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+
+interface SelectedAnalyzer {
+  topicId: string
+  subtopicId: string
+  pointId: string
+}
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = await request.json()
     const {
       screenId,
       designMasterId,
@@ -14,22 +20,24 @@ export async function POST(request: Request) {
       ageGroup,
       brandPersonality,
       platform,
-      selectedTopics,
-      selectedSubtopics,
-      selectedPoints,
-    } = body;
+      selectedAnalyzers,
+    } = body
 
     if (!screenId) {
-      return NextResponse.json({ error: "ScreenId is required" }, { status: 400 });
+      return NextResponse.json({ error: "ScreenId is required" }, { status: 400 })
+    }
+
+    if (!selectedAnalyzers || selectedAnalyzers.length === 0) {
+      return NextResponse.json({ error: "At least one analyzer must be selected" }, { status: 400 })
     }
 
     // First, verify the screen exists
     const screen = await prisma.screen.findUnique({
       where: { id: screenId },
-    });
+    })
 
     if (!screen) {
-      return NextResponse.json({ error: "Screen not found" }, { status: 404 });
+      return NextResponse.json({ error: "Screen not found" }, { status: 404 })
     }
 
     // Create the feedback query with proper relations
@@ -51,49 +59,19 @@ export async function POST(request: Request) {
         brandPersonality,
         platform: platform || "Web",
       },
-    });
+    })
 
-    // Create the select analyzers for topics
-    if (selectedTopics && selectedTopics.length > 0) {
-      const topicAnalyzers = selectedTopics.map((topicId: string) => ({
-        feedbackQueryId: feedbackQuery.id,
-        topicId,
-        subtopicId: "", // Use empty string instead of null
-        pointId: "", // Use empty string instead of null
-      }));
+    // Create the select analyzers - each point gets its own record with all three IDs
+    const analyzerData = selectedAnalyzers.map((analyzer: SelectedAnalyzer) => ({
+      feedbackQueryId: feedbackQuery.id,
+      topicId: analyzer.topicId,
+      subtopicId: analyzer.subtopicId,
+      pointId: analyzer.pointId,
+    }))
 
-      await prisma.selectAnalyzer.createMany({
-        data: topicAnalyzers,
-      });
-    }
-
-    // Create the select analyzers for subtopics
-    if (selectedSubtopics && selectedSubtopics.length > 0) {
-      const subtopicAnalyzers = selectedSubtopics.map((subtopicId: string) => ({
-        feedbackQueryId: feedbackQuery.id,
-        topicId: "", // Use empty string instead of null
-        subtopicId,
-        pointId: "", // Use empty string instead of null
-      }));
-
-      await prisma.selectAnalyzer.createMany({
-        data: subtopicAnalyzers,
-      });
-    }
-
-    // Create the select analyzers for points
-    if (selectedPoints && selectedPoints.length > 0) {
-      const pointAnalyzers = selectedPoints.map((pointId: string) => ({
-        feedbackQueryId: feedbackQuery.id,
-        topicId: "", // Use empty string instead of null
-        subtopicId: "", // Use empty string instead of null
-        pointId,
-      }));
-
-      await prisma.selectAnalyzer.createMany({
-        data: pointAnalyzers,
-      });
-    }
+    await prisma.selectAnalyzer.createMany({
+      data: analyzerData,
+    })
 
     // Create a mock feedback result
     const feedbackResult = await prisma.feedbackResult.create({
@@ -105,7 +83,7 @@ export async function POST(request: Request) {
           "This design shows strong visual hierarchy and clean typography. The color palette is well-balanced and creates good contrast for readability. Consider improving the spacing between elements for better visual breathing room. The interactive elements are clearly defined and follow modern UI patterns. Overall, this is a solid design foundation with room for minor refinements.",
         version: "1.0",
       },
-    });
+    })
 
     return NextResponse.json(
       {
@@ -113,10 +91,10 @@ export async function POST(request: Request) {
         feedbackResult,
         redirectUrl: `/projects/${body.projectId}/screens/${screenId}/feedback/${feedbackResult.id}`,
       },
-      { status: 201 }
-    );
+      { status: 201 },
+    )
   } catch (error) {
-    console.error("Error creating feedback query:", error);
-    return NextResponse.json({ error: "Failed to create feedback query" }, { status: 500 });
+    console.error("Error creating feedback query:", error)
+    return NextResponse.json({ error: "Failed to create feedback query" }, { status: 500 })
   }
 }

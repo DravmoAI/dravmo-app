@@ -55,6 +55,12 @@ interface AnalyzerTopic {
   analyzerSubtopics: AnalyzerSubtopic[]
 }
 
+interface SelectedAnalyzer {
+  topicId: string
+  subtopicId: string
+  pointId: string
+}
+
 export default function ScreenAnalyzePage() {
   const params = useParams()
   const router = useRouter()
@@ -65,9 +71,7 @@ export default function ScreenAnalyzePage() {
   const [loading, setLoading] = useState(true)
   const [analyzerTopics, setAnalyzerTopics] = useState<AnalyzerTopic[]>([])
   const [designMasters, setDesignMasters] = useState<DesignMaster[]>([])
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([])
-  const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([])
-  const [selectedPoints, setSelectedPoints] = useState<string[]>([])
+  const [selectedAnalyzers, setSelectedAnalyzers] = useState<SelectedAnalyzer[]>([])
   const [selectedMaster, setSelectedMaster] = useState<string | null>(null)
   const [isMastersMode, setIsMastersMode] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -103,17 +107,20 @@ export default function ScreenAnalyzePage() {
         const mastersData = await mastersRes.json()
         setDesignMasters(mastersData.designMasters)
 
-        // Pre-select the first topic and its first subtopic
+        // Pre-select the first point from the first subtopic of the first topic
         if (analyzerData.topics.length > 0) {
           const firstTopic = analyzerData.topics[0]
-          setSelectedTopics([firstTopic.id])
-
           if (firstTopic.analyzerSubtopics.length > 0) {
             const firstSubtopic = firstTopic.analyzerSubtopics[0]
-            setSelectedSubtopics([firstSubtopic.id])
-
             if (firstSubtopic.analyzerPoints.length > 0) {
-              setSelectedPoints([firstSubtopic.analyzerPoints[0].id])
+              const firstPoint = firstSubtopic.analyzerPoints[0]
+              setSelectedAnalyzers([
+                {
+                  topicId: firstTopic.id,
+                  subtopicId: firstSubtopic.id,
+                  pointId: firstPoint.id,
+                },
+              ])
             }
           }
         }
@@ -132,76 +139,91 @@ export default function ScreenAnalyzePage() {
     fetchData()
   }, [screenId])
 
-  const handleTopicChange = (topicId: string) => {
-    setSelectedTopics((prev) => {
-      const isSelected = prev.includes(topicId)
+  const isPointSelected = (pointId: string) => {
+    return selectedAnalyzers.some((analyzer) => analyzer.pointId === pointId)
+  }
 
-      // Find the topic
-      const topic = analyzerTopics.find((t) => t.id === topicId)
-      if (!topic) return prev
+  const isSubtopicSelected = (subtopicId: string) => {
+    return selectedAnalyzers.some((analyzer) => analyzer.subtopicId === subtopicId)
+  }
+
+  const isTopicSelected = (topicId: string) => {
+    return selectedAnalyzers.some((analyzer) => analyzer.topicId === topicId)
+  }
+
+  const handlePointChange = (pointId: string, subtopicId: string, topicId: string) => {
+    setSelectedAnalyzers((prev) => {
+      const isSelected = prev.some((analyzer) => analyzer.pointId === pointId)
 
       if (isSelected) {
-        // If deselecting a topic, also deselect all its subtopics and points
-        const subtopicIds = topic.analyzerSubtopics.map((s) => s.id)
-        const pointIds = topic.analyzerSubtopics.flatMap((s) => s.analyzerPoints.map((p) => p.id))
-
-        setSelectedSubtopics((prev) => prev.filter((id) => !subtopicIds.includes(id)))
-        setSelectedPoints((prev) => prev.filter((id) => !pointIds.includes(id)))
-
-        return prev.filter((id) => id !== topicId)
+        // Remove the analyzer with this point
+        return prev.filter((analyzer) => analyzer.pointId !== pointId)
       } else {
-        return [...prev, topicId]
+        // Add new analyzer
+        return [
+          ...prev,
+          {
+            topicId,
+            subtopicId,
+            pointId,
+          },
+        ]
       }
     })
   }
 
   const handleSubtopicChange = (subtopicId: string, topicId: string) => {
-    setSelectedSubtopics((prev) => {
-      const isSelected = prev.includes(subtopicId)
+    const topic = analyzerTopics.find((t) => t.id === topicId)
+    if (!topic) return
 
-      // Find the subtopic
-      const topic = analyzerTopics.find((t) => t.id === topicId)
-      if (!topic) return prev
+    const subtopic = topic.analyzerSubtopics.find((s) => s.id === subtopicId)
+    if (!subtopic) return
 
-      const subtopic = topic.analyzerSubtopics.find((s) => s.id === subtopicId)
-      if (!subtopic) return prev
+    const isSelected = isSubtopicSelected(subtopicId)
 
-      if (isSelected) {
-        // If deselecting a subtopic, also deselect all its points
-        const pointIds = subtopic.analyzerPoints.map((p) => p.id)
-        setSelectedPoints((prev) => prev.filter((id) => !pointIds.includes(id)))
+    if (isSelected) {
+      // Remove all analyzers for this subtopic
+      setSelectedAnalyzers((prev) => prev.filter((analyzer) => analyzer.subtopicId !== subtopicId))
+    } else {
+      // Add all points from this subtopic
+      const newAnalyzers = subtopic.analyzerPoints.map((point) => ({
+        topicId,
+        subtopicId,
+        pointId: point.id,
+      }))
 
-        return prev.filter((id) => id !== subtopicId)
-      } else {
-        // If selecting a subtopic, also select its parent topic
-        if (!selectedTopics.includes(topicId)) {
-          setSelectedTopics((prev) => [...prev, topicId])
-        }
-
-        return [...prev, subtopicId]
-      }
-    })
+      setSelectedAnalyzers((prev) => [
+        ...prev.filter((analyzer) => analyzer.subtopicId !== subtopicId),
+        ...newAnalyzers,
+      ])
+    }
   }
 
-  const handlePointChange = (pointId: string, subtopicId: string, topicId: string) => {
-    setSelectedPoints((prev) => {
-      const isSelected = prev.includes(pointId)
+  const handleTopicChange = (topicId: string) => {
+    const topic = analyzerTopics.find((t) => t.id === topicId)
+    if (!topic) return
 
-      if (isSelected) {
-        return prev.filter((id) => id !== pointId)
-      } else {
-        // If selecting a point, also select its parent subtopic and topic
-        if (!selectedSubtopics.includes(subtopicId)) {
-          setSelectedSubtopics((prev) => [...prev, subtopicId])
-        }
+    const isSelected = isTopicSelected(topicId)
 
-        if (!selectedTopics.includes(topicId)) {
-          setSelectedTopics((prev) => [...prev, topicId])
-        }
+    if (isSelected) {
+      // Remove all analyzers for this topic
+      setSelectedAnalyzers((prev) => prev.filter((analyzer) => analyzer.topicId !== topicId))
+    } else {
+      // Add all points from all subtopics of this topic
+      const newAnalyzers: SelectedAnalyzer[] = []
 
-        return [...prev, pointId]
-      }
-    })
+      topic.analyzerSubtopics.forEach((subtopic) => {
+        subtopic.analyzerPoints.forEach((point) => {
+          newAnalyzers.push({
+            topicId,
+            subtopicId: subtopic.id,
+            pointId: point.id,
+          })
+        })
+      })
+
+      setSelectedAnalyzers((prev) => [...prev.filter((analyzer) => analyzer.topicId !== topicId), ...newAnalyzers])
+    }
   }
 
   const handleSelectChange = (name: string, value: string) => {
@@ -212,10 +234,10 @@ export default function ScreenAnalyzePage() {
   }
 
   const handleAnalyze = async () => {
-    if (selectedTopics.length === 0) {
+    if (selectedAnalyzers.length === 0) {
       toast({
         title: "Selection Required",
-        description: "Please select at least one topic to analyze.",
+        description: "Please select at least one analysis point.",
         variant: "destructive",
       })
       return
@@ -249,9 +271,7 @@ export default function ScreenAnalyzePage() {
           ageGroup: formData.ageGroup,
           brandPersonality: formData.brandPersonality,
           platform: formData.platform,
-          selectedTopics,
-          selectedSubtopics,
-          selectedPoints,
+          selectedAnalyzers,
         }),
       })
 
@@ -522,7 +542,7 @@ export default function ScreenAnalyzePage() {
                             <div className="flex items-center gap-3">
                               <Checkbox
                                 id={`topic-${topic.id}`}
-                                checked={selectedTopics.includes(topic.id)}
+                                checked={isTopicSelected(topic.id)}
                                 onCheckedChange={() => handleTopicChange(topic.id)}
                                 onClick={(e) => e.stopPropagation()}
                               />
@@ -553,7 +573,7 @@ export default function ScreenAnalyzePage() {
                                       <div className="flex items-center gap-3">
                                         <Checkbox
                                           id={`subtopic-${subtopic.id}`}
-                                          checked={selectedSubtopics.includes(subtopic.id)}
+                                          checked={isSubtopicSelected(subtopic.id)}
                                           onCheckedChange={() => handleSubtopicChange(subtopic.id, topic.id)}
                                           onClick={(e) => e.stopPropagation()}
                                         />
@@ -576,7 +596,7 @@ export default function ScreenAnalyzePage() {
                                           <div key={point.id} className="flex items-center gap-3">
                                             <Checkbox
                                               id={`point-${point.id}`}
-                                              checked={selectedPoints.includes(point.id)}
+                                              checked={isPointSelected(point.id)}
                                               onCheckedChange={() => handlePointChange(point.id, subtopic.id, topic.id)}
                                             />
                                             <div>
@@ -606,7 +626,7 @@ export default function ScreenAnalyzePage() {
                     <Button
                       onClick={handleAnalyze}
                       className="w-full gap-2"
-                      disabled={selectedTopics.length === 0 || (isMastersMode && !selectedMaster) || isSubmitting}
+                      disabled={selectedAnalyzers.length === 0 || (isMastersMode && !selectedMaster) || isSubmitting}
                     >
                       {isSubmitting ? (
                         <>
