@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const body = await request.json();
     const {
       screenId,
       designMasterId,
@@ -17,19 +17,19 @@ export async function POST(request: Request) {
       selectedTopics,
       selectedSubtopics,
       selectedPoints,
-    } = body
+    } = body;
 
     if (!screenId) {
-      return NextResponse.json({ error: "ScreenId is required" }, { status: 400 })
+      return NextResponse.json({ error: "ScreenId is required" }, { status: 400 });
     }
 
     // First, verify the screen exists
     const screen = await prisma.screen.findUnique({
       where: { id: screenId },
-    })
+    });
 
     if (!screen) {
-      return NextResponse.json({ error: "Screen not found" }, { status: 404 })
+      return NextResponse.json({ error: "Screen not found" }, { status: 404 });
     }
 
     // Create the feedback query with proper relations
@@ -38,11 +38,11 @@ export async function POST(request: Request) {
         screen: {
           connect: { id: screenId },
         },
-        designMaster: designMasterId
-          ? {
-              connect: { id: designMasterId },
-            }
-          : undefined,
+        ...(designMasterId && {
+          designMaster: {
+            connect: { id: designMasterId },
+          },
+        }),
         industry,
         productType,
         purpose,
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
         brandPersonality,
         platform: platform || "Web",
       },
-    })
+    });
 
     // Create the select analyzers for topics
     if (selectedTopics && selectedTopics.length > 0) {
@@ -60,11 +60,11 @@ export async function POST(request: Request) {
         topicId,
         subtopicId: "", // Use empty string instead of null
         pointId: "", // Use empty string instead of null
-      }))
+      }));
 
       await prisma.selectAnalyzer.createMany({
         data: topicAnalyzers,
-      })
+      });
     }
 
     // Create the select analyzers for subtopics
@@ -74,11 +74,11 @@ export async function POST(request: Request) {
         topicId: "", // Use empty string instead of null
         subtopicId,
         pointId: "", // Use empty string instead of null
-      }))
+      }));
 
       await prisma.selectAnalyzer.createMany({
         data: subtopicAnalyzers,
-      })
+      });
     }
 
     // Create the select analyzers for points
@@ -88,11 +88,11 @@ export async function POST(request: Request) {
         topicId: "", // Use empty string instead of null
         subtopicId: "", // Use empty string instead of null
         pointId,
-      }))
+      }));
 
       await prisma.selectAnalyzer.createMany({
         data: pointAnalyzers,
-      })
+      });
     }
 
     // Create a mock feedback result
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
           "This design shows strong visual hierarchy and clean typography. The color palette is well-balanced and creates good contrast for readability. Consider improving the spacing between elements for better visual breathing room. The interactive elements are clearly defined and follow modern UI patterns. Overall, this is a solid design foundation with room for minor refinements.",
         version: "1.0",
       },
-    })
+    });
 
     return NextResponse.json(
       {
@@ -113,10 +113,10 @@ export async function POST(request: Request) {
         feedbackResult,
         redirectUrl: `/projects/${body.projectId}/screens/${screenId}/feedback/${feedbackResult.id}`,
       },
-      { status: 201 },
-    )
+      { status: 201 }
+    );
   } catch (error) {
-    console.error("Error creating feedback query:", error)
-    return NextResponse.json({ error: "Failed to create feedback query" }, { status: 500 })
+    console.error("Error creating feedback query:", error);
+    return NextResponse.json({ error: "Failed to create feedback query" }, { status: 500 });
   }
 }
