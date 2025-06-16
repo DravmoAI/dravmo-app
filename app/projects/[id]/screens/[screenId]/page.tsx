@@ -41,49 +41,51 @@ export default function ScreenDetailPage() {
   const [feedbackResults, setFeedbackResults] = useState<FeedbackResult[]>([])
 
   useEffect(() => {
-    // Mock screen data
-    const mockScreen: Screen = {
-      id: screenId,
-      projectId,
-      sourceUrl: "/placeholder.svg?height=600&width=800",
-      sourceType: "upload",
-      createdAt: "2024-01-15",
-      updatedAt: "2024-01-20",
-      feedbackCount: 3,
-      lastFeedback: "2024-01-20",
+    const fetchData = async () => {
+      try {
+        // Fetch screen data
+        const screenResponse = await fetch(`/api/screens/${screenId}`)
+        if (screenResponse.ok) {
+          const screenData = await screenResponse.json()
+          setScreen(screenData.screen)
+        }
+
+        // Fetch project data
+        const projectResponse = await fetch(`/api/projects/${projectId}`)
+        if (projectResponse.ok) {
+          const projectData = await projectResponse.json()
+          setProject(projectData.project)
+        }
+
+        // Mock feedback results (in real app, this would be fetched from API)
+        const mockFeedbackResults: FeedbackResult[] = [
+          {
+            id: "1",
+            createdAt: "2024-01-20",
+            summary: "Layout analysis with typography recommendations",
+            version: "v3",
+          },
+          {
+            id: "2",
+            createdAt: "2024-01-18",
+            summary: "Color and contrast evaluation",
+            version: "v2",
+          },
+          {
+            id: "3",
+            createdAt: "2024-01-16",
+            summary: "Initial design review",
+            version: "v1",
+          },
+        ]
+
+        setFeedbackResults(mockFeedbackResults)
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      }
     }
 
-    // Mock project data
-    const mockProject: Project = {
-      id: projectId,
-      name: "Praktika Landing Page",
-    }
-
-    // Mock feedback results
-    const mockFeedbackResults: FeedbackResult[] = [
-      {
-        id: "1",
-        createdAt: "2024-01-20",
-        summary: "Layout analysis with typography recommendations",
-        version: "v3",
-      },
-      {
-        id: "2",
-        createdAt: "2024-01-18",
-        summary: "Color and contrast evaluation",
-        version: "v2",
-      },
-      {
-        id: "3",
-        createdAt: "2024-01-16",
-        summary: "Initial design review",
-        version: "v1",
-      },
-    ]
-
-    setScreen(mockScreen)
-    setProject(mockProject)
-    setFeedbackResults(mockFeedbackResults)
+    fetchData()
   }, [projectId, screenId])
 
   const formatDate = (dateString: string) => {

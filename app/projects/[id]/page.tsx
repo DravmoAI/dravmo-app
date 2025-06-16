@@ -127,9 +127,13 @@ export default function ProjectDetailPage() {
             <Card key={screen.id} className="overflow-hidden hover:border-primary/50 transition-colors">
               <div className="aspect-[4/3] bg-muted">
                 <img
-                  src={screen.sourceUrl || "/placeholder.svg"}
+                  src={screen.sourceUrl || "/placeholder.svg?height=300&width=400"}
                   alt={`Screen ${screen.id}`}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.src = "/placeholder.svg?height=300&width=400"
+                  }}
                 />
               </div>
               <CardContent className="p-4">

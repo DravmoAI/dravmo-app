@@ -8,7 +8,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
         id: params.id,
       },
       include: {
-        project: true,
+        project: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     })
 
@@ -16,7 +21,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: "Screen not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ screen }, { status: 200 })
+    return NextResponse.json({ screen })
   } catch (error) {
     console.error("Error fetching screen:", error)
     return NextResponse.json({ error: "Failed to fetch screen" }, { status: 500 })

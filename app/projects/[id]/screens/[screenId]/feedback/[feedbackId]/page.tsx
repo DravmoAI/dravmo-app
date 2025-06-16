@@ -29,6 +29,20 @@ interface FeedbackResult {
   categories: Record<string, FeedbackCategory>
 }
 
+interface Screen {
+  id: string
+  projectId: string
+  sourceUrl: string
+  sourceType: "upload" | "figma"
+  createdAt: string
+  updatedAt: string
+}
+
+interface Project {
+  id: string
+  name: string
+}
+
 export default function FeedbackDetailPage() {
   const params = useParams()
   const projectId = params.id as string
@@ -36,54 +50,81 @@ export default function FeedbackDetailPage() {
   const feedbackId = params.feedbackId as string
   const [activeTab, setActiveTab] = useState("feedback")
   const [feedbackResult, setFeedbackResult] = useState<FeedbackResult | null>(null)
+  const [screen, setScreen] = useState<Screen | null>(null)
+  const [project, setProject] = useState<Project | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Mock feedback result data
-    const mockFeedbackResult: FeedbackResult = {
-      id: feedbackId,
-      createdAt: "2024-01-20",
-      version: "v3",
-      summary: "Layout analysis with typography recommendations",
-      categories: {
-        layout: {
-          title: "Layout & Structure",
-          items: [
-            {
-              title: "Hero Section Overload",
-              description:
-                "The large 'Praktika' text competes with the phone mockup for attention. Consider reducing its opacity or shifting it slightly to create a clearer visual hierarchy.",
-              severity: "medium",
+    const fetchData = async () => {
+      try {
+        // Fetch screen data
+        const screenResponse = await fetch(`/api/screens/${screenId}`)
+        if (screenResponse.ok) {
+          const screenData = await screenResponse.json()
+          setScreen(screenData.screen)
+        }
+
+        // Fetch project data
+        const projectResponse = await fetch(`/api/projects/${projectId}`)
+        if (projectResponse.ok) {
+          const projectData = await projectResponse.json()
+          setProject(projectData.project)
+        }
+
+        // Mock feedback result data (in real app, this would be fetched from API)
+        const mockFeedbackResult: FeedbackResult = {
+          id: feedbackId,
+          createdAt: "2024-01-20",
+          version: "v3",
+          summary: "Layout analysis with typography recommendations",
+          categories: {
+            layout: {
+              title: "Layout & Structure",
+              items: [
+                {
+                  title: "Hero Section Overload",
+                  description:
+                    "The large 'Praktika' text competes with the phone mockup for attention. Consider reducing its opacity or shifting it slightly to create a clearer visual hierarchy.",
+                  severity: "medium",
+                },
+                {
+                  title: "Navigation Pills",
+                  description:
+                    "The tabs at the bottom lack sufficient visual cues to indicate they're interactive. Consider adding subtle underlines or shadows to enhance their affordance.",
+                  severity: "low",
+                },
+              ],
             },
-            {
-              title: "Navigation Pills",
-              description:
-                "The tabs at the bottom lack sufficient visual cues to indicate they're interactive. Consider adding subtle underlines or shadows to enhance their affordance.",
-              severity: "low",
+            typography: {
+              title: "Typography & Readability",
+              items: [
+                {
+                  title: "Font Contrast Issues",
+                  description:
+                    "The white text on yellow background creates readability issues. Consider using a darker text color or adding a subtle text shadow to improve contrast.",
+                  severity: "high",
+                },
+                {
+                  title: "Inconsistent Type Scale",
+                  description:
+                    "There are too many different text sizes being used. Recommend consolidating to a more consistent type scale with 3-4 distinct sizes.",
+                  severity: "medium",
+                },
+              ],
             },
-          ],
-        },
-        typography: {
-          title: "Typography & Readability",
-          items: [
-            {
-              title: "Font Contrast Issues",
-              description:
-                "The white text on yellow background creates readability issues. Consider using a darker text color or adding a subtle text shadow to improve contrast.",
-              severity: "high",
-            },
-            {
-              title: "Inconsistent Type Scale",
-              description:
-                "There are too many different text sizes being used. Recommend consolidating to a more consistent type scale with 3-4 distinct sizes.",
-              severity: "medium",
-            },
-          ],
-        },
-      },
+          },
+        }
+
+        setFeedbackResult(mockFeedbackResult)
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    setFeedbackResult(mockFeedbackResult)
-  }, [feedbackId])
+    fetchData()
+  }, [feedbackId, screenId, projectId])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -93,8 +134,24 @@ export default function FeedbackDetailPage() {
     })
   }
 
-  if (!feedbackResult) {
-    return <DashboardLayout>Loading...</DashboardLayout>
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (!feedbackResult || !screen || !project) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Feedback not found</div>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   return (
@@ -214,7 +271,7 @@ export default function FeedbackDetailPage() {
               <Card className="overflow-hidden">
                 <div className="aspect-[3/4] bg-muted relative">
                   <img
-                    src="/placeholder.svg?height=400&width=300"
+                    src={screen.sourceUrl || "/placeholder.svg?height=400&width=300"}
                     alt="Design preview"
                     className="w-full h-full object-cover"
                   />
@@ -223,7 +280,7 @@ export default function FeedbackDetailPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-bold">Screen Preview</h3>
-                      <p className="text-sm text-muted-foreground">From {projectId}</p>
+                      <p className="text-sm text-muted-foreground">From {project.name}</p>
                     </div>
                     <Badge variant="outline">{feedbackResult.version}</Badge>
                   </div>
