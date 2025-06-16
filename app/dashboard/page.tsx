@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 
 interface Project {
   id: string
@@ -28,7 +28,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchUserAndProjects() {
       try {
-        const supabase = createClient()
+        const supabase = getSupabaseClient()
         const {
           data: { user },
           error: userError,
