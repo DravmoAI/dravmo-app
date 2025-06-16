@@ -73,7 +73,20 @@ export async function POST(request: Request) {
       data: analyzerData,
     })
 
-    // Create a mock feedback result
+    // Get the count of existing feedback results for this screen to determine version number
+    const existingFeedbackCount = await prisma.feedbackResult.count({
+      where: {
+        feedbackQuery: {
+          screenId: screenId,
+        },
+      },
+    })
+
+    // Generate version number (v1, v2, v3, etc.)
+    const versionNumber = existingFeedbackCount + 1
+    const version = `v${versionNumber}`
+
+    // Create a feedback result with proper version
     const feedbackResult = await prisma.feedbackResult.create({
       data: {
         feedbackQuery: {
@@ -81,7 +94,7 @@ export async function POST(request: Request) {
         },
         feedbackSummary:
           "This design shows strong visual hierarchy and clean typography. The color palette is well-balanced and creates good contrast for readability. Consider improving the spacing between elements for better visual breathing room. The interactive elements are clearly defined and follow modern UI patterns. Overall, this is a solid design foundation with room for minor refinements.",
-        version: "1.0",
+        version: version,
       },
     })
 

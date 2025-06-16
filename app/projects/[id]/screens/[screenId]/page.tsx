@@ -8,6 +8,7 @@ import { ArrowLeft, MessageSquare, Download, Share2, Pencil } from "lucide-react
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
+import { LoadingSpinner } from "@/components/loading-spinner"
 
 interface Screen {
   id: string
@@ -16,8 +17,6 @@ interface Screen {
   sourceType: "upload" | "figma"
   createdAt: string
   updatedAt: string
-  feedbackCount: number
-  lastFeedback?: string
 }
 
 interface Project {
@@ -28,8 +27,15 @@ interface Project {
 interface FeedbackResult {
   id: string
   createdAt: string
-  summary: string
+  feedbackSummary: string
   version: string
+  feedbackQuery: {
+    id: string
+    designMaster?: {
+      id: string
+      name: string
+    }
+  }
 }
 
 export default function ScreenDetailPage() {
@@ -39,10 +45,13 @@ export default function ScreenDetailPage() {
   const [screen, setScreen] = useState<Screen | null>(null)
   const [project, setProject] = useState<Project | null>(null)
   const [feedbackResults, setFeedbackResults] = useState<FeedbackResult[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true)
+
         // Fetch screen data
         const screenResponse = await fetch(`/api/screens/${screenId}`)
         if (screenResponse.ok) {
@@ -57,31 +66,16 @@ export default function ScreenDetailPage() {
           setProject(projectData.project)
         }
 
-        // Mock feedback results (in real app, this would be fetched from API)
-        const mockFeedbackResults: FeedbackResult[] = [
-          {
-            id: "1",
-            createdAt: "2024-01-20",
-            summary: "Layout analysis with typography recommendations",
-            version: "v3",
-          },
-          {
-            id: "2",
-            createdAt: "2024-01-18",
-            summary: "Color and contrast evaluation",
-            version: "v2",
-          },
-          {
-            id: "3",
-            createdAt: "2024-01-16",
-            summary: "Initial design review",
-            version: "v1",
-          },
-        ]
-
-        setFeedbackResults(mockFeedbackResults)
+        // Fetch feedback results for this screen
+        const feedbackResponse = await fetch(`/api/screens/${screenId}/feedback`)
+        if (feedbackResponse.ok) {
+          const feedbackData = await feedbackResponse.json()
+          setFeedbackResults(feedbackData.feedbackResults)
+        }
       } catch (error) {
         console.error("Error fetching data:", error)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -96,8 +90,27 @@ export default function ScreenDetailPage() {
     })
   }
 
+  const truncateSummary = (summary: string, maxLength = 80) => {
+    if (summary.length <= maxLength) return summary
+    return summary.substring(0, maxLength) + "..."
+  }
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <LoadingSpinner size="lg" text="Loading screen details..." />
+      </DashboardLayout>
+    )
+  }
+
   if (!screen || !project) {
-    return <DashboardLayout>Loading...</DashboardLayout>
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Screen not found</div>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   return (
@@ -183,7 +196,7 @@ export default function ScreenDetailPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Feedback Count:</span>
-                      <span className="font-medium">{screen.feedbackCount}</span>
+                      <span className="font-medium">{feedbackResults.length}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -191,23 +204,43 @@ export default function ScreenDetailPage() {
 
               <div>
                 <h3 className="font-bold mb-3">Feedback History</h3>
-                <div className="space-y-3">
-                  {feedbackResults.map((result) => (
-                    <Link key={result.id} href={`/projects/${projectId}/screens/${screenId}/feedback/${result.id}`}>
-                      <Card className="hover:border-primary/50 transition-colors">
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <Badge variant="outline" className="text-xs">
-                              {result.version}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">{formatDate(result.createdAt)}</span>
-                          </div>
-                          <p className="text-sm">{result.summary}</p>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
+                {feedbackResults.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <p className="text-muted-foreground text-sm">No feedback yet</p>
+                      <Link href={`/projects/${projectId}/screens/${screenId}/analyze`} className="block mt-2">
+                        <Button size="sm" variant="outline">
+                          Create First Analysis
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {feedbackResults.map((result) => (
+                      <Link key={result.id} href={`/projects/${projectId}/screens/${screenId}/feedback/${result.id}`}>
+                        <Card className="hover:border-primary/50 transition-colors">
+                          <CardContent className="p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <Badge variant="outline" className="text-xs">
+                                {result.version}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">{formatDate(result.createdAt)}</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-1">
+                              {truncateSummary(result.feedbackSummary)}
+                            </p>
+                            {result.feedbackQuery.designMaster && (
+                              <p className="text-xs text-muted-foreground">
+                                by {result.feedbackQuery.designMaster.name}
+                              </p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <Link href={`/projects/${projectId}/screens/${screenId}/analyze`} className="block">

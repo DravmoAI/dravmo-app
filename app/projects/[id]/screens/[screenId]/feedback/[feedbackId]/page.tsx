@@ -9,6 +9,7 @@ import { ArrowLeft, Download, Share2 } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useState, useEffect } from "react"
+import { LoadingSpinner } from "@/components/loading-spinner"
 
 interface FeedbackItem {
   title: string
@@ -25,8 +26,21 @@ interface FeedbackResult {
   id: string
   createdAt: string
   version: string
-  summary: string
-  categories: Record<string, FeedbackCategory>
+  feedbackSummary: string
+  feedbackQuery: {
+    id: string
+    industry: string
+    productType: string
+    purpose: string
+    audience: string
+    ageGroup: string
+    brandPersonality: string
+    platform: string
+    designMaster?: {
+      id: string
+      name: string
+    }
+  }
 }
 
 interface Screen {
@@ -54,9 +68,56 @@ export default function FeedbackDetailPage() {
   const [project, setProject] = useState<Project | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Mock categories for now - in real app, this would be generated from analyzer results
+  const mockCategories: Record<string, FeedbackCategory> = {
+    layout: {
+      title: "Layout & Structure",
+      items: [
+        {
+          title: "Hero Section Overload",
+          description:
+            "The large 'Praktika' text competes with the phone mockup for attention. Consider reducing its opacity or shifting it slightly to create a clearer visual hierarchy.",
+          severity: "medium",
+        },
+        {
+          title: "Navigation Pills",
+          description:
+            "The tabs at the bottom lack sufficient visual cues to indicate they're interactive. Consider adding subtle underlines or shadows to enhance their affordance.",
+          severity: "low",
+        },
+      ],
+    },
+    typography: {
+      title: "Typography & Readability",
+      items: [
+        {
+          title: "Font Contrast Issues",
+          description:
+            "The white text on yellow background creates readability issues. Consider using a darker text color or adding a subtle text shadow to improve contrast.",
+          severity: "high",
+        },
+        {
+          title: "Inconsistent Type Scale",
+          description:
+            "There are too many different text sizes being used. Recommend consolidating to a more consistent type scale with 3-4 distinct sizes.",
+          severity: "medium",
+        },
+      ],
+    },
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true)
+
+        // Fetch feedback result
+        const feedbackResponse = await fetch(`/api/feedback-results/${feedbackId}`)
+        if (feedbackResponse.ok) {
+          const feedbackData = await feedbackResponse.json()
+          setFeedbackResult(feedbackData.feedbackResult)
+        }
+
         // Fetch screen data
         const screenResponse = await fetch(`/api/screens/${screenId}`)
         if (screenResponse.ok) {
@@ -70,52 +131,6 @@ export default function FeedbackDetailPage() {
           const projectData = await projectResponse.json()
           setProject(projectData.project)
         }
-
-        // Mock feedback result data (in real app, this would be fetched from API)
-        const mockFeedbackResult: FeedbackResult = {
-          id: feedbackId,
-          createdAt: "2024-01-20",
-          version: "v3",
-          summary: "Layout analysis with typography recommendations",
-          categories: {
-            layout: {
-              title: "Layout & Structure",
-              items: [
-                {
-                  title: "Hero Section Overload",
-                  description:
-                    "The large 'Praktika' text competes with the phone mockup for attention. Consider reducing its opacity or shifting it slightly to create a clearer visual hierarchy.",
-                  severity: "medium",
-                },
-                {
-                  title: "Navigation Pills",
-                  description:
-                    "The tabs at the bottom lack sufficient visual cues to indicate they're interactive. Consider adding subtle underlines or shadows to enhance their affordance.",
-                  severity: "low",
-                },
-              ],
-            },
-            typography: {
-              title: "Typography & Readability",
-              items: [
-                {
-                  title: "Font Contrast Issues",
-                  description:
-                    "The white text on yellow background creates readability issues. Consider using a darker text color or adding a subtle text shadow to improve contrast.",
-                  severity: "high",
-                },
-                {
-                  title: "Inconsistent Type Scale",
-                  description:
-                    "There are too many different text sizes being used. Recommend consolidating to a more consistent type scale with 3-4 distinct sizes.",
-                  severity: "medium",
-                },
-              ],
-            },
-          },
-        }
-
-        setFeedbackResult(mockFeedbackResult)
       } catch (error) {
         console.error("Error fetching data:", error)
       } finally {
@@ -137,9 +152,7 @@ export default function FeedbackDetailPage() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Loading...</div>
-        </div>
+        <LoadingSpinner size="lg" text="Loading feedback..." />
       </DashboardLayout>
     )
   }
@@ -167,7 +180,12 @@ export default function FeedbackDetailPage() {
             </Link>
             <div>
               <h2 className="text-3xl font-bold">Feedback {feedbackResult.version}</h2>
-              <p className="text-muted-foreground">Created on {formatDate(feedbackResult.createdAt)}</p>
+              <p className="text-muted-foreground">
+                Created on {formatDate(feedbackResult.createdAt)}
+                {feedbackResult.feedbackQuery.designMaster && (
+                  <span> • by {feedbackResult.feedbackQuery.designMaster.name}</span>
+                )}
+              </p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -199,12 +217,20 @@ export default function FeedbackDetailPage() {
               >
                 Summary
               </button>
+              <button
+                className={`pb-2 px-1 ${
+                  activeTab === "details" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
+                }`}
+                onClick={() => setActiveTab("details")}
+              >
+                Analysis Details
+              </button>
             </div>
 
             {activeTab === "feedback" && (
               <div className="space-y-6">
                 <Accordion type="single" collapsible className="w-full">
-                  {Object.entries(feedbackResult.categories).map(([key, category]) => (
+                  {Object.entries(mockCategories).map(([key, category]) => (
                     <AccordionItem key={key} value={key}>
                       <AccordionTrigger className="text-lg font-medium">{category.title}</AccordionTrigger>
                       <AccordionContent>
@@ -218,8 +244,8 @@ export default function FeedbackDetailPage() {
                                       item.severity === "high"
                                         ? "bg-destructive"
                                         : item.severity === "medium"
-                                          ? "bg-tertiary"
-                                          : "bg-primary"
+                                          ? "bg-yellow-500"
+                                          : "bg-green-500"
                                     }`}
                                   />
                                   <div>
@@ -243,23 +269,47 @@ export default function FeedbackDetailPage() {
                 <Card>
                   <CardContent className="p-6">
                     <h3 className="text-xl font-bold mb-4">Design Summary</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Your design shows strong potential with its vibrant color choices and modern aesthetic. The
-                      primary areas for improvement are in typography contrast, layout hierarchy, and interactive
-                      element affordances.
-                    </p>
-                    <h4 className="font-bold mt-6 mb-2">Strengths</h4>
-                    <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                      <li>Bold, energetic color palette that stands out</li>
-                      <li>Clean, modern illustration style</li>
-                      <li>Good use of white space in certain areas</li>
-                    </ul>
-                    <h4 className="font-bold mt-6 mb-2">Areas for Improvement</h4>
-                    <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                      <li>Typography contrast and readability</li>
-                      <li>Visual hierarchy in the hero section</li>
-                      <li>Interactive element affordances</li>
-                    </ul>
+                    <p className="text-muted-foreground whitespace-pre-wrap">{feedbackResult.feedbackSummary}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {activeTab === "details" && (
+              <div className="space-y-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-bold mb-4">Analysis Parameters</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium text-muted-foreground">Industry:</span>
+                        <p>{feedbackResult.feedbackQuery.industry}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-muted-foreground">Product Type:</span>
+                        <p>{feedbackResult.feedbackQuery.productType}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-muted-foreground">Purpose:</span>
+                        <p>{feedbackResult.feedbackQuery.purpose}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-muted-foreground">Target Audience:</span>
+                        <p>{feedbackResult.feedbackQuery.audience}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-muted-foreground">Age Group:</span>
+                        <p>{feedbackResult.feedbackQuery.ageGroup}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-muted-foreground">Brand Personality:</span>
+                        <p>{feedbackResult.feedbackQuery.brandPersonality}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-muted-foreground">Platform:</span>
+                        <p>{feedbackResult.feedbackQuery.platform}</p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
