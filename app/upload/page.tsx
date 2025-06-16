@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, LinkIcon, ArrowRight } from "lucide-react"
+import { Upload, LinkIcon, ArrowRight, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { uploadFile, STORAGE_BUCKETS } from "@/lib/supabase-storage"
@@ -216,8 +216,8 @@ export default function UploadPage() {
   if (isLoading || !userId) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Loading...</div>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       </DashboardLayout>
     )

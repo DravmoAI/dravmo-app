@@ -4,9 +4,10 @@ import { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Loader2 } from "lucide-react"
+import { Plus } from "lucide-react"
 import Link from "next/link"
 import { getSupabaseClient } from "@/lib/supabase"
+import { LoadingSpinner } from "@/components/loading-spinner"
 
 interface Project {
   id: string
@@ -103,9 +104,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
+        <LoadingSpinner className="min-h-[400px]" />
       </DashboardLayout>
     )
   }
