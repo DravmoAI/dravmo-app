@@ -1,104 +1,110 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, LinkIcon, ArrowRight, Loader2 } from "lucide-react"
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { uploadFile, STORAGE_BUCKETS } from "@/lib/supabase-storage"
-import { getSupabaseClient } from "@/lib/supabase"
-import { v4 as uuidv4 } from "uuid"
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Upload, LinkIcon, ArrowRight, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { uploadFile, STORAGE_BUCKETS } from "@/lib/supabase-storage";
+import { getSupabaseClient } from "@/lib/supabase";
+import { v4 as uuidv4 } from "uuid";
 
 interface Project {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export default function UploadPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const preselectedProjectId = searchParams.get("projectId")
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedProjectId = searchParams.get("projectId");
 
-  const [projects, setProjects] = useState<Project[]>([])
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(preselectedProjectId || "")
-  const [newProjectName, setNewProjectName] = useState("")
-  const [figmaUrl, setFigmaUrl] = useState("")
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [activeTab, setActiveTab] = useState("upload")
-  const [userId, setUserId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const supabase = getSupabaseClient()
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(preselectedProjectId || "");
+  const [newProjectName, setNewProjectName] = useState("");
+  const [figmaUrl, setFigmaUrl] = useState("");
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState("upload");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const supabase = getSupabaseClient();
 
   // Get the authenticated user
   useEffect(() => {
     const getUser = async () => {
       const {
         data: { session },
-      } = await supabase.auth.getSession()
+      } = await supabase.auth.getSession();
       if (session?.user) {
-        setUserId(session.user.id)
+        setUserId(session.user.id);
       } else {
-        router.push("/login")
+        router.push("/login");
       }
-    }
-    getUser()
-  }, [router, supabase])
+    };
+    getUser();
+  }, [router, supabase]);
 
   // Fetch projects when userId is available
   useEffect(() => {
     if (userId) {
-      fetchProjects()
+      fetchProjects();
     }
-  }, [userId])
+  }, [userId]);
 
   const fetchProjects = async () => {
-    if (!userId) return
+    if (!userId) return;
 
     try {
-      setIsLoading(true)
-      const response = await fetch(`/api/projects?userId=${userId}`)
+      setIsLoading(true);
+      const response = await fetch(`/api/projects?userId=${userId}`);
       if (response.ok) {
-        const { projects } = await response.json()
-        setProjects(projects || [])
+        const { projects } = await response.json();
+        setProjects(projects || []);
       } else {
-        console.error("Failed to fetch projects")
+        console.error("Failed to fetch projects");
       }
     } catch (error) {
-      console.error("Error fetching projects:", error)
+      console.error("Error fetching projects:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0];
     if (file) {
-      setUploadedFile(file)
+      setUploadedFile(file);
     }
-  }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-  }
+    e.preventDefault();
+  };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setUploadedFile(e.dataTransfer.files[0])
+      setUploadedFile(e.dataTransfer.files[0]);
     }
-  }
+  };
 
   const createProject = async (name: string) => {
     if (!userId) {
-      throw new Error("User not authenticated")
+      throw new Error("User not authenticated");
     }
 
     try {
@@ -111,19 +117,19 @@ export default function UploadPage() {
           name,
           userId,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to create project")
+        throw new Error("Failed to create project");
       }
 
-      const { project } = await response.json()
-      return project.id
+      const { project } = await response.json();
+      return project.id;
     } catch (error) {
-      console.error("Error creating project:", error)
-      throw error
+      console.error("Error creating project:", error);
+      throw error;
     }
-  }
+  };
 
   const createScreen = async (projectId: string, sourceUrl: string, sourceType: string) => {
     try {
@@ -137,81 +143,81 @@ export default function UploadPage() {
           sourceUrl,
           sourceType,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to create screen")
+        throw new Error("Failed to create screen");
       }
 
-      const { screen } = await response.json()
-      return screen
+      const { screen } = await response.json();
+      return screen;
     } catch (error) {
-      console.error("Error creating screen:", error)
-      throw error
+      console.error("Error creating screen:", error);
+      throw error;
     }
-  }
+  };
 
   const handleSubmit = async () => {
     if (!uploadedFile && !figmaUrl) {
-      alert("Please upload a file or provide a Figma URL")
-      return
+      alert("Please upload a file or provide a Figma URL");
+      return;
     }
 
     if (!selectedProjectId && !newProjectName) {
-      alert("Please select a project or create a new one")
-      return
+      alert("Please select a project or create a new one");
+      return;
     }
 
     if (!userId) {
-      alert("You must be logged in to upload screens")
-      router.push("/login")
-      return
+      alert("You must be logged in to upload screens");
+      router.push("/login");
+      return;
     }
 
-    setIsUploading(true)
+    setIsUploading(true);
 
     try {
       // Determine project ID
-      let projectId = selectedProjectId
+      let projectId = selectedProjectId;
       if (!projectId && newProjectName) {
-        projectId = await createProject(newProjectName)
+        projectId = await createProject(newProjectName);
       }
 
       // Handle file upload or Figma URL
-      let sourceUrl = ""
-      let sourceType = ""
+      let sourceUrl = "";
+      let sourceType = "";
 
       if (uploadedFile) {
         // Generate a unique file path
-        const fileExt = uploadedFile.name.split(".").pop()
-        const filePath = `${userId}/${uuidv4()}.${fileExt}`
+        const fileExt = uploadedFile.name.split(".").pop();
+        const filePath = `${userId}/${uuidv4()}.${fileExt}`;
 
         // Upload file to Supabase storage
-        const { url, error } = await uploadFile(STORAGE_BUCKETS.SCREENS, filePath, uploadedFile)
+        const { url, error } = await uploadFile(STORAGE_BUCKETS.SCREENS, filePath, uploadedFile);
 
         if (error || !url) {
-          throw new Error("Failed to upload file to storage")
+          throw new Error("Failed to upload file to storage");
         }
 
-        sourceUrl = url
-        sourceType = "upload"
+        sourceUrl = url;
+        sourceType = "upload";
       } else if (figmaUrl) {
-        sourceUrl = figmaUrl
-        sourceType = "figma"
+        sourceUrl = figmaUrl;
+        sourceType = "figma";
       }
 
       // Create screen
-      const screen = await createScreen(projectId, sourceUrl, sourceType)
+      const screen = await createScreen(projectId, sourceUrl, sourceType);
 
       // Redirect to project page
-      router.push(`/projects/${projectId}`)
+      router.push(`/projects/${projectId}`);
     } catch (error) {
-      console.error("Error uploading:", error)
-      alert("Failed to upload. Please try again.")
+      console.error("Error uploading:", error);
+      alert("Failed to upload. Please try again.");
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
   if (isLoading || !userId) {
     return (
@@ -220,7 +226,7 @@ export default function UploadPage() {
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   return (
@@ -253,26 +259,32 @@ export default function UploadPage() {
                 </SelectContent>
               </Select>
               {projects.length === 0 && (
-                <p className="text-xs text-muted-foreground mt-1">No projects found. Create a new one below.</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  No projects found. Create a new one below.
+                </p>
               )}
             </div>
 
-            <div className="text-center text-sm text-muted-foreground">or</div>
+            {!preselectedProjectId && (
+              <>
+                <div className="text-center text-sm text-muted-foreground">or</div>
 
-            <div className="space-y-2">
-              <Label htmlFor="newProject">Create New Project</Label>
-              <Input
-                id="newProject"
-                placeholder="Enter new project name"
-                value={newProjectName}
-                onChange={(e) => {
-                  setNewProjectName(e.target.value)
-                  if (e.target.value) {
-                    setSelectedProjectId("")
-                  }
-                }}
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newProject">Create New Project</Label>
+                  <Input
+                    id="newProject"
+                    placeholder="Enter new project name"
+                    value={newProjectName}
+                    onChange={(e) => {
+                      setNewProjectName(e.target.value);
+                      if (e.target.value) {
+                        setSelectedProjectId("");
+                      }
+                    }}
+                  />
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -293,7 +305,13 @@ export default function UploadPage() {
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
                 >
-                  <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" id="file-upload" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                  />
                   <label htmlFor="file-upload" className="cursor-pointer">
                     <div className="space-y-4">
                       <div className="mx-auto w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
@@ -338,12 +356,14 @@ export default function UploadPage() {
           onClick={handleSubmit}
           className="w-full gap-2"
           size="lg"
-          disabled={isUploading || (!uploadedFile && !figmaUrl) || (!selectedProjectId && !newProjectName)}
+          disabled={
+            isUploading || (!uploadedFile && !figmaUrl) || (!selectedProjectId && !newProjectName)
+          }
         >
           {isUploading ? "Uploading..." : "Continue to Analysis"}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
     </DashboardLayout>
-  )
+  );
 }
