@@ -1,41 +1,41 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useSearchParams } from "next/navigation"
-import { LoadingSpinner } from "@/components/LoadingSpinner"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { LoadingSpinner } from "@/components/loading-spinner";
 
 export default function ResetPasswordPage() {
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const token = searchParams.get("token")
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
 
     if (!password || !confirmPassword) {
-      setError("Please fill in all fields.")
-      return
+      setError("Please fill in all fields.");
+      return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.")
-      return
+      setError("Passwords do not match.");
+      return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.")
-      return
+      setError("Password must be at least 6 characters long.");
+      return;
     }
 
-    setLoading(true)
-    setError("")
-    setSuccess("")
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
       const response = await fetch("/api/reset-password", {
@@ -44,23 +44,23 @@ export default function ResetPasswordPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ password, token }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setSuccess(data.message)
-        router.push("/login") // Redirect to login page after successful reset
+        setSuccess(data.message);
+        router.push("/login"); // Redirect to login page after successful reset
       } else {
-        setError(data.message || "An error occurred.")
+        setError(data.message || "An error occurred.");
       }
     } catch (err) {
-      setError("An error occurred while resetting your password.")
-      console.error(err)
+      setError("An error occurred while resetting your password.");
+      console.error(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
@@ -107,5 +107,5 @@ export default function ResetPasswordPage() {
         </form>
       </div>
     </div>
-  )
+  );
 }
