@@ -1,7 +1,53 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRight, CheckCircle, Star } from "lucide-react"
-import Link from "next/link"
+import Image from "next/image"
+
+export const GradientBorderWrapper = ({
+  children,
+  gradientDirection = "to-t",
+  fromColor = "",
+  toColor = "",
+  borderWidth = 1,
+  className = "",
+}) => {
+  return (
+    <div className={`relative ${className}`}>
+      <div
+        className={`absolute inset-0 rounded-[30px] bg-gradient-${gradientDirection}`}
+        style={{
+          zIndex: 0,
+          background: `linear-gradient(${gradientDirection
+            .replace("to-", "")
+            .split("")
+            .map((c) =>
+              c === "t"
+                ? "to top"
+                : c === "r"
+                  ? "to right"
+                  : c === "b"
+                    ? "to bottom"
+                    : c === "l"
+                      ? "to left"
+                      : ""
+            )
+            .join(" ")}, var(--${fromColor}, #9F73E6), var(--${toColor}, #6342AC))`,
+        }}
+      >
+        <div
+          className="absolute bg-[#212121] rounded-[29px]"
+          style={{
+            inset: `${borderWidth}px`,
+            borderRadius: `calc(30px - ${borderWidth}px)`,
+          }}
+        ></div>
+      </div>
+      <div className="relative w-full h-full" style={{ zIndex: 1 }}>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 export default function LandingPage() {
   const plans = [
@@ -57,212 +103,349 @@ export default function LandingPage() {
     },
   ]
 
+  const basicPlanFeatures = [
+    { label: "Unlimited projects", available: true },
+    { label: "20 reviews/month", available: true, note: "(daily limit 5)" },
+    { label: "Design persona setup", available: true },
+    { label: "Layout analysis", available: true },
+    { label: "Typography review", available: true },
+    { label: "Color theory feedback", available: true },
+    { label: "Interactive components", available: false },
+    { label: "Imagery analysis", available: false },
+    { label: "Micro-interaction feedback", available: false },
+    { label: "Data visualization", available: false },
+    { label: "WCAG checks", available: false },
+    { label: "Master mode", available: false },
+    { label: "Figma integration", available: false },
+    { label: "Purchase additional reviews", available: false },
+  ];
+  
+  const proPlanFeatures = [
+    { label: "Unlimited projects", available: true },
+    { label: "60 reviews/month", available: true, note: "(no daily limit)" },
+    { label: "Design persona setup", available: true },
+    { label: "Layout analysis", available: true },
+    { label: "Typography review", available: true },
+    { label: "Color theory feedback", available: true },
+    { label: "Interactive components", available: true },
+    { label: "Imagery analysis", available: true },
+    { label: "Micro-interaction feedback", available: true },
+    { label: "Data visualization", available: true },
+    { label: "WCAG checks", available: true },
+    { label: "Master mode", available: true },
+    { label: "Figma integration", available: true },
+    { label: "Purchase additional reviews", available: true },
+  ];
+
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border/40">
-        <div className="container flex items-center justify-between py-4">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="font-bold text-primary-foreground">D</span>
-            </div>
-            <h1 className="text-xl font-bold">Dravmo</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/login">
-              <Button variant="ghost">Log In</Button>
-            </Link>
-            <Link href="/signup">
-              <Button>Sign Up</Button>
-            </Link>
+    <div className="min-h-screen flex flex-col bg-[#0F1619]">
+      <nav className="absolute top-[51px] left-1/2 transform -translate-x-1/2 z-30">
+        <div className="relative">
+          {/* Background rectangle */}
+          <div
+            className="absolute w-[407px] h-[74px] bg-gradient-to-l from-[rgba(242,242,242,0.08)] to-[rgba(13,13,13,0.02)] rounded-[30px]"
+            style={{
+              boxShadow: '6px 4px 7.5px -4px rgba(91, 213, 175, 0.22)',
+              left: 'calc(50% - 407px/2)',
+              top: 'calc(50% - 74px/2)'
+            }}
+          ></div>
+
+          {/* Navigation items */}
+          <div className="flex items-center justify-center gap-x-[50px] relative z-10 py-[17px]">
+            <a href="#community" className="font-quantico font-normal text-[14px] leading-[20px] text-white text-center flex items-center justify-center">
+              Community
+            </a>
+            <a href="#features" className="font-quantico font-normal text-[14px] leading-[20px] text-white text-center flex items-center justify-center">
+              Features
+            </a>
+            <a href="#plans" className="font-quantico font-normal text-[14px] leading-[20px] text-white text-center flex items-center justify-center">
+              Plans
+            </a>
           </div>
         </div>
+      </nav>
+      <header
+        className="h-screen flex flex-col items-center justify-center text-center bg-cover bg-center bg-no-repeat relative">
+        <Image src="/landing-page/dotted-line-1.png" alt="Dravmo" width={5436} height={585} className="w-[97%] h-[146px] absolute top-1/2 translate-y-[-69%] z-0" />
+        <Image src="/dravmo-logo.png" alt="Dravmo" width={588} height={352} className="w-[147px] h-[88px] absolute top-[40px] left-[24px] z-20" />
+        <Image src="/landing-page/header-image-main.png" alt="Dravmo" width={3066} height={1840} className="w-[767px] h-[460px] relative z-10" />
+        <h1 className="text-[20px] leading-[20px] text-center tracking-[0.5em] uppercase text-[#F7EDE2] font-quantico -translate-y-32 relative z-10">AI Design Review Engine</h1>
+        <div className="flex items-center justify-center gap-x-[20px] -translate-y-24 relative z-10">
+          <Button variant="outline" className="w-[150px] h-[50px] bg-[#0F1619] border-[#97FFEF] border rounded-[30px] text-[#97FFEF] font-roboto-flex">
+            Begin Review
+          </Button>
+          <Button variant="outline" className="w-[150px] h-[50px] text-[#F7EDE2] border rounded-[30px] border-[#F7EDE2] font-roboto-flex font-medium text-[14px] leading-[20px] tracking-[0.02em] bg-gradient-to-b from-[rgba(145,187,242,0.52)] to-[rgba(13,13,13,0.04)]">
+            Access Dashboard
+          </Button>
+        </div>
+
+        <div className="absolute bottom-0 left-[100px] right-[100px] flex justify-between items-start p-6">
+          <div className="text-left">
+            <h2 className="font-krona-one font-normal text-[24px] leading-[20px] bg-gradient-to-t from-[#5BD5AF] via-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent mb-2">NOW</h2>
+            <div className="font-roboto-flex font-medium text-[15px] leading-[24px] tracking-[0.15em] text-white">
+              <p>every design decision</p>
+              <p>you make is backed by a</p>
+              <p>‘Master-level feedback’</p>
+            </div>
+          </div>
+          <div className="text-left">
+            <h2 className="font-krona-one font-normal text-[24px] leading-[20px] bg-gradient-to-t from-[#5BD5AF] via-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent mb-2">PAY $0</h2>
+            <div className="font-roboto-flex font-medium text-[15px] leading-[24px] tracking-[0.15em] text-white">
+              <p>10 reviews/month</p>
+            </div>
+
+          </div>
+        </div>
+
       </header>
 
-      <main className="flex-1">
-        <section className="py-20 container">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-tertiary to-primary bg-clip-text text-transparent">
-              AI-Powered Design Feedback
+      <main className="">
+        <Image src="/landing-page/rotated-dotted-line.png" alt="Dravmo" width={5436} height={585} className="w-full h-auto absolute top-full translate-y-[-44%] z-0" />
+
+        {/* how it works */}
+        <div className="flex flex-col items-center justify-center mt-[321px]">
+          <h2 className="font-quantico font-normal text-[20px] leading-[20px] flex items-center text-center tracking-[0.5em] uppercase mb-2 bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
+            take your design to the next level
+          </h2>
+          <h3
+            className="font-krona-one font-normal text-[96px] leading-[86px] text-center uppercase text-[#F7EDE2]"
+          >
+            how it works
+          </h3>
+          <div className="mt-[80px] mb-[36px] flex items-center justify-center gap-x-[75px]">
+            {/* connect figma */}
+            <div
+              className="w-[365px] h-[482px] filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)] pt-[20px] pl-[34px]"
+              style={{
+                background: "linear-gradient(156.3deg, #91BBF2 -81.94%, rgba(13, 13, 13, 0.04) 112.13%)",
+                boxShadow: "6px 12px 18px -5px rgba(91,213,175,0.14)",
+                borderRadius: "30px"
+              }}
+            >
+              <h1 className="font-krona-one font-normal text-[40px] bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
+                connect figma
+              </h1>
+              <Image src="/landing-page/Figma.png" alt="Dravmo" width={800} height={800} className="my-[36px] size-[200px] mx-auto" />
+              <div className="flex items-center justify-between gap-x-[51px]">
+                <p className="w-[205px] font-quantico font-normal text-[16px] leading-[24px] tracking-[0.15em] text-white">
+                  You can also upload JPG and PNG files
+                </p>
+                <p className="-translate-y-[15px] font-krona-one font-normal text-[96px] leading-[24px] tracking-[0.15em]" style={{ color: "rgba(91,213,175,0.16)" }}>
+                  1
+                </p>
+              </div>
+            </div>
+
+            {/* select project */}
+            <div
+              className="w-[365px] h-[482px] filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)] pt-[20px] pl-[34px]"
+              style={{
+                background: "linear-gradient(156.3deg, #91BBF2 -81.94%, rgba(13, 13, 13, 0.04) 112.13%)",
+                boxShadow: "6px 12px 18px -5px rgba(91,213,175,0.14)",
+                borderRadius: "30px"
+              }}
+            >
+              <h1 className="font-krona-one font-normal text-[40px] bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
+                select project
+              </h1>
+              <Image src="/landing-page/Slider.png" alt="Dravmo" width={800} height={800} className="my-[36px] size-[200px] mx-auto" />
+              <div className="flex items-center justify-between ">
+                <p className="font-quantico font-normal text-[16px] leading-[24px] tracking-[0.15em] text-white">
+                  Add design context for personalized results
+                </p>
+                <p className="-translate-y-[15px] font-krona-one font-normal text-[96px] leading-[24px] tracking-[0.15em]" style={{ color: "rgba(91,213,175,0.16)" }}>
+                  2
+                </p>
+              </div>
+            </div>
+
+            {/* analyze design */}
+            <div
+              className="w-[365px] h-[482px] filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.25)] pt-[20px] pl-[34px]"
+              style={{
+                background: "linear-gradient(156.3deg, #91BBF2 -81.94%, rgba(13, 13, 13, 0.04) 112.13%)",
+                boxShadow: "6px 12px 18px -5px rgba(91,213,175,0.14)",
+                borderRadius: "30px"
+              }}
+            >
+              <h1 className="font-krona-one font-normal text-[40px] bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
+                analyze design
+              </h1>
+              <Image src="/landing-page/Monitor.png" alt="Dravmo" width={800} height={800} className="my-[36px] size-[200px] mx-auto" />
+              <div className="flex items-center justify-between ">
+                <p className="font-quantico font-normal text-[16px] leading-[24px] tracking-[0.15em] text-white">
+                  Generate actionable design improvements
+                </p>
+                <p className="-translate-y-[15px] font-krona-one font-normal text-[96px] leading-[24px] tracking-[0.15em]" style={{ color: "rgba(91,213,175,0.16)" }}>
+                  3
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <Image src="/landing-page/dotted-line-2.png" alt="Dravmo" width={5436} height={585} className="w-[97%] h-[146px]" />
+
+        <Image src="/landing-page/features.png" alt="Features" width={5760} height={2128} className="w-auto mx-auto mt-[63px]" />  
+        {/* master mode */}
+        <div className="flex flex-col items-center justify-center mt-[53px] mb-[100px]">
+          <Image src="/landing-page/dotted-line-3.png" alt="" width={544} height={5756} className="w-[146px] h-[1440px] absolute top-[3380px] right-0 translate-y-[-44%] z-0" />
+          <h2 className="font-quantico font-normal text-[20px] leading-[20px] flex items-center text-center tracking-[0.5em] uppercase mb-2 bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
+            design legends inspired ai review          </h2>
+          <h3
+            className="font-krona-one font-normal text-[96px] leading-[86px] text-center uppercase text-[#F7EDE2]"
+          >
+            master mode
+          </h3>
+          <h4
+            className="font-['Roboto_Flex'] font-normal text-[16px] leading-[20px] text-center tracking-[0.15em] text-[#97FFEF] mt-[10px]"
+          >
+            See your work reimagined through their eyes
+          </h4>
+          
+          <div className="relative">
+            <div className="absolute top-56 -right-36">
+              <h1 className="font-krona-one font-normal text-[24px] leading-[20px] bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent uppercase">
+              10 MASTERS
             </h1>
-            <p className="text-xl mb-8 text-muted-foreground">
-              Upload your designs and get instant, actionable feedback from AI that understands design principles and
-              your personal style.
-            </p>
-            <div className="flex justify-center gap-4">
-              <Link href="/signup">
-                <Button size="lg" className="gap-2">
-                  Get Started <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/demo">
-                <Button size="lg" variant="outline">
-                  See Demo
-                </Button>
-              </Link>
+            <h2
+              className="font-['Roboto_Flex'] font-medium text-[16px] leading-[20px] tracking-[0.15em] text-white"
+            >
+              each with turn-key playbooks
+            </h2>
+          </div>
+            <div className="absolute bottom-36 -left-48 text-right">
+              <h1 className="font-krona-one font-normal text-[24px] leading-[20px] bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent uppercase">
+                10 AI MENTORS
+              </h1>
+              <h2
+                className="font-['Roboto_Flex'] font-medium text-[16px] leading-[20px] tracking-[0.15em] text-white"
+              >
+                each with the brain of a master designer            </h2>
             </div>
-          </div>
-        </section>
+            <Image src="/landing-page/design-masters.png" alt="Desing Masters" width={3292} height={5172} className="w-[823px] h-[1293px] mt-[100px]" />
 
-        <section className="py-16 bg-secondary/20">
-          <div className="container">
-            <h2 className="text-3xl font-bold mb-12 text-center">How Dravmo Works</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-card p-6 rounded-lg">
-                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-                  <span className="font-bold text-primary">1</span>
-                </div>
-                <h3 className="text-xl font-bold mb-2">Upload Your Design</h3>
-                <p className="text-muted-foreground">
-                  Upload JPG, PNG files or import directly from Figma to get started.
-                </p>
-              </div>
-              <div className="bg-card p-6 rounded-lg">
-                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-                  <span className="font-bold text-primary">2</span>
-                </div>
-                <h3 className="text-xl font-bold mb-2">Select Analysis Topics</h3>
-                <p className="text-muted-foreground">
-                  Choose what aspects of your design you want feedback on - from layout to typography.
-                </p>
-              </div>
-              <div className="bg-card p-6 rounded-lg">
-                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-                  <span className="font-bold text-primary">3</span>
-                </div>
-                <h3 className="text-xl font-bold mb-2">Get Actionable Feedback</h3>
-                <p className="text-muted-foreground">
-                  Receive detailed, personalized feedback to improve your designs.
-                </p>
-              </div>
-            </div>
           </div>
-        </section>
+            <Image src="/landing-page/dotted-line-4.png" alt="" width={2342} height={1049} className="w-[42%] h-auto mx-auto mt-[63px]" />  
+        </div>
 
-        <section className="py-16 container">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Choose Your Plan</h2>
-            <p className="text-muted-foreground">Select the perfect plan for your design feedback needs</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan) => (
-              <Card key={plan.id} className={`relative ${plan.popular ? "border-primary" : ""}`}>
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                      <Star className="h-3 w-3" />
-                      Most Popular
+        {/* plans */}
+        <div className="flex flex-col items-center justify-center mt-[53px] mb-[100px] font-poppins">
+          <h2 className="font-quantico font-normal text-[20px] leading-[20px] flex items-center text-center tracking-[0.5em] uppercase mb-2 bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
+          save 20% on yearly subscription   
+          </h2>
+          <h3
+            className="font-krona-one font-normal text-[96px] leading-[86px] text-center uppercase text-[#F7EDE2] mb-[100px]"
+          >
+            plans
+          </h3>
+          <div className="mx-auto flex items-center justify-center gap-x-2">
+            <span className="font-roboto-flex font-medium text-[14px] leading-[14px] text-[#97FFEF] ">Monthly</span>
+            <div className="checkbox">
+                      <input className="tgl" id="period" type="checkbox" />
+                      <label className="tgl-btn" for="period"></label>
                     </div>
-                  </div>
-                )}
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <div className="text-3xl font-bold">
-                    ${plan.price}
-                    <span className="text-sm font-normal text-muted-foreground">/{plan.period}</span>
-                  </div>
-                  <p className="text-muted-foreground">{plan.description}</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    {plan.features.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-primary" />
-                        <span className="text-sm">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <Link href="/signup" className="block">
-                    <Button className="w-full" variant={plan.popular ? "default" : "outline"}>
-                      Get Started
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
+            <span className="font-roboto-flex font-medium text-[14px] leading-[14px] text-[#97FFEF] ">Yearly</span>
 
-        <section className="py-16 container">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold mb-8 text-center">Features</h2>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-xl font-bold">Personalized Design Persona</h3>
-                  <p className="text-muted-foreground">
-                    Set up your design preferences with our quick-start quiz to get feedback tailored to your style.
-                  </p>
+          </div>
+            <div className="relative flex items-center justify-center gap-x-[52px] mt-[102px]">
+              {/* Basic */}
+            <div
+              className="w-[516px] h-[953px] border-[9px] border-[#84B9FF] border-solid rounded-[30px] bg-[#0D1B2A]  px-[32px]"
+            >
+              <div className="flex justify-between items-start w-full">
+                <div className="mt-[82px]">
+                  <h1 className="font-krona-one font-normal text-[48px] leading-[48px] text-[#F7EDE2]">Basic</h1>
+                  <h2><i>for</i> Students & Trials</h2>
+                </div>
+                <div className="w-auto leading-none mt-[67px]">
+                  <h1
+                    className="font-quantico font-bold text-[96px] text-right text-[#5BD5AF]"
+                  >$0</h1>
+                  <h2
+                    className="font-poppins font-light text-[20px] text-right tracking-[0.02em] text-[#97FFEF]"
+                  >
+                    monthly
+                  </h2>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-xl font-bold">Comprehensive Analysis</h3>
-                  <p className="text-muted-foreground">
-                    Get feedback on layout, typography, color, accessibility, and more.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-xl font-bold">Masters Mode</h3>
-                  <p className="text-muted-foreground">
-                    Analyze your designs through the lens of legendary designers and their philosophies.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-xl font-bold">Figma Integration</h3>
-                  <p className="text-muted-foreground">
-                    Seamlessly import designs from Figma and apply feedback directly.
-                  </p>
-                </div>
-              </div>
+              <ul className="mt-[70px] space-y-4 text-[18px] font-poppins font-semibold">
+                {basicPlanFeatures.map((item, idx) => (
+                  <li key={idx} className={`flex gap-[23px] items-start mt-[10px] text-[20px] ${item.available ? 'text-[#F7EDE2]' : 'text-[#A0AEC0]'}`}>
+                    <span className={`text-xl mt-[2px] ${item.available ? 'visible' : 'invisible'}`}>
+                      <Image src="/Tick-circle.png" alt="Check" width={24} height={24} />
+                    </span>
+                    <span>
+                      {item.label}
+                      {item.note && (
+                        <span className="italic text-sm font-normal text-[#5BD5AF] pl-1">{item.note}</span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-        </section>
+              {/* Pro */}
+              <div
+              className="w-[516px] h-[953px] border-[9px] border-[#84B9FF] border-solid rounded-[30px] bg-[#0D1B2A]  px-[32px]"
+            >
+              <div className="flex justify-between items-start w-full">
+                <div className="mt-[82px]">
+                  <h1 className="font-krona-one font-normal text-[48px] leading-[48px] text-[#F7EDE2]">Pro</h1>
+                  <h2><i>for</i> Design Professionals</h2>
+                    <div className="flex items-center justify-center gap-x-5 translate-y-2">
+                    <p className="italic text-base font-normal text-[#5BD5AF] -ml-3">Go Unlimited</p>
+                    <div className="checkbox">
+                      <input className="tgl" id="toggle" type="checkbox" />
+                      <label className="tgl-btn" for="toggle"></label>
+                    </div>
+                    </div>
+                </div>
+                <div className="w-auto leading-none mt-[67px]">
+                  <h1
+                    className="font-quantico font-bold text-[96px] text-right text-[#5BD5AF]"
+                  >$0</h1>
+                  <h2
+                    className="font-poppins font-light text-[20px] text-right tracking-[0.02em] text-[#97FFEF]"
+                  >
+                    monthly
+                  </h2>
+                </div>
+              </div>
+              <ul className="mt-[70px] space-y-4 text-[18px] font-poppins font-semibold">
+                {proPlanFeatures.map((item, idx) => (
+                  <li key={idx} className={`flex gap-[23px] items-start mt-[10px] text-[20px] ${item.available ? 'text-[#F7EDE2]' : 'text-[#A0AEC0]'}`}>
+                    <span className={`text-xl mt-[2px] ${item.available ? 'visible' : 'invisible'}`}>
+                      <Image src="/Tick-circle.png" alt="Check" width={24} height={24} />
+                    </span>
+                    <span>
+                      {item.label}
+                      {item.note && (
+                        <span className="italic text-[15px] font-normal text-[#5BD5AF] pl-1">{item.note}</span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-        <section className="py-16 bg-gradient-to-br from-secondary to-background">
-          <div className="container text-center">
-            <h2 className="text-3xl font-bold mb-6">Ready to improve your designs?</h2>
-            <p className="text-xl mb-8 text-muted-foreground max-w-2xl mx-auto">
-              Join Dravmo today and start getting AI-powered feedback that will take your designs to the next level.
-            </p>
-            <Link href="/signup">
-              <Button size="lg" className="gap-2">
-                Get Started <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </section>
+            </div>
+        </div>
       </main>
-
-      <footer className="border-t border-border/40 py-8">
-        <div className="container">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                <span className="font-bold text-primary-foreground">D</span>
-              </div>
-              <span className="font-bold">Dravmo</span>
-            </div>
-            <div className="flex gap-6">
-              <Link href="#" className="text-muted-foreground hover:text-foreground">
-                Terms
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-foreground">
-                Privacy
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-foreground">
-                Contact
-              </Link>
-            </div>
-            <div className="text-sm text-muted-foreground">© 2025 Dravmo. All rights reserved.</div>
-          </div>
+      <footer className="relative font-roboto-flex w-full bg-[#0F1619] py-8 px-8 flex items-center justify-between z-10">
+        <Image src="/landing-page/dotted-line-footer.png" alt="Check" width={1268} height={522} className="w-[15%] absolute left-0 bottom-0"/>
+        <div className="relative flex items-center min-w-[250px] h-[80px]">
+          <span className="relative z-10 text-white text-[16px] ml-6">
+            2025 Dravmo Inc.
+          </span>
+        </div>
+        <div className="flex items-center gap-x-12">
+          <a href="#" className="text-white text-[16px] hover:underline">Terms</a>
+          <a href="#" className="text-white text-[16px] hover:underline">Privacy</a>
+          <a href="#" className="text-white text-[16px] hover:underline">Contact</a>
         </div>
       </footer>
     </div>

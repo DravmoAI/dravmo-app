@@ -69,6 +69,10 @@ const config = {
       fontFamily: {
         "noto-sans": ["var(--font-noto-sans)"],
         roboto: ["var(--font-roboto)"],
+        quantico: ["var(--font-quantico)"],
+        "roboto-flex": ["var(--font-roboto-flex)"],
+        "krona-one": ["var(--font-krona-one)"],
+        poppins: ["var(--font-poppins)"],
       },
       keyframes: {
         "accordion-down": {
