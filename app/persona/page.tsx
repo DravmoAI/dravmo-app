@@ -1,44 +1,44 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
-import { getSupabaseClient } from "@/lib/supabase"
-import { uploadFile, STORAGE_BUCKETS } from "@/lib/supabase-storage"
-import { AlertCircle, Loader2 } from "lucide-react"
-import { v4 as uuidv4 } from "uuid"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { getSupabaseClient } from "@/lib/supabase";
+import { uploadFile, STORAGE_BUCKETS } from "@/lib/supabase-storage";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
 
 interface PersonaCard {
-  id: string
-  personaCardName: string
-  personaPhilosophy: string
-  personaMeaning: string
+  id: string;
+  personaCardName: string;
+  personaPhilosophy: string;
+  personaMeaning: string;
 }
 
 interface PersonaFormData {
-  personaCardId: string
-  colorBoldness: number
-  typeTemperament: number
-  spacingAiriness: number
-  motionDrama: number
-  keywords: string[]
-  moodboardFiles: File[]
+  personaCardId: string;
+  colorBoldness: number;
+  typeTemperament: number;
+  spacingAiriness: number;
+  motionDrama: number;
+  keywords: string[];
+  moodboardFiles: File[];
 }
 
 export default function PersonaPage() {
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [personaCards, setPersonaCards] = useState<PersonaCard[]>([])
-  const [existingPersona, setExistingPersona] = useState<any>(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [personaCards, setPersonaCards] = useState<PersonaCard[]>([]);
+  const [existingPersona, setExistingPersona] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState<PersonaFormData>({
     personaCardId: "",
     colorBoldness: 50,
@@ -47,10 +47,10 @@ export default function PersonaPage() {
     motionDrama: 50,
     keywords: [],
     moodboardFiles: [],
-  })
-  const [uploadedImages, setUploadedImages] = useState<Array<{ file: File; preview: string }>>([])
-  const router = useRouter()
-  const supabase = getSupabaseClient()
+  });
+  const [uploadedImages, setUploadedImages] = useState<Array<{ file: File; preview: string }>>([]);
+  const router = useRouter();
+  const supabase = getSupabaseClient();
 
   const styleKeywords = [
     "brutal",
@@ -63,7 +63,7 @@ export default function PersonaPage() {
     "monoline",
     "retro-futuristic",
     "organic",
-  ]
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,40 +71,40 @@ export default function PersonaPage() {
         // Get current user
         const {
           data: { user },
-        } = await supabase.auth.getUser()
+        } = await supabase.auth.getUser();
         if (!user) {
-          router.push("/login")
-          return
+          router.push("/login");
+          return;
         }
-        setUser(user)
+        setUser(user);
 
         // Fetch persona cards
-        const cardsResponse = await fetch("/api/persona-cards")
+        const cardsResponse = await fetch("/api/persona-cards");
         if (cardsResponse.ok) {
-          const { personaCards } = await cardsResponse.json()
-          setPersonaCards(personaCards)
+          const { personaCards } = await cardsResponse.json();
+          setPersonaCards(personaCards);
 
           // Set default persona card if available
           if (personaCards.length > 0 && !formData.personaCardId) {
-            setFormData((prev) => ({ ...prev, personaCardId: personaCards[0].id }))
+            setFormData((prev) => ({ ...prev, personaCardId: personaCards[0].id }));
           }
         }
 
         // Fetch user profile with persona
-        const profileResponse = await fetch(`/api/profile/${user.id}`)
+        const profileResponse = await fetch(`/api/profile/${user.id}`);
         if (profileResponse.ok) {
-          const { profile } = await profileResponse.json()
-          setProfile(profile)
+          const { profile } = await profileResponse.json();
+          setProfile(profile);
 
           // Check if user already has a persona
           if (profile?.persona) {
-            setExistingPersona(profile.persona)
-            setIsEditing(true)
+            setExistingPersona(profile.persona);
+            setIsEditing(true);
 
             // Populate form with existing data
-            const persona = profile.persona
-            const vibe = persona.personaVibes[0] || {}
-            const keywords = persona.personaKeywords.map((k: any) => k.keyword)
+            const persona = profile.persona;
+            const vibe = persona.personaVibes[0] || {};
+            const keywords = persona.personaKeywords.map((k: any) => k.keyword);
 
             setFormData({
               personaCardId: persona.personaCardId,
@@ -114,7 +114,7 @@ export default function PersonaPage() {
               motionDrama: vibe.motionDrama || 50,
               keywords: keywords,
               moodboardFiles: [],
-            })
+            });
 
             // Load existing moodboard images
             if (persona.personaMoodboards && persona.personaMoodboards.length > 0) {
@@ -122,26 +122,26 @@ export default function PersonaPage() {
                 file: null,
                 preview: m.snapshotUrl,
                 existing: true,
-              }))
-              setUploadedImages(moodboardPreviews)
+              }));
+              setUploadedImages(moodboardPreviews);
             }
           }
         }
       } catch (err) {
-        console.error("Error fetching data:", err)
-        setError("Failed to load data. Please refresh the page.")
+        console.error("Error fetching data:", err);
+        setError("Failed to load data. Please refresh the page.");
       }
-    }
+    };
 
-    fetchData()
-  }, [router])
+    fetchData();
+  }, [router]);
 
   const handleMoodboardUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
+    const files = Array.from(e.target.files || []);
 
     files.forEach((file) => {
       if (uploadedImages.length < 3 && file.type.startsWith("image/")) {
-        const reader = new FileReader()
+        const reader = new FileReader();
         reader.onload = (event) => {
           setUploadedImages((prev) => [
             ...prev,
@@ -149,83 +149,83 @@ export default function PersonaPage() {
               file,
               preview: event.target?.result as string,
             },
-          ])
-        }
-        reader.readAsDataURL(file)
+          ]);
+        };
+        reader.readAsDataURL(file);
 
         // Add to form data
         setFormData((prev) => ({
           ...prev,
           moodboardFiles: [...prev.moodboardFiles, file],
-        }))
+        }));
       }
-    })
-  }
+    });
+  };
 
   const removeImage = (index: number) => {
-    setUploadedImages((prev) => prev.filter((_, i) => i !== index))
+    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
     setFormData((prev) => ({
       ...prev,
       moodboardFiles: prev.moodboardFiles.filter((_, i) => i !== index),
-    }))
-  }
+    }));
+  };
 
   const handleKeywordToggle = (keyword: string) => {
     setFormData((prev) => {
-      const keywords = [...prev.keywords]
+      const keywords = [...prev.keywords];
       if (keywords.includes(keyword)) {
-        return { ...prev, keywords: keywords.filter((k) => k !== keyword) }
+        return { ...prev, keywords: keywords.filter((k) => k !== keyword) };
       }
       if (keywords.length >= 3) {
-        return { ...prev, keywords: [...keywords.slice(1), keyword] }
+        return { ...prev, keywords: [...keywords.slice(1), keyword] };
       }
-      return { ...prev, keywords: [...keywords, keyword] }
-    })
-  }
+      return { ...prev, keywords: [...keywords, keyword] };
+    });
+  };
 
   const handleSliderChange = (name: keyof typeof formData, value: number[]) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value[0],
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = async () => {
     if (!user) {
-      setError("You must be logged in to continue")
-      return
+      setError("You must be logged in to continue");
+      return;
     }
 
     if (!formData.personaCardId) {
-      setError("Please select a persona card")
-      return
+      setError("Please select a persona card");
+      return;
     }
 
     if (formData.keywords.length !== 3) {
-      setError("Please select exactly 3 keywords")
-      return
+      setError("Please select exactly 3 keywords");
+      return;
     }
 
-    setIsLoading(true)
-    setError("")
+    setIsLoading(true);
+    setError("");
 
     try {
       // Upload moodboard images to Supabase Storage
-      const moodboardUrls = []
+      const moodboardUrls = [];
 
       for (const file of formData.moodboardFiles) {
-        const fileName = `${user.id}/${uuidv4()}-${file.name.replace(/\s+/g, "-")}`
-        const { url, error } = await uploadFile(STORAGE_BUCKETS.MOODBOARDS, fileName, file)
+        const fileName = `${user.id}/${uuidv4()}-${file.name.replace(/\s+/g, "-")}`;
+        const { url, error } = await uploadFile(STORAGE_BUCKETS.MOODBOARDS, fileName, file);
 
-        if (error) throw error
-        if (url) moodboardUrls.push(url)
+        if (error) throw error;
+        if (url) moodboardUrls.push(url);
       }
 
       // Add existing moodboard URLs if editing
       if (isEditing && existingPersona?.personaMoodboards) {
         existingPersona.personaMoodboards.forEach((m: any) => {
-          if (m.snapshotUrl) moodboardUrls.push(m.snapshotUrl)
-        })
+          if (m.snapshotUrl) moodboardUrls.push(m.snapshotUrl);
+        });
       }
 
       const personaData = {
@@ -237,9 +237,9 @@ export default function PersonaPage() {
         motionDrama: formData.motionDrama,
         keywords: formData.keywords,
         moodboardUrls,
-      }
+      };
 
-      let response
+      let response;
 
       if (isEditing && existingPersona) {
         // Update existing persona
@@ -250,38 +250,38 @@ export default function PersonaPage() {
             id: existingPersona.id,
             ...personaData,
           }),
-        })
+        });
       } else {
         // Create new persona
         response = await fetch(`/api/persona`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(personaData),
-        })
+        });
       }
 
       if (!response.ok) {
-        throw new Error("Failed to save persona")
+        throw new Error("Failed to save persona");
       }
 
       // Redirect to dashboard
-      router.push("/dashboard")
+      router.push("/dashboard");
     } catch (err) {
-      console.error("Error saving persona:", err)
-      setError("Failed to save persona. Please try again.")
+      console.error("Error saving persona:", err);
+      setError("Failed to save persona. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-3xl font-bold mb-2">
+        <h2 className="text-3xl font-normal mb-2 font-krona-one">
           {isEditing ? "Update Your Design Persona" : "Set Up Your Design Persona"}
         </h2>
         <p className="text-muted-foreground mb-8">
-          Tell us about your design preferences so we can tailor our feedback to your style.
+          Your design preferences helps me tailor the feedback to your style
         </p>
 
         {error && (
@@ -293,30 +293,38 @@ export default function PersonaPage() {
 
         <div className="space-y-8">
           <div>
-            <h3 className="text-xl font-bold mb-4">Step 1: Choose Your Persona Card</h3>
-            <p className="text-muted-foreground mb-4">Who are you in the design dojo?</p>
-            <div className="grid md:grid-cols-2 gap-4">
-              {personaCards.map((persona) => (
+            <h3 className="font-krona-one text-xl font-bold">Step 1: Choose Your Persona Card</h3>
+            <p className="text-primary font-quantico mb-4">Who are you in the design dojo?</p>
+            <div className="grid md:grid-cols-2 gap-4 place-content-center place-items-center">
+              {personaCards.map((persona, index) => (
                 <Card
                   key={persona.id}
-                  className={`cursor-pointer transition-all ${
-                    formData.personaCardId === persona.id ? "border-primary" : "hover:border-primary/50"
+                  className={`${
+                    index === 4 ? "col-span-2 max-w-[374px]" : ""
+                  } cursor-pointer transition-all bg-[linear-gradient(156deg,_#91BBF2_-81.94%,_rgba(13,13,13,0.04)_112.13%)] shadow-[4px_3px_18px_-5px_rgba(91,213,175,0.14)] ${
+                    formData.personaCardId === persona.id
+                      ? "border-primary"
+                      : "hover:border-primary/50"
                   }`}
                   onClick={() => setFormData((prev) => ({ ...prev, personaCardId: persona.id }))}
                 >
                   <CardContent className="p-4">
                     <h4 className="font-bold">{persona.personaCardName}</h4>
-                    <p className="text-sm italic text-muted-foreground mb-2">"{persona.personaPhilosophy}"</p>
-                    <p className="text-sm text-muted-foreground">{persona.personaMeaning}</p>
+                    <p className="text-sm italic text-primary mb-2">
+                      "{persona.personaPhilosophy}"
+                    </p>
+                    <p className="text-sm text-white/90">{persona.personaMeaning}</p>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </div>
 
+          <hr className="border-t border-primary my-8" />
+
           <div>
-            <h3 className="text-xl font-bold mb-4">Step 2: Dial In Your Core Vibes</h3>
-            <p className="text-muted-foreground mb-4">Slider controls for your soul.</p>
+            <h3 className="font-krona-one text-xl font-bold">Step 2: Dial In Your Core Vibes</h3>
+            <p className="text-primary font-quantico mb-4">Slider controls for your soul.</p>
             <div className="space-y-6">
               <div className="space-y-6">
                 <div className="space-y-2">
@@ -342,7 +350,9 @@ export default function PersonaPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <Label htmlFor="typeTemperament">Typeface Temperament</Label>
-                    <span className="text-muted-foreground text-sm">{formData.typeTemperament}%</span>
+                    <span className="text-muted-foreground text-sm">
+                      {formData.typeTemperament}%
+                    </span>
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-xs text-muted-foreground">Ultra-clean Sans-serif</span>
@@ -362,7 +372,9 @@ export default function PersonaPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <Label htmlFor="spacingAiriness">Spacing Airiness</Label>
-                    <span className="text-muted-foreground text-sm">{formData.spacingAiriness}%</span>
+                    <span className="text-muted-foreground text-sm">
+                      {formData.spacingAiriness}%
+                    </span>
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-xs text-muted-foreground">Compact & Dense</span>
@@ -401,16 +413,22 @@ export default function PersonaPage() {
               </div>
             </div>
 
+            <hr className="border-t border-primary my-8" />
+
             <div>
-              <h3 className="text-xl font-bold mb-4">Step 3: Pick Your 3 Style Keywords</h3>
-              <p className="text-muted-foreground mb-4">Words that spark your creative engine.</p>
-              <div className="flex flex-wrap gap-2">
+              <h3 className="font-krona-one text-xl font-bold">
+                Step 3: Pick Your 3 Style Keywords
+              </h3>
+              <p className="text-primary font-quantico mb-4">
+                Words that spark your creative engine.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 {styleKeywords.map((keyword) => (
                   <button
                     key={keyword}
                     type="button"
                     onClick={() => handleKeywordToggle(keyword)}
-                    className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                    className={`px-6 py-3 rounded-full text-sm transition-colors ${
                       formData.keywords.includes(keyword)
                         ? "bg-primary text-primary-foreground"
                         : "bg-secondary text-foreground hover:bg-secondary/80"
@@ -420,12 +438,18 @@ export default function PersonaPage() {
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">Selected: {formData.keywords.length}/3</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Selected: {formData.keywords.length}/3
+              </p>
             </div>
 
+            <hr className="border-t border-primary my-8" />
+
             <div>
-              <h3 className="text-xl font-bold mb-4">Step 4: Moodboard Snapshot (Optional)</h3>
-              <p className="text-muted-foreground mb-4">Show, don't just tell.</p>
+              <h3 className="font-krona-one text-xl font-bold">
+                Step 4: Moodboard Snapshot (Optional)
+              </h3>
+              <p className="text-primary font-quantico mb-4">Show, don't just tell.</p>
               <Card className="border-2 border-dashed border-border">
                 <CardContent className="p-8 text-center">
                   <div className="text-muted-foreground mb-4">
@@ -439,7 +463,10 @@ export default function PersonaPage() {
                     className="hidden"
                     onChange={handleMoodboardUpload}
                   />
-                  <Button variant="outline" onClick={() => document.getElementById("moodboard-upload")?.click()}>
+                  <Button
+                    variant="outline"
+                    onClick={() => document.getElementById("moodboard-upload")?.click()}
+                  >
                     Browse Files
                   </Button>
                   {uploadedImages.length > 0 && (
@@ -487,5 +514,5 @@ export default function PersonaPage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }
