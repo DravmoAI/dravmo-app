@@ -17,7 +17,7 @@ interface PricingSectionProps {
 
 export function PricingSection({ basicPlanFeatures, proPlanFeatures, litePlanFeatures }: PricingSectionProps) {
   const [isUnlimited, setIsUnlimited] = useState(false)
-  const [isYearly, setIsYearly] = useState(false)
+  const [isYearly, setIsYearly] = useState(true)
 
   return (
     <div className="flex flex-col items-center justify-center mt-[53px] mb-[100px] font-poppins">
