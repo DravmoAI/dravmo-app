@@ -53,59 +53,7 @@ export const GradientBorderWrapper = ({
 
 export default function LandingPage() {
   const [isUnlimited, setIsUnlimited] = useState(false);
-
-  const plans = [
-    {
-      id: "free",
-      name: "Free",
-      price: 0,
-      period: "forever",
-      description: "Perfect for trying out Dravmo",
-      maxProjects: 3,
-      maxQueries: 10,
-      features: ["Up to 3 projects", "10 feedback queries per month", "Basic analysis topics", "Community support"],
-      popular: false,
-    },
-    {
-      id: "pro",
-      name: "Pro",
-      price: 29,
-      period: "month",
-      description: "For serious designers and teams",
-      maxProjects: 50,
-      maxQueries: 500,
-      features: [
-        "Up to 50 projects",
-        "500 feedback queries per month",
-        "All analysis topics",
-        "Masters Mode access",
-        "Priority support",
-        "Export to PDF",
-        "Figma integration",
-      ],
-      popular: true,
-    },
-    {
-      id: "enterprise",
-      name: "Enterprise",
-      price: 99,
-      period: "month",
-      description: "For large teams and organizations",
-      maxProjects: -1, // Unlimited
-      maxQueries: -1, // Unlimited
-      features: [
-        "Unlimited projects",
-        "Unlimited feedback queries",
-        "All analysis topics",
-        "Masters Mode access",
-        "Custom design masters",
-        "Team collaboration",
-        "API access",
-        "Dedicated support",
-      ],
-      popular: false,
-    },
-  ]
+  const [isYearly, setIsYearly] = useState(false);
 
   const basicPlanFeatures = [
     { label: "Unlimited projects", available: true },
@@ -373,12 +321,11 @@ export default function LandingPage() {
           </h3>
           <div className="mx-auto flex items-center justify-center gap-x-2">
             <span className="font-roboto-flex font-medium text-[14px] leading-[14px] text-[#97FFEF] ">Monthly</span>
-            <div className="checkbox">
-              <input className="tgl" id="period" type="checkbox" />
-              <label className="tgl-btn" htmlFor="period"></label>
-            </div>
+           <label className="switch">
+            <input type="checkbox" checked={isYearly} onChange={() => setIsYearly(!isYearly)} />
+            <span className="slider round"></span>
+          </label>
             <span className="font-roboto-flex font-medium text-[14px] leading-[14px] text-[#97FFEF] ">Yearly</span>
-
           </div>
           <div className="relative flex items-center justify-center gap-x-[52px] mt-[62px]">
             {/* Basic */}
@@ -444,7 +391,7 @@ export default function LandingPage() {
                   <h1
                     className="font-quantico font-bold text-[96px] text-right text-[#5BD5AF]"
                   >
-                    ${isUnlimited ? 35 : 15}
+                    ${isUnlimited ? (isYearly ? 28 : 35) : (isYearly ? 12 : 15)}
                   </h1>
                   <h2
                     className="font-poppins font-light text-[20px] text-right tracking-[0.02em] text-[#97FFEF]"
