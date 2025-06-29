@@ -5,27 +5,27 @@ import Image from "next/image"
 
 export function HeroSection() {
   return (
-    <header className="h-screen flex flex-col items-center justify-center text-center bg-cover bg-center bg-no-repeat relative px-4">
+    <header className="h-screen flex flex-col items-center md:justify-center text-center bg-cover bg-center bg-no-repeat relative px-4">
       <Image 
         src="/landing-page/dotted-line-1.png" 
         alt="Dravmo" 
         width={5436} 
         height={585} 
-        className="w-[97%] h-[146px] absolute top-1/2 translate-y-[-69%] z-0 hidden md:block" 
+        className="hidden md:block w-full md:w-[97%] md:h-[146px] absolute top-1/2 translate-y-[-69%] z-0" 
       />
       <Image 
         src="/dravmo-logo.png" 
         alt="Dravmo" 
         width={588} 
         height={352} 
-        className="w-[100px] h-[60px] md:w-[147px] md:h-[88px] absolute top-[20px] md:top-[40px] left-[16px] md:left-[24px] z-20" 
+        className="w-[100px] h-[60px] md:w-[147px] md:h-[88px] absolute top-[20px] md:top-[40px] left-1/2 md:left-[24px] -translate-x-1/2 md:translate-x-0 z-20" 
       />
       <Image 
         src="/landing-page/header-image-main.png" 
         alt="Dravmo" 
         width={3066} 
         height={1840} 
-        className="w-[300px] h-[180px] md:w-[767px] md:h-[460px] relative z-10" 
+        className="w-[300px] h-[180px] md:w-[767px] md:h-[460px] relative z-10 mt-[102px]" 
       />
       <h1 className="text-[14px] md:text-[20px] leading-[16px] md:leading-[20px] text-center tracking-[0.3em] md:tracking-[0.5em] uppercase text-[#F7EDE2] font-quantico -translate-y-16 md:-translate-y-32 relative z-10 px-4">
         AI Design Review Engine

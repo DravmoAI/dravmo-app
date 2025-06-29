@@ -27,7 +27,7 @@ export default function LandingPage() {
   
   const proPlanFeatures = [
     { label: "Unlimited projects", available: true },
-    { label: "Unlimited", available: true, note: "(20 daily limit)" },
+    { label: "Unlimited reviews", available: true, note: "(200 daily limit)" },
     { label: "Design persona setup", available: true },
     { label: "Layout analysis", available: true },
     { label: "Typography review", available: true },
