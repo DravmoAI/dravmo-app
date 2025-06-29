@@ -67,8 +67,9 @@ const config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        "noto-sans": ["var(--font-noto-sans)"],
-        roboto: ["var(--font-roboto)"],
+        "krona-one": ["var(--font-krona-one)"],
+        quantico: ["var(--font-quantico)"],
+        "roboto-flex": ["var(--font-roboto-flex)"],
       },
       keyframes: {
         "accordion-down": {
