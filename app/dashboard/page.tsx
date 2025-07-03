@@ -1,112 +1,113 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Plus } from "lucide-react"
-import Link from "next/link"
-import { getSupabaseClient } from "@/lib/supabase"
-import { LoadingSpinner } from "@/components/loading-spinner"
+import { useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus } from "lucide-react";
+import Link from "next/link";
+import { getSupabaseClient } from "@/lib/supabase";
+import { LoadingSpinner } from "@/components/loading-spinner";
 
 interface Project {
-  id: string
-  name: string
-  createdAt: string
-  updatedAt: string
-  screenCount: number
-  lastFeedback: string
-  status: string
-  thumbnail?: string
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  screenCount: number;
+  lastFeedback: string;
+  status: string;
+  thumbnail?: string;
 }
 
 export default function DashboardPage() {
-  const [projects, setProjects] = useState<Project[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<any>(null)
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     async function fetchUserAndProjects() {
       try {
-        const supabase = getSupabaseClient()
+        const supabase = getSupabaseClient();
         const {
           data: { user },
           error: userError,
-        } = await supabase.auth.getUser()
+        } = await supabase.auth.getUser();
 
         if (userError || !user) {
-          setError("Please log in to view your projects")
-          setLoading(false)
-          return
+          setError("Please log in to view your projects");
+          setLoading(false);
+          return;
         }
 
-        setUser(user)
+        setUser(user);
 
         // Fetch projects from API
-        const response = await fetch(`/api/projects?userId=${user.id}`)
+        const response = await fetch(`/api/projects?userId=${user.id}`);
         if (!response.ok) {
-          throw new Error("Failed to fetch projects")
+          throw new Error("Failed to fetch projects");
         }
 
-        const data = await response.json()
+        const data = await response.json();
 
         // Get the 3 most recent projects
-        const recentProjects = data.projects.slice(0, 3)
+        const recentProjects = data.projects.slice(0, 3);
 
         // For each project, try to get a thumbnail from the first screen
         const projectsWithThumbnails = await Promise.all(
           recentProjects.map(async (project: Project) => {
             try {
-              const screensResponse = await fetch(`/api/screens?projectId=${project.id}`)
+              const screensResponse = await fetch(`/api/screens?projectId=${project.id}`);
               if (screensResponse.ok) {
-                const screensData = await screensResponse.json()
-                const firstScreen = screensData.screens?.[0]
+                const screensData = await screensResponse.json();
+                const firstScreen = screensData.screens?.[0];
                 return {
                   ...project,
-                  thumbnail: firstScreen?.sourceUrl || "/placeholder.svg?height=100&width=200&text=No+Image",
-                }
+                  thumbnail:
+                    firstScreen?.sourceUrl || "/placeholder.svg?height=100&width=200&text=No+Image",
+                };
               }
             } catch (error) {
-              console.error(`Error fetching screens for project ${project.id}:`, error)
+              console.error(`Error fetching screens for project ${project.id}:`, error);
             }
             return {
               ...project,
               thumbnail: "/placeholder.svg?height=100&width=200&text=No+Image",
-            }
-          }),
-        )
+            };
+          })
+        );
 
-        setProjects(projectsWithThumbnails)
+        setProjects(projectsWithThumbnails);
       } catch (error) {
-        console.error("Error fetching projects:", error)
-        setError("Failed to load projects")
+        console.error("Error fetching projects:", error);
+        setError("Failed to load projects");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchUserAndProjects()
-  }, [])
+    fetchUserAndProjects();
+  }, []);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - date.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) return "Today"
-    if (diffDays === 2) return "Yesterday"
-    if (diffDays <= 7) return `${diffDays - 1} days ago`
-    return date.toLocaleDateString()
-  }
+    if (diffDays === 1) return "Today";
+    if (diffDays === 2) return "Yesterday";
+    if (diffDays <= 7) return `${diffDays - 1} days ago`;
+    return date.toLocaleDateString();
+  };
 
   if (loading) {
     return (
       <DashboardLayout>
         <LoadingSpinner className="min-h-[400px]" />
       </DashboardLayout>
-    )
+    );
   }
 
   if (error) {
@@ -121,14 +122,14 @@ export default function DashboardPage() {
           </div>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   return (
     <DashboardLayout>
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold">
+          <h2 className="text-3xl font-bold font-krona-one">
             Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ""}!
           </h2>
           <Link href="/upload">
@@ -140,7 +141,7 @@ export default function DashboardPage() {
 
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">Recent Projects</h3>
+            <h3 className="text-xl font-bold font-roboto-flex">Recent Projects</h3>
             <Link href="/projects">
               <Button variant="ghost" size="sm">
                 View all
@@ -171,14 +172,16 @@ export default function DashboardPage() {
                         alt={project.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.src = "/placeholder.svg?height=100&width=200&text=No+Image"
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/placeholder.svg?height=100&width=200&text=No+Image";
                         }}
                       />
                     </div>
                     <CardContent className="p-4">
                       <div className="font-medium truncate">{project.name}</div>
-                      <div className="text-sm text-muted-foreground">{formatDate(project.updatedAt)}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatDate(project.updatedAt)}
+                      </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {project.screenCount} screen{project.screenCount !== 1 ? "s" : ""}
                       </div>
@@ -191,5 +194,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }
