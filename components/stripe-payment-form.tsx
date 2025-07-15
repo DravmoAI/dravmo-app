@@ -82,11 +82,11 @@ export function StripePaymentForm({ planName, price, onSuccess, onCancel }: Stri
   }
 
   return (
-    <Card>
+    <>
       <CardHeader>
         <CardTitle>Complete Your Payment</CardTitle>
         <div className="text-sm text-muted-foreground">
-          {planName} Plan - ${price}/month
+          {planName} - ${price}/month
         </div>
       </CardHeader>
       <CardContent>
@@ -101,7 +101,7 @@ export function StripePaymentForm({ planName, price, onSuccess, onCancel }: Stri
           <PaymentElement 
             options={{
               layout: "tabs",
-              paymentMethodOrder: ["card", "apple_pay", "google_pay"],
+              paymentMethodOrder: ["card"],
             }}
           />
 
@@ -128,6 +128,6 @@ export function StripePaymentForm({ planName, price, onSuccess, onCancel }: Stri
           </div>
         </form>
       </CardContent>
-    </Card>
+    </>
   )
 }

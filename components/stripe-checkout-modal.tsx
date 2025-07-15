@@ -82,7 +82,7 @@ export function StripeCheckoutModal({ isOpen, onClose, plan, onSuccess }: Stripe
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Subscribe to {plan.name}</DialogTitle>
+          <DialogTitle>Subscribe to Dravmo</DialogTitle>
         </DialogHeader>
 
         {isLoading && (
