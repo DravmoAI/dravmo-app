@@ -21,6 +21,7 @@ export async function POST(request: Request) {
       brandPersonality,
       platform,
       selectedAnalyzers,
+      imageData,
     } = body
 
     if (!screenId) {
@@ -29,6 +30,10 @@ export async function POST(request: Request) {
 
     if (!selectedAnalyzers || selectedAnalyzers.length === 0) {
       return NextResponse.json({ error: "At least one analyzer must be selected" }, { status: 400 })
+    }
+
+    if (!imageData) {
+      return NextResponse.json({ error: "Image data is required" }, { status: 400 })
     }
 
     // First, verify the screen exists
@@ -86,14 +91,73 @@ export async function POST(request: Request) {
     const versionNumber = existingFeedbackCount + 1
     const version = `v${versionNumber}`
 
-    // Create a feedback result with proper version
+    // Fetch analyzer topics to build criterias
+    const analyzerTopics = await prisma.analyzerTopic.findMany({
+      include: {
+        analyzerSubtopics: {
+          include: {
+            analyzerPoints: true,
+          },
+        },
+      },
+    })
+
+    // Build criterias object based on selected analyzers
+    const criterias: any = {}
+
+    selectedAnalyzers.forEach((selectedAnalyzer: SelectedAnalyzer) => {
+      const topic = analyzerTopics.find((t) => t.id === selectedAnalyzer.topicId)
+      const subtopic = topic?.analyzerSubtopics.find((s) => s.id === selectedAnalyzer.subtopicId)
+      const point = subtopic?.analyzerPoints.find((p) => p.id === selectedAnalyzer.pointId)
+
+      if (topic && subtopic && point) {
+        if (!criterias[topic.name]) {
+          criterias[topic.name] = {}
+        }
+        if (!criterias[topic.name][subtopic.name]) {
+          criterias[topic.name][subtopic.name] = []
+        }
+        if (!criterias[topic.name][subtopic.name].includes(point.name)) {
+          criterias[topic.name][subtopic.name].push(point.name)
+        }
+      }
+    })
+
+    // Generate review using AI backend
+    const reviewResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/general-review`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          metadata: {
+            industry,
+            productType,
+            brandPersonality,
+            ageGroup,
+            platform,
+          },
+          criterias,
+          imageData,
+        }),
+      },
+    )
+
+    if (!reviewResponse.ok) {
+      throw new Error("Failed to generate AI review")
+    }
+
+    const reviewResult = await reviewResponse.json()
+
+    // Create a feedback result with AI-generated content
     const feedbackResult = await prisma.feedbackResult.create({
       data: {
         feedbackQuery: {
           connect: { id: feedbackQuery.id },
         },
-        feedbackSummary:
-          "This design shows strong visual hierarchy and clean typography. The color palette is well-balanced and creates good contrast for readability. Consider improving the spacing between elements for better visual breathing room. The interactive elements are clearly defined and follow modern UI patterns. Overall, this is a solid design foundation with room for minor refinements.",
+        feedbackSummary: JSON.stringify(reviewResult.data), // Store the full AI response
         version: version,
       },
     })

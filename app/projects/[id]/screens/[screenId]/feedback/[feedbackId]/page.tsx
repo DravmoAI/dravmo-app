@@ -11,15 +11,33 @@ import { useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import { LoadingSpinner } from "@/components/loading-spinner"
 
-interface FeedbackItem {
-  title: string
-  description: string
-  severity: "high" | "medium" | "low"
+interface FeedbackJudgement {
+  bbox: number[] | null
+  judgement: string
 }
 
-interface FeedbackCategory {
-  title: string
-  items: FeedbackItem[]
+interface FeedbackPoint {
+  [pointName: string]: FeedbackJudgement[]
+}
+
+interface FeedbackSubtopic {
+  [subtopicName: string]: FeedbackPoint
+}
+
+interface FeedbackTopic {
+  [topicName: string]: FeedbackSubtopic
+}
+
+interface GeneralReview {
+  [topicName: string]: FeedbackTopic[string]
+}
+
+interface AIFeedbackResponse {
+  expert_reviews: any[]
+  general_review: GeneralReview
+  criterias: any
+  metadata: any
+  img_details: any
 }
 
 interface FeedbackResult {
@@ -67,44 +85,7 @@ export default function FeedbackDetailPage() {
   const [screen, setScreen] = useState<Screen | null>(null)
   const [project, setProject] = useState<Project | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
-  // Mock categories for now - in real app, this would be generated from analyzer results
-  const mockCategories: Record<string, FeedbackCategory> = {
-    layout: {
-      title: "Layout & Structure",
-      items: [
-        {
-          title: "Hero Section Overload",
-          description:
-            "The large 'Praktika' text competes with the phone mockup for attention. Consider reducing its opacity or shifting it slightly to create a clearer visual hierarchy.",
-          severity: "medium",
-        },
-        {
-          title: "Navigation Pills",
-          description:
-            "The tabs at the bottom lack sufficient visual cues to indicate they're interactive. Consider adding subtle underlines or shadows to enhance their affordance.",
-          severity: "low",
-        },
-      ],
-    },
-    typography: {
-      title: "Typography & Readability",
-      items: [
-        {
-          title: "Font Contrast Issues",
-          description:
-            "The white text on yellow background creates readability issues. Consider using a darker text color or adding a subtle text shadow to improve contrast.",
-          severity: "high",
-        },
-        {
-          title: "Inconsistent Type Scale",
-          description:
-            "There are too many different text sizes being used. Recommend consolidating to a more consistent type scale with 3-4 distinct sizes.",
-          severity: "medium",
-        },
-      ],
-    },
-  }
+  const [aiFeedback, setAiFeedback] = useState<AIFeedbackResponse | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -116,6 +97,14 @@ export default function FeedbackDetailPage() {
         if (feedbackResponse.ok) {
           const feedbackData = await feedbackResponse.json()
           setFeedbackResult(feedbackData.feedbackResult)
+
+          // Parse AI feedback from feedbackSummary
+          try {
+            const parsedFeedback = JSON.parse(feedbackData.feedbackResult.feedbackSummary)
+            setAiFeedback(parsedFeedback)
+          } catch (error) {
+            console.error("Error parsing AI feedback:", error)
+          }
         }
 
         // Fetch screen data
@@ -149,6 +138,143 @@ export default function FeedbackDetailPage() {
     })
   }
 
+  const getSeverityFromJudgement = (judgement: string): "high" | "medium" | "low" => {
+    const lowerJudgement = judgement.toLowerCase()
+    if (lowerJudgement.includes("critical") || lowerJudgement.includes("major") || lowerJudgement.includes("serious")) {
+      return "high"
+    } else if (
+      lowerJudgement.includes("minor") ||
+      lowerJudgement.includes("slight") ||
+      lowerJudgement.includes("could")
+    ) {
+      return "low"
+    }
+    return "medium"
+  }
+
+  const renderFeedbackContent = () => {
+    if (!aiFeedback?.general_review) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No AI feedback available</p>
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-6">
+        <Accordion type="single" collapsible className="w-full">
+          {Object.entries(aiFeedback.general_review).map(([topicName, topicData]) => (
+            <AccordionItem key={topicName} value={topicName}>
+              <AccordionTrigger className="text-lg font-medium font-krona-one">{topicName}</AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4 pt-2">
+                  {Object.entries(topicData).map(([subtopicName, subtopicData]) => (
+                    <div key={subtopicName} className="space-y-3">
+                      <h4 className="font-semibold text-base font-quantico">{subtopicName}</h4>
+                      {Object.entries(subtopicData).map(([pointName, judgements]) => (
+                        <div key={pointName} className="space-y-2">
+                          <h5 className="font-medium text-sm font-quantico text-muted-foreground">{pointName}</h5>
+                          {judgements.map((item, index) => (
+                            <Card key={index}>
+                              <CardContent className="p-4">
+                                <div className="flex items-start gap-2">
+                                  <div
+                                    className={`h-3 w-3 rounded-full mt-1.5 flex-shrink-0 ${
+                                      getSeverityFromJudgement(item.judgement) === "high"
+                                        ? "bg-destructive"
+                                        : getSeverityFromJudgement(item.judgement) === "medium"
+                                          ? "bg-yellow-500"
+                                          : "bg-green-500"
+                                    }`}
+                                  />
+                                  <div className="flex-1">
+                                    <p className="text-sm leading-relaxed">{item.judgement.replace(/^>\s*/, "")}</p>
+                                    {item.bbox && (
+                                      <div className="mt-2 text-xs text-muted-foreground">
+                                        <Badge variant="outline" className="text-xs">
+                                          Region: [{item.bbox.join(", ")}]
+                                        </Badge>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+    )
+  }
+
+  const renderSummaryContent = () => {
+    if (!aiFeedback) {
+      return (
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-xl font-bold mb-4 font-krona-one">Design Summary</h3>
+            <p className="text-muted-foreground">No summary available</p>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    // Generate a summary from the AI feedback
+    const totalIssues = Object.values(aiFeedback.general_review).reduce((total, topicData) => {
+      return (
+        total +
+        Object.values(topicData).reduce((subtotal, subtopicData) => {
+          return (
+            subtotal +
+            Object.values(subtopicData).reduce((pointTotal, judgements) => {
+              return pointTotal + judgements.length
+            }, 0)
+          )
+        }, 0)
+      )
+    }, 0)
+
+    const topicsAnalyzed = Object.keys(aiFeedback.general_review)
+
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-xl font-bold mb-4 font-krona-one">AI Analysis Summary</h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-4 bg-muted rounded-lg">
+                <div className="text-2xl font-bold text-primary">{totalIssues}</div>
+                <div className="text-sm text-muted-foreground">Total Insights</div>
+              </div>
+              <div className="text-center p-4 bg-muted rounded-lg">
+                <div className="text-2xl font-bold text-primary">{topicsAnalyzed.length}</div>
+                <div className="text-sm text-muted-foreground">Topics Analyzed</div>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2 font-quantico">Areas Reviewed:</h4>
+              <div className="flex flex-wrap gap-2">
+                {topicsAnalyzed.map((topic) => (
+                  <Badge key={topic} variant="secondary">
+                    {topic}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -179,7 +305,7 @@ export default function FeedbackDetailPage() {
               </Button>
             </Link>
             <div>
-              <h2 className="text-3xl font-bold">Feedback {feedbackResult.version}</h2>
+              <h2 className="text-3xl font-bold font-krona-one">Feedback {feedbackResult.version}</h2>
               <p className="text-muted-foreground">
                 Created on {formatDate(feedbackResult.createdAt)}
                 {feedbackResult.feedbackQuery.designMaster && (
@@ -189,10 +315,10 @@ export default function FeedbackDetailPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2 bg-transparent">
               <Share2 className="h-4 w-4" /> Share
             </Button>
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2 bg-transparent">
               <Download className="h-4 w-4" /> Export
             </Button>
           </div>
@@ -202,15 +328,15 @@ export default function FeedbackDetailPage() {
           <div className="md:col-span-2">
             <div className="mb-6 flex gap-4 border-b">
               <button
-                className={`pb-2 px-1 ${
+                className={`pb-2 px-1 font-quantico ${
                   activeTab === "feedback" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
                 }`}
                 onClick={() => setActiveTab("feedback")}
               >
-                Feedback
+                AI Feedback
               </button>
               <button
-                className={`pb-2 px-1 ${
+                className={`pb-2 px-1 font-quantico ${
                   activeTab === "summary" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
                 }`}
                 onClick={() => setActiveTab("summary")}
@@ -218,7 +344,7 @@ export default function FeedbackDetailPage() {
                 Summary
               </button>
               <button
-                className={`pb-2 px-1 ${
+                className={`pb-2 px-1 font-quantico ${
                   activeTab === "details" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
                 }`}
                 onClick={() => setActiveTab("details")}
@@ -227,89 +353,53 @@ export default function FeedbackDetailPage() {
               </button>
             </div>
 
-            {activeTab === "feedback" && (
-              <div className="space-y-6">
-                <Accordion type="single" collapsible className="w-full">
-                  {Object.entries(mockCategories).map(([key, category]) => (
-                    <AccordionItem key={key} value={key}>
-                      <AccordionTrigger className="text-lg font-medium">{category.title}</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-4 pt-2">
-                          {category.items.map((item, index) => (
-                            <Card key={index}>
-                              <CardContent className="p-4">
-                                <div className="flex items-start gap-2">
-                                  <div
-                                    className={`h-3 w-3 rounded-full mt-1.5 ${
-                                      item.severity === "high"
-                                        ? "bg-destructive"
-                                        : item.severity === "medium"
-                                          ? "bg-yellow-500"
-                                          : "bg-green-500"
-                                    }`}
-                                  />
-                                  <div>
-                                    <h4 className="font-medium">{item.title}</h4>
-                                    <p className="text-muted-foreground text-sm">{item.description}</p>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </div>
-            )}
+            {activeTab === "feedback" && renderFeedbackContent()}
 
-            {activeTab === "summary" && (
-              <div className="space-y-6">
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold mb-4">Design Summary</h3>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{feedbackResult.feedbackSummary}</p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+            {activeTab === "summary" && <div className="space-y-6">{renderSummaryContent()}</div>}
 
             {activeTab === "details" && (
               <div className="space-y-6">
                 <Card>
                   <CardContent className="p-6">
-                    <h3 className="text-xl font-bold mb-4">Analysis Parameters</h3>
+                    <h3 className="text-xl font-bold mb-4 font-krona-one">Analysis Parameters</h3>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="font-medium text-muted-foreground">Industry:</span>
+                        <span className="font-medium text-muted-foreground font-quantico">Industry:</span>
                         <p>{feedbackResult.feedbackQuery.industry}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-muted-foreground">Product Type:</span>
+                        <span className="font-medium text-muted-foreground font-quantico">Product Type:</span>
                         <p>{feedbackResult.feedbackQuery.productType}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-muted-foreground">Purpose:</span>
+                        <span className="font-medium text-muted-foreground font-quantico">Purpose:</span>
                         <p>{feedbackResult.feedbackQuery.purpose}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-muted-foreground">Target Audience:</span>
+                        <span className="font-medium text-muted-foreground font-quantico">Target Audience:</span>
                         <p>{feedbackResult.feedbackQuery.audience}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-muted-foreground">Age Group:</span>
+                        <span className="font-medium text-muted-foreground font-quantico">Age Group:</span>
                         <p>{feedbackResult.feedbackQuery.ageGroup}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-muted-foreground">Brand Personality:</span>
+                        <span className="font-medium text-muted-foreground font-quantico">Brand Personality:</span>
                         <p>{feedbackResult.feedbackQuery.brandPersonality}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-muted-foreground">Platform:</span>
+                        <span className="font-medium text-muted-foreground font-quantico">Platform:</span>
                         <p>{feedbackResult.feedbackQuery.platform}</p>
                       </div>
                     </div>
+                    {aiFeedback?.metadata && (
+                      <div className="mt-6">
+                        <h4 className="font-semibold mb-2 font-quantico">AI Analysis Metadata:</h4>
+                        <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
+                          <pre>{JSON.stringify(aiFeedback.metadata, null, 2)}</pre>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -329,7 +419,7 @@ export default function FeedbackDetailPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-bold">Screen Preview</h3>
+                      <h3 className="font-bold font-quantico">Screen Preview</h3>
                       <p className="text-sm text-muted-foreground">From {project.name}</p>
                     </div>
                     <Badge variant="outline">{feedbackResult.version}</Badge>
@@ -340,7 +430,7 @@ export default function FeedbackDetailPage() {
               <div className="mt-6 space-y-4">
                 <Button className="w-full">Apply to Figma</Button>
                 <Link href={`/projects/${projectId}/screens/${screenId}/analyze`}>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full bg-transparent">
                     New Analysis
                   </Button>
                 </Link>
