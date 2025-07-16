@@ -299,35 +299,6 @@ export default function UploadPage() {
                 <TabsTrigger value="upload">File Upload</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="upload" className="space-y-4">
-                <div
-                  className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center"
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                >
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="file-upload"
-                  />
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    <div className="space-y-4">
-                      <div className="mx-auto w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                        <Upload className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {uploadedFile ? uploadedFile.name : "Click to upload or drag and drop"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </TabsContent>
-
               <TabsContent value="figma" className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="figma-url">Figma File URL</Label>
