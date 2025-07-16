@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import Link from "next/link"
 import { getSupabaseClient } from "@/lib/supabase"
@@ -22,6 +24,7 @@ interface Project {
 
 export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([])
+  const [persona, setPersona] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
@@ -42,6 +45,13 @@ export default function DashboardPage() {
         }
 
         setUser(user)
+
+        // Fetch user profile with persona
+        const profileResponse = await fetch(`/api/profile/${user.id}`)
+        if (profileResponse.ok) {
+          const { profile } = await profileResponse.json()
+          setPersona(profile?.persona)
+        }
 
         // Fetch projects from API
         const response = await fetch(`/api/projects?userId=${user.id}`)
@@ -128,7 +138,7 @@ export default function DashboardPage() {
     <DashboardLayout>
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold">
+          <h2 className="text-3xl font-bold font-krona-one">
             Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ""}!
           </h2>
           <Link href="/upload">
@@ -138,9 +148,101 @@ export default function DashboardPage() {
           </Link>
         </div>
 
+        {/* Design Persona Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="font-quantico">Design Persona</CardTitle>
+              <Link href="/persona">
+                <Button variant="outline" size="sm">
+                  {persona ? "Update Persona" : "Create Persona"}
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {persona ? (
+              <>
+                <div>
+                  <h3 className="font-bold mb-2 font-quantico">Selected Persona</h3>
+                  <Badge variant="secondary" className="text-sm">
+                    {persona.personaCard?.personaCardName || "Custom Persona"}
+                  </Badge>
+                </div>
+
+                {persona.personaVibes && persona.personaVibes.length > 0 && (
+                  <div>
+                    <h3 className="font-bold mb-4 font-quantico">Design Preferences</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Color Boldness</Label>
+                        <div className="text-sm text-muted-foreground">{persona.personaVibes[0].colorBoldness}%</div>
+                      </div>
+                      <div>
+                        <Label>Typeface Temperament</Label>
+                        <div className="text-sm text-muted-foreground">{persona.personaVibes[0].typeTemperament}%</div>
+                      </div>
+                      <div>
+                        <Label>Spacing Airiness</Label>
+                        <div className="text-sm text-muted-foreground">{persona.personaVibes[0].spacingAiriness}%</div>
+                      </div>
+                      <div>
+                        <Label>Motion Drama</Label>
+                        <div className="text-sm text-muted-foreground">{persona.personaVibes[0].motionDrama}%</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {persona.personaKeywords && persona.personaKeywords.length > 0 && (
+                  <div>
+                    <h3 className="font-bold mb-2 font-quantico">Style Keywords</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {persona.personaKeywords.map((keyword: any) => (
+                        <Badge key={keyword.id} variant="outline">
+                          {keyword.keyword}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {persona.personaMoodboards && persona.personaMoodboards.length > 0 && (
+                  <div>
+                    <h3 className="font-bold mb-2 font-quantico">Moodboard</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      {persona.personaMoodboards.map((moodboard: any) => (
+                        <div key={moodboard.id} className="relative">
+                          <img
+                            src={moodboard.snapshotUrl || "/placeholder.svg"}
+                            alt="Moodboard image"
+                            className="w-full h-20 object-cover rounded"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-xs text-muted-foreground">
+                  Persona created on {new Date(persona.createdAt).toLocaleDateString()}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">No design persona set up yet</p>
+                <Link href="/persona">
+                  <Button>Set Up Your Persona</Button>
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Projects Section */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold">Recent Projects</h3>
+            <h3 className="text-xl font-bold font-quantico">Recent Projects</h3>
             <Link href="/projects">
               <Button variant="ghost" size="sm">
                 View all

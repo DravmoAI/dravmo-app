@@ -58,27 +58,37 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-roboto-flex;
   }
-  h1,
+  h1 {
+    @apply font-krona-one;
+  }
   h2,
   h3,
   h4,
   h5,
   h6 {
-    @apply font-noto-sans;
+    @apply font-quantico;
   }
   p,
   span,
-  div {
-    @apply font-roboto;
+  div,
+  button,
+  input,
+  textarea,
+  label {
+    @apply font-roboto-flex;
   }
 }
 
-.font-noto-sans {
-  font-family: var(--font-noto-sans);
+.font-krona-one {
+  font-family: var(--font-krona-one);
 }
 
-.font-roboto {
-  font-family: var(--font-roboto);
+.font-quantico {
+  font-family: var(--font-quantico);
+}
+
+.font-roboto-flex {
+  font-family: var(--font-roboto-flex);
 }
