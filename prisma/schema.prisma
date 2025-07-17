@@ -166,17 +166,44 @@ model FeedbackResult {
 }
 
 model DesignMaster {
-    id           String @id @default(uuid())
-    name         String
-    styleSummary String @map("style_summary") @db.Text
-    userfulFor   String @map("userful_for") @db.Text
-    bio          String @db.Text
-    avatarUrl    String @map("avatar_url") @db.Text
+    id                String   @id @default(uuid())
+    name              String
+    philosophy        String?  @db.Text
+    methodology       String[]
+    signatureGestures String[] @map("signature_gestures")
+    fitSummary        String?  @db.Text
+    avatarUrl         String?  @map("avatar_url") @db.Text
 
     // Relations
     feedbackQueries FeedbackQuery[]
+    talks           Talk[] // Optional by default
+    blogs           Blog[] // Optional by default
 
     @@map("design_masters")
+}
+
+model Talk {
+    id             String @id @default(uuid())
+    designMasterId String @map("design_master_id")
+    title          String
+    content        String @db.Text
+
+    // Relation
+    designMaster DesignMaster @relation(fields: [designMasterId], references: [id])
+
+    @@map("talks")
+}
+
+model Blog {
+    id             String @id @default(uuid())
+    designMasterId String @map("design_master_id")
+    title          String
+    content        String @db.Text
+
+    // Relation
+    designMaster DesignMaster @relation(fields: [designMasterId], references: [id])
+
+    @@map("blogs")
 }
 
 model AnalyzerResult {
