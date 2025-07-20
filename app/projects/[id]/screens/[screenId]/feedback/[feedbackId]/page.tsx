@@ -32,12 +32,21 @@ interface GeneralReview {
   [topicName: string]: FeedbackTopic[string]
 }
 
+interface ExpertReview {
+  name: string
+  screen_review: Array<{
+    bbox: number[] | null
+    judgement: string
+  }>
+}
+
 interface AIFeedbackResponse {
-  expert_reviews: any[]
+  expert_reviews: ExpertReview[]
   general_review: GeneralReview
   criterias: any
   metadata: any
   img_details: any
+  expert_assigned?: any
 }
 
 interface FeedbackResult {
@@ -152,11 +161,74 @@ export default function FeedbackDetailPage() {
     return "medium"
   }
 
-  const renderFeedbackContent = () => {
+  const renderExpertReviewContent = () => {
+    if (!aiFeedback?.expert_reviews || aiFeedback.expert_reviews.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No expert review available</p>
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-6">
+        {aiFeedback.expert_reviews.map((expertReview, expertIndex) => (
+          <Card key={expertIndex}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary">
+                    {expertReview.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg font-krona-one">{expertReview.name}</h3>
+                  <p className="text-sm text-muted-foreground">Expert Design Review</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {expertReview.screen_review.map((review, reviewIndex) => (
+                  <div key={reviewIndex} className="flex gap-3 p-4 bg-muted/30 rounded-lg">
+                    <div
+                      className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                        getSeverityFromJudgement(review.judgement) === "high"
+                          ? "bg-destructive"
+                          : getSeverityFromJudgement(review.judgement) === "medium"
+                            ? "bg-yellow-500"
+                            : "bg-green-500"
+                      }`}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm leading-relaxed whitespace-pre-line">
+                        {review.judgement.replace(/^>\s*/, "")}
+                      </p>
+                      {review.bbox && (
+                        <div className="mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            Region: [{review.bbox.join(", ")}]
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  const renderGeneralReviewContent = () => {
     if (!aiFeedback?.general_review) {
       return (
         <div className="text-center py-8">
-          <p className="text-muted-foreground">No AI feedback available</p>
+          <p className="text-muted-foreground">No general review available</p>
         </div>
       )
     }
@@ -215,6 +287,38 @@ export default function FeedbackDetailPage() {
     )
   }
 
+  const renderFeedbackContent = () => {
+    // Check if we have expert reviews (design master was selected)
+    if (aiFeedback?.expert_reviews && aiFeedback.expert_reviews.length > 0) {
+      return renderExpertReviewContent()
+    }
+
+    // Otherwise show general review
+    return renderGeneralReviewContent()
+  }
+
+  const getTotalFeedbackCount = () => {
+    if (aiFeedback?.expert_reviews && aiFeedback.expert_reviews.length > 0) {
+      // Count expert review items
+      return aiFeedback.expert_reviews.reduce((total, expert) => {
+        return total + expert.screen_review.length
+      }, 0)
+    }
+
+    if (!aiFeedback?.general_review) return 0
+
+    // Count general review items
+    let count = 0
+    Object.values(aiFeedback.general_review).forEach((topic) => {
+      Object.values(topic).forEach((subtopic) => {
+        Object.values(subtopic).forEach((points) => {
+          count += points.length
+        })
+      })
+    })
+    return count
+  }
+
   const renderSummaryContent = () => {
     if (!aiFeedback) {
       return (
@@ -227,22 +331,11 @@ export default function FeedbackDetailPage() {
       )
     }
 
-    // Generate a summary from the AI feedback
-    const totalIssues = Object.values(aiFeedback.general_review).reduce((total, topicData) => {
-      return (
-        total +
-        Object.values(topicData).reduce((subtotal, subtopicData) => {
-          return (
-            subtotal +
-            Object.values(subtopicData).reduce((pointTotal, judgements) => {
-              return pointTotal + judgements.length
-            }, 0)
-          )
-        }, 0)
-      )
-    }, 0)
-
-    const topicsAnalyzed = Object.keys(aiFeedback.general_review)
+    const totalIssues = getTotalFeedbackCount()
+    const isExpertReview = aiFeedback.expert_reviews && aiFeedback.expert_reviews.length > 0
+    const topicsAnalyzed = isExpertReview
+      ? aiFeedback.expert_reviews.map((expert) => expert.name)
+      : Object.keys(aiFeedback.general_review || {})
 
     return (
       <Card>
@@ -256,11 +349,15 @@ export default function FeedbackDetailPage() {
               </div>
               <div className="text-center p-4 bg-muted rounded-lg">
                 <div className="text-2xl font-bold text-primary">{topicsAnalyzed.length}</div>
-                <div className="text-sm text-muted-foreground">Topics Analyzed</div>
+                <div className="text-sm text-muted-foreground">
+                  {isExpertReview ? "Expert Reviews" : "Topics Analyzed"}
+                </div>
               </div>
             </div>
             <div>
-              <h4 className="font-semibold mb-2 font-quantico">Areas Reviewed:</h4>
+              <h4 className="font-semibold mb-2 font-quantico">
+                {isExpertReview ? "Expert Reviewers:" : "Areas Reviewed:"}
+              </h4>
               <div className="flex flex-wrap gap-2">
                 {topicsAnalyzed.map((topic) => (
                   <Badge key={topic} variant="secondary">
@@ -333,7 +430,7 @@ export default function FeedbackDetailPage() {
                 }`}
                 onClick={() => setActiveTab("feedback")}
               >
-                AI Feedback
+                {aiFeedback?.expert_reviews && aiFeedback.expert_reviews.length > 0 ? "Expert Review" : "AI Feedback"}
               </button>
               <button
                 className={`pb-2 px-1 font-quantico ${
