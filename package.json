@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
+    "prisma:deploy": "prisma migrate deploy",
+    "build": "prisma generate && next build",
     "start": "next start"
   },
   "dependencies": {
