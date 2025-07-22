@@ -1,53 +1,53 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { v4 as uuidv4 } from "uuid"
+import { type NextRequest, NextResponse } from "next/server";
+import { v4 as uuidv4 } from "uuid";
 
 interface ExpertDetails {
-  name: string
-  philosophy: string
-  methodology: string[]
-  signature_gestures: string[]
+  name: string;
+  philosophy: string;
+  methodology: string[];
+  signature_gestures: string[];
   talks: Array<{
-    title: string
-    content: string
-  }>
+    title: string;
+    content: string;
+  }>;
   blogs: Array<{
-    title: string
-    content: string
-  }>
+    title: string;
+    content: string;
+  }>;
 }
 
 interface ExpertMetadata {
-  industry: string
-  product_type: string
-  personality: string
-  audience_type: string
-  age_group: string
-  platform: string
+  industry: string;
+  product_type: string;
+  personality: string;
+  audience_type: string;
+  age_group: string;
+  platform: string;
 }
 
 interface ImageDetails {
-  mime_type: string
-  img_str: string
+  mime_type: string;
+  img_str: string;
 }
 
 interface ExpertPayload {
-  thread_id: string
-  metadata: ExpertMetadata
-  expert_details: ExpertDetails
-  img_details: ImageDetails
+  thread_id: string;
+  metadata: ExpertMetadata;
+  expert_details: ExpertDetails;
+  img_details: ImageDetails;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { metadata, expertDetails, imageData } = body
+    const body = await request.json();
+    const { metadata, expertDetails, imageData } = body;
 
     if (!metadata || !expertDetails || !imageData) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     // Generate a random thread ID
-    const threadId = uuidv4()
+    const threadId = uuidv4();
 
     // Prepare the payload for FastAPI backend
     const expertPayload: ExpertPayload = {
@@ -72,31 +72,34 @@ export async function POST(request: NextRequest) {
         mime_type: imageData.mime_type,
         img_str: imageData.img_str,
       },
-    }
+    };
 
     // Send to FastAPI backend
-    const backendResponse = await fetch("http://localhost:8000/expert_advice", {
+    const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_AI_ENGINE_URL}/expert_advice`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(expertPayload),
-    })
+    });
 
     if (!backendResponse.ok) {
-      const errorText = await backendResponse.text()
-      console.error("FastAPI backend error:", errorText)
-      return NextResponse.json({ error: "Failed to generate expert advice with AI backend" }, { status: 500 })
+      const errorText = await backendResponse.text();
+      console.error("FastAPI backend error:", errorText);
+      return NextResponse.json(
+        { error: "Failed to generate expert advice with AI backend" },
+        { status: 500 }
+      );
     }
 
-    const result = await backendResponse.json()
+    const result = await backendResponse.json();
 
     return NextResponse.json({
       success: true,
       data: result,
-    })
+    });
   } catch (error) {
-    console.error("Error generating expert advice:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Error generating expert advice:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
