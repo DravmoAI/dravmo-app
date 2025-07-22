@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
 const config = {
   darkMode: ["class"],
@@ -67,9 +67,12 @@ const config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        "krona-one": ["var(--font-krona-one)"],
+        "noto-sans": ["var(--font-noto-sans)"],
+        roboto: ["var(--font-roboto)"],
         quantico: ["var(--font-quantico)"],
         "roboto-flex": ["var(--font-roboto-flex)"],
+        "krona-one": ["var(--font-krona-one)"],
+        poppins: ["var(--font-poppins)"],
       },
       keyframes: {
         "accordion-down": {
@@ -88,6 +91,6 @@ const config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+} satisfies Config;
 
-export default config
+export default config;
