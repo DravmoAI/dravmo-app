@@ -41,6 +41,8 @@ export default function UploadPage() {
   const [activeTab, setActiveTab] = useState("upload");
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFigmaAuthenticated, setIsFigmaAuthenticated] = useState(false);
+  const [isFigmaAuthLoading, setIsFigmaAuthLoading] = useState(false);
   const supabase = getSupabaseClient();
 
   // Get the authenticated user
@@ -64,6 +66,24 @@ export default function UploadPage() {
       fetchProjects();
     }
   }, [userId]);
+
+  // Check Figma authentication status
+  useEffect(() => {
+    const checkFigmaAuth = async () => {
+      try {
+        const response = await fetch('/api/figma/check-auth');
+        if (response.ok) {
+          const data = await response.json();
+          setIsFigmaAuthenticated(data.authenticated);
+        }
+      } catch (error) {
+        console.error('Error checking Figma auth:', error);
+        setIsFigmaAuthenticated(false);
+      }
+    };
+
+    checkFigmaAuth();
+  }, []);
 
   const fetchProjects = async () => {
     if (!userId) return;
@@ -157,9 +177,25 @@ export default function UploadPage() {
     }
   };
 
+  const handleFigmaLogin = async () => {
+    setIsFigmaAuthLoading(true);
+    try {
+      // Redirect to Figma OAuth
+      window.location.href = '/api/figma/auth';
+    } catch (error) {
+      console.error('Error during Figma login:', error);
+      setIsFigmaAuthLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!uploadedFile && !figmaUrl) {
       alert("Please upload a file or provide a Figma URL");
+      return;
+    }
+
+    if (figmaUrl && !isFigmaAuthenticated) {
+      alert("Please connect to Figma first before using Figma URLs");
       return;
     }
 
@@ -301,22 +337,47 @@ export default function UploadPage() {
 
               <TabsContent value="figma" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="figma-url">Figma File URL</Label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="figma-url"
-                        placeholder="https://www.figma.com/file/..."
-                        value={figmaUrl}
-                        onChange={(e) => setFigmaUrl(e.target.value)}
-                        className="pl-10"
-                      />
+                  <Label>Connect to Figma</Label>
+                  
+                  {!isFigmaAuthenticated ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        Connect your Figma account to import designs directly from Figma files.
+                      </p>
+                      <Button 
+                        onClick={handleFigmaLogin}
+                        disabled={isFigmaAuthLoading}
+                        className="w-full"
+                      >
+                        {isFigmaAuthLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Connecting...
+                          </>
+                        ) : (
+                          'Connect to Figma'
+                        )}
+                      </Button>
                     </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Make sure your Figma file is publicly accessible or shared with view permissions
-                  </p>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="figma-url"
+                            placeholder="https://www.figma.com/file/..."
+                            value={figmaUrl}
+                            onChange={(e) => setFigmaUrl(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Paste your Figma file URL to import the design
+                      </p>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
@@ -357,7 +418,10 @@ export default function UploadPage() {
           className="w-full gap-2"
           size="lg"
           disabled={
-            isUploading || (!uploadedFile && !figmaUrl) || (!selectedProjectId && !newProjectName)
+            isUploading || 
+            (!uploadedFile && !figmaUrl) || 
+            (!selectedProjectId && !newProjectName) ||
+            (!!figmaUrl && !isFigmaAuthenticated)
           }
         >
           {isUploading ? "Uploading..." : "Continue to Analysis"}
