@@ -1,90 +1,95 @@
-"use client"
+"use client";
 
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, Plus, Eye, Trash2, Edit } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { CreateProjectModal } from "@/components/create-project-modal"
-import { LoadingSpinner } from "@/components/loading-spinner"
-import Link from "next/link"
-import { useState, useEffect } from "react"
-import { getSupabaseClient } from "@/lib/supabase"
-import { useRouter } from "next/navigation"
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { MoreHorizontal, Plus, Eye, Trash2, Edit } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CreateProjectModal } from "@/components/create-project-modal";
+import { LoadingSpinner } from "@/components/loading-spinner";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { getSupabaseClient } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 interface Project {
-  id: string
-  name: string
-  createdAt: string
-  updatedAt: string
-  screenCount: number
-  lastFeedback: string
-  status: "active" | "archived"
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  screenCount: number;
+  lastFeedback: string;
+  status: "active" | "archived";
 }
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([])
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [userId, setUserId] = useState<string | null>(null)
-  const router = useRouter()
-  const supabase = getSupabaseClient()
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const router = useRouter();
+  const supabase = getSupabaseClient();
 
   useEffect(() => {
     // Check if user is authenticated and get user ID
     const checkAuth = async () => {
       const {
         data: { session },
-      } = await supabase.auth.getSession()
+      } = await supabase.auth.getSession();
       if (!session?.user) {
-        router.push("/login")
-        return
+        router.push("/login");
+        return;
       }
-      setUserId(session.user.id)
-    }
+      setUserId(session.user.id);
+    };
 
-    checkAuth()
-  }, [router, supabase])
+    checkAuth();
+  }, [router, supabase]);
 
   const fetchProjects = async () => {
-    if (!userId) return
+    if (!userId) return;
 
     try {
-      const response = await fetch(`/api/projects?userId=${userId}`)
+      const response = await fetch(`/api/projects?userId=${userId}`);
       if (!response.ok) {
-        throw new Error("Failed to fetch projects")
+        throw new Error("Failed to fetch projects");
       }
-      const { projects } = await response.json()
-      setProjects(projects || [])
+      const { projects } = await response.json();
+      setProjects(projects || []);
     } catch (error) {
-      console.error("Error fetching projects:", error)
+      console.error("Error fetching projects:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (userId) {
-      fetchProjects()
+      fetchProjects();
     }
-  }, [userId])
+  }, [userId]);
 
   const handleDeleteProject = async (projectId: string) => {
     try {
       const response = await fetch(`/api/projects/${projectId}`, {
         method: "DELETE",
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to delete project")
+        throw new Error("Failed to delete project");
       }
 
-      setProjects(projects.filter((p) => p.id !== projectId))
+      setProjects(projects.filter((p) => p.id !== projectId));
     } catch (error) {
-      console.error("Error deleting project:", error)
+      console.error("Error deleting project:", error);
     }
-  }
+  };
 
   const handleProjectCreated = (newProject: any) => {
     const transformedProject: Project = {
@@ -95,17 +100,17 @@ export default function ProjectsPage() {
       screenCount: 0,
       lastFeedback: newProject.updatedAt,
       status: "active",
-    }
-    setProjects([transformedProject, ...projects])
-  }
+    };
+    setProjects([transformedProject, ...projects]);
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   if (isLoading || !userId) {
     return (
@@ -113,8 +118,10 @@ export default function ProjectsPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold">Projects</h2>
-              <p className="text-muted-foreground">Manage your design projects and feedback history</p>
+              <h2 className="text-3xl font-bold font-krona-one">Projects</h2>
+              <p className="text-muted-foreground">
+                Manage your design projects and feedback history
+              </p>
             </div>
             <Button className="gap-2" disabled>
               <Plus className="h-4 w-4" />
@@ -124,7 +131,7 @@ export default function ProjectsPage() {
           <LoadingSpinner className="min-h-[400px]" text="Loading projects..." />
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   return (
@@ -132,8 +139,10 @@ export default function ProjectsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold">Projects</h2>
-            <p className="text-muted-foreground">Manage your design projects and feedback history</p>
+            <h2 className="text-3xl font-bold font-krona-one">Projects</h2>
+            <p className="text-muted-foreground">
+              Manage your design projects and feedback history
+            </p>
           </div>
           <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="h-4 w-4" />
@@ -149,20 +158,25 @@ export default function ProjectsPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-xl font-bold">{project.name}</h3>
-                      <Badge variant={project.status === "active" ? "default" : "secondary"}>{project.status}</Badge>
+                      <Badge variant={project.status === "active" ? "default" : "secondary"}>
+                        {project.status}
+                      </Badge>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
                       <div>
-                        <span className="font-medium">Created:</span> {formatDate(project.createdAt)}
+                        <span className="font-medium">Created:</span>{" "}
+                        {formatDate(project.createdAt)}
                       </div>
                       <div>
-                        <span className="font-medium">Updated:</span> {formatDate(project.updatedAt)}
+                        <span className="font-medium">Updated:</span>{" "}
+                        {formatDate(project.updatedAt)}
                       </div>
                       <div>
                         <span className="font-medium">Screens:</span> {project.screenCount}
                       </div>
                       <div>
-                        <span className="font-medium">Last Feedback:</span> {formatDate(project.lastFeedback)}
+                        <span className="font-medium">Last Feedback:</span>{" "}
+                        {formatDate(project.lastFeedback)}
                       </div>
                     </div>
                   </div>
@@ -181,13 +195,19 @@ export default function ProjectsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link href={`/projects/${project.id}/edit`} className="flex items-center cursor-pointer">
+                          <Link
+                            href={`/projects/${project.id}/edit`}
+                            className="flex items-center cursor-pointer"
+                          >
                             <Edit className="h-4 w-4 mr-2" />
                             Edit Project
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link href={`/projects/${project.id}`} className="flex items-center cursor-pointer">
+                          <Link
+                            href={`/projects/${project.id}`}
+                            className="flex items-center cursor-pointer"
+                          >
                             <Eye className="h-4 w-4 mr-2" />
                             View Screens
                           </Link>
@@ -222,5 +242,5 @@ export default function ProjectsPage() {
         />
       </div>
     </DashboardLayout>
-  )
+  );
 }

@@ -1,122 +1,147 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
-import { Plus } from "lucide-react"
-import Link from "next/link"
-import { getSupabaseClient } from "@/lib/supabase"
-import { LoadingSpinner } from "@/components/loading-spinner"
+import { useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Plus } from "lucide-react";
+import Link from "next/link";
+import { getSupabaseClient } from "@/lib/supabase";
+import { LoadingSpinner } from "@/components/loading-spinner";
 
 interface Project {
-  id: string
-  name: string
-  createdAt: string
-  updatedAt: string
-  screenCount: number
-  lastFeedback: string
-  status: string
-  thumbnail?: string
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  screenCount: number;
+  lastFeedback: string;
+  status: string;
+  thumbnail?: string;
 }
 
+const mapColorBoldnessToName = {
+  "0": "Monochrone Zen",
+  "50": "Balanced Pop",
+  "100": "Full-blast Neon",
+};
+
+const maptypeTemperamentToName = {
+  "0": "Ultra-clean Sans-serif",
+  "50": "Humanist Hybrid",
+  "100": "Experimental Decorative",
+};
+
+const mapSpacingAirinessToName = {
+  "0": "Compact & Dense",
+  "50": "Balanced Breathing",
+  "100": "Cloud-like Levity",
+};
+
+const mapMotionDramaToName = {
+  "0": "Static & Direct",
+  "50": "Subtle Animation",
+  "100": "Cinematic Spectacle",
+};
+
 export default function DashboardPage() {
-  const [projects, setProjects] = useState<Project[]>([])
-  const [persona, setPersona] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<any>(null)
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [persona, setPersona] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     async function fetchUserAndProjects() {
       try {
-        const supabase = getSupabaseClient()
+        const supabase = getSupabaseClient();
         const {
           data: { user },
           error: userError,
-        } = await supabase.auth.getUser()
+        } = await supabase.auth.getUser();
 
         if (userError || !user) {
-          setError("Please log in to view your projects")
-          setLoading(false)
-          return
+          setError("Please log in to view your projects");
+          setLoading(false);
+          return;
         }
 
-        setUser(user)
+        setUser(user);
 
         // Fetch user profile with persona
-        const profileResponse = await fetch(`/api/profile/${user.id}`)
+        const profileResponse = await fetch(`/api/profile/${user.id}`);
         if (profileResponse.ok) {
-          const { profile } = await profileResponse.json()
-          setPersona(profile?.persona)
+          const { profile } = await profileResponse.json();
+          setPersona(profile?.persona);
         }
 
         // Fetch projects from API
-        const response = await fetch(`/api/projects?userId=${user.id}`)
+        const response = await fetch(`/api/projects?userId=${user.id}`);
         if (!response.ok) {
-          throw new Error("Failed to fetch projects")
+          throw new Error("Failed to fetch projects");
         }
 
-        const data = await response.json()
+        const data = await response.json();
 
         // Get the 3 most recent projects
-        const recentProjects = data.projects.slice(0, 3)
+        const recentProjects = data.projects.slice(0, 3);
 
         // For each project, try to get a thumbnail from the first screen
         const projectsWithThumbnails = await Promise.all(
           recentProjects.map(async (project: Project) => {
             try {
-              const screensResponse = await fetch(`/api/screens?projectId=${project.id}`)
+              const screensResponse = await fetch(`/api/screens?projectId=${project.id}`);
               if (screensResponse.ok) {
-                const screensData = await screensResponse.json()
-                const firstScreen = screensData.screens?.[0]
+                const screensData = await screensResponse.json();
+                const firstScreen = screensData.screens?.[0];
                 return {
                   ...project,
-                  thumbnail: firstScreen?.sourceUrl || "/placeholder.svg?height=100&width=200&text=No+Image",
-                }
+                  thumbnail:
+                    firstScreen?.sourceUrl || "/placeholder.svg?height=100&width=200&text=No+Image",
+                };
               }
             } catch (error) {
-              console.error(`Error fetching screens for project ${project.id}:`, error)
+              console.error(`Error fetching screens for project ${project.id}:`, error);
             }
             return {
               ...project,
               thumbnail: "/placeholder.svg?height=100&width=200&text=No+Image",
-            }
-          }),
-        )
+            };
+          })
+        );
 
-        setProjects(projectsWithThumbnails)
+        setProjects(projectsWithThumbnails);
       } catch (error) {
-        console.error("Error fetching projects:", error)
-        setError("Failed to load projects")
+        console.error("Error fetching projects:", error);
+        setError("Failed to load projects");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchUserAndProjects()
-  }, [])
+    fetchUserAndProjects();
+  }, []);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - date.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) return "Today"
-    if (diffDays === 2) return "Yesterday"
-    if (diffDays <= 7) return `${diffDays - 1} days ago`
-    return date.toLocaleDateString()
-  }
+    if (diffDays === 1) return "Today";
+    if (diffDays === 2) return "Yesterday";
+    if (diffDays <= 7) return `${diffDays - 1} days ago`;
+    return date.toLocaleDateString();
+  };
 
   if (loading) {
     return (
       <DashboardLayout>
         <LoadingSpinner className="min-h-[400px]" />
       </DashboardLayout>
-    )
+    );
   }
 
   if (error) {
@@ -131,7 +156,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   return (
@@ -152,7 +177,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="font-quantico">Design Persona</CardTitle>
+              <CardTitle className="font-krona-one">Design Persona</CardTitle>
               <Link href="/persona">
                 <Button variant="outline" size="sm">
                   {persona ? "Update Persona" : "Create Persona"}
@@ -165,7 +190,7 @@ export default function DashboardPage() {
               <>
                 <div>
                   <h3 className="font-bold mb-2 font-quantico">Selected Persona</h3>
-                  <Badge variant="secondary" className="text-sm">
+                  <Badge variant="default" className="text-xs">
                     {persona.personaCard?.personaCardName || "Custom Persona"}
                   </Badge>
                 </div>
@@ -174,21 +199,46 @@ export default function DashboardPage() {
                   <div>
                     <h3 className="font-bold mb-4 font-quantico">Design Preferences</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
+                      <div className="flex flex-col gap-2">
                         <Label>Color Boldness</Label>
-                        <div className="text-sm text-muted-foreground">{persona.personaVibes[0].colorBoldness}%</div>
+                        <Badge className="w-fit">
+                          {mapColorBoldnessToName[
+                            String(
+                              persona.personaVibes[0].colorBoldness
+                            ) as keyof typeof mapColorBoldnessToName
+                          ] || "Custom"}
+                        </Badge>
                       </div>
-                      <div>
+
+                      <div className="flex flex-col gap-2">
                         <Label>Typeface Temperament</Label>
-                        <div className="text-sm text-muted-foreground">{persona.personaVibes[0].typeTemperament}%</div>
+                        <Badge className="w-fit">
+                          {maptypeTemperamentToName[
+                            persona.personaVibes[0].typeTemperament.toString() as keyof typeof maptypeTemperamentToName
+                          ] || "Custom"}
+                        </Badge>
                       </div>
-                      <div>
+
+                      <div className="flex flex-col gap-2">
                         <Label>Spacing Airiness</Label>
-                        <div className="text-sm text-muted-foreground">{persona.personaVibes[0].spacingAiriness}%</div>
+                        <Badge className="w-fit">
+                          {mapSpacingAirinessToName[
+                            String(
+                              persona.personaVibes[0].spacingAiriness
+                            ) as keyof typeof mapSpacingAirinessToName
+                          ] || "Custom"}
+                        </Badge>
                       </div>
-                      <div>
+
+                      <div className="flex flex-col gap-2">
                         <Label>Motion Drama</Label>
-                        <div className="text-sm text-muted-foreground">{persona.personaVibes[0].motionDrama}%</div>
+                        <Badge className="w-fit">
+                          {mapMotionDramaToName[
+                            String(
+                              persona.personaVibes[0].motionDrama
+                            ) as keyof typeof mapMotionDramaToName
+                          ] || "Custom"}
+                        </Badge>
                       </div>
                     </div>
                   </div>
@@ -199,7 +249,7 @@ export default function DashboardPage() {
                     <h3 className="font-bold mb-2 font-quantico">Style Keywords</h3>
                     <div className="flex flex-wrap gap-2">
                       {persona.personaKeywords.map((keyword: any) => (
-                        <Badge key={keyword.id} variant="outline">
+                        <Badge key={keyword.id} variant="default">
                           {keyword.keyword}
                         </Badge>
                       ))}
@@ -273,14 +323,16 @@ export default function DashboardPage() {
                         alt={project.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.src = "/placeholder.svg?height=100&width=200&text=No+Image"
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/placeholder.svg?height=100&width=200&text=No+Image";
                         }}
                       />
                     </div>
                     <CardContent className="p-4">
                       <div className="font-medium truncate">{project.name}</div>
-                      <div className="text-sm text-muted-foreground">{formatDate(project.updatedAt)}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatDate(project.updatedAt)}
+                      </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {project.screenCount} screen{project.screenCount !== 1 ? "s" : ""}
                       </div>
@@ -293,5 +345,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

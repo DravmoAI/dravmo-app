@@ -1,106 +1,106 @@
-"use client"
+"use client";
 
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, MessageSquare, Download, Share2, Pencil } from "lucide-react"
-import Link from "next/link"
-import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
-import { LoadingSpinner } from "@/components/loading-spinner"
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, MessageSquare, Download, Share2, Pencil } from "lucide-react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { LoadingSpinner } from "@/components/loading-spinner";
 
 interface Screen {
-  id: string
-  projectId: string
-  sourceUrl: string
-  sourceType: "upload" | "figma"
-  createdAt: string
-  updatedAt: string
+  id: string;
+  projectId: string;
+  sourceUrl: string;
+  sourceType: "upload" | "figma";
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Project {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface FeedbackResult {
-  id: string
-  createdAt: string
-  feedbackSummary: string
-  version: string
+  id: string;
+  createdAt: string;
+  feedbackSummary: string;
+  version: string;
   feedbackQuery: {
-    id: string
+    id: string;
     designMaster?: {
-      id: string
-      name: string
-    }
-  }
+      id: string;
+      name: string;
+    };
+  };
 }
 
 export default function ScreenDetailPage() {
-  const params = useParams()
-  const projectId = params.id as string
-  const screenId = params.screenId as string
-  const [screen, setScreen] = useState<Screen | null>(null)
-  const [project, setProject] = useState<Project | null>(null)
-  const [feedbackResults, setFeedbackResults] = useState<FeedbackResult[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const params = useParams();
+  const projectId = params.id as string;
+  const screenId = params.screenId as string;
+  const [screen, setScreen] = useState<Screen | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
+  const [feedbackResults, setFeedbackResults] = useState<FeedbackResult[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(true);
 
         // Fetch screen data
-        const screenResponse = await fetch(`/api/screens/${screenId}`)
+        const screenResponse = await fetch(`/api/screens/${screenId}`);
         if (screenResponse.ok) {
-          const screenData = await screenResponse.json()
-          setScreen(screenData.screen)
+          const screenData = await screenResponse.json();
+          setScreen(screenData.screen);
         }
 
         // Fetch project data
-        const projectResponse = await fetch(`/api/projects/${projectId}`)
+        const projectResponse = await fetch(`/api/projects/${projectId}`);
         if (projectResponse.ok) {
-          const projectData = await projectResponse.json()
-          setProject(projectData.project)
+          const projectData = await projectResponse.json();
+          setProject(projectData.project);
         }
 
         // Fetch feedback results for this screen
-        const feedbackResponse = await fetch(`/api/screens/${screenId}/feedback`)
+        const feedbackResponse = await fetch(`/api/screens/${screenId}/feedback`);
         if (feedbackResponse.ok) {
-          const feedbackData = await feedbackResponse.json()
-          setFeedbackResults(feedbackData.feedbackResults)
+          const feedbackData = await feedbackResponse.json();
+          setFeedbackResults(feedbackData.feedbackResults);
         }
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error("Error fetching data:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [projectId, screenId])
+    fetchData();
+  }, [projectId, screenId]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const truncateSummary = (summary: string, maxLength = 80) => {
-    if (summary.length <= maxLength) return summary
-    return summary.substring(0, maxLength) + "..."
-  }
+    if (summary.length <= maxLength) return summary;
+    return summary.substring(0, maxLength) + "...";
+  };
 
   if (isLoading) {
     return (
       <DashboardLayout>
         <LoadingSpinner size="lg" text="Loading screen details..." />
       </DashboardLayout>
-    )
+    );
   }
 
   if (!screen || !project) {
@@ -110,7 +110,7 @@ export default function ScreenDetailPage() {
           <div className="text-muted-foreground">Screen not found</div>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   return (
@@ -125,7 +125,7 @@ export default function ScreenDetailPage() {
               </Button>
             </Link>
           </div>
-          <div className="flex gap-2">
+          {/* <div className="flex gap-2">
             <Button variant="outline" size="sm" className="gap-2">
               <Share2 className="h-4 w-4" />
               Share
@@ -140,7 +140,7 @@ export default function ScreenDetailPage() {
                 Analyze
               </Button>
             </Link>
-          </div>
+          </div> */}
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -161,12 +161,14 @@ export default function ScreenDetailPage() {
                     <Badge variant="outline" className="text-xs">
                       {screen.sourceType === "figma" ? "Figma" : "Upload"}
                     </Badge>
-                    <span className="text-sm text-muted-foreground">Uploaded on {formatDate(screen.createdAt)}</span>
+                    <span className="text-sm text-muted-foreground">
+                      Uploaded on {formatDate(screen.createdAt)}
+                    </span>
                   </div>
-                  <Button variant="ghost" size="sm" className="gap-2">
+                  {/* <Button variant="ghost" size="sm" className="gap-2">
                     <Pencil className="h-4 w-4" />
                     Edit Details
-                  </Button>
+                  </Button> */}
                 </div>
               </CardContent>
             </Card>
@@ -202,13 +204,23 @@ export default function ScreenDetailPage() {
                 </CardContent>
               </Card>
 
+              <Link href={`/projects/${projectId}/screens/${screenId}/analyze`} className="block">
+                <Button className="w-full gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  New Analysis
+                </Button>
+              </Link>
+
               <div>
                 <h3 className="font-bold mb-3">Feedback History</h3>
                 {feedbackResults.length === 0 ? (
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-muted-foreground text-sm">No feedback yet</p>
-                      <Link href={`/projects/${projectId}/screens/${screenId}/analyze`} className="block mt-2">
+                      <Link
+                        href={`/projects/${projectId}/screens/${screenId}/analyze`}
+                        className="block mt-2"
+                      >
                         <Button size="sm" variant="outline">
                           Create First Analysis
                         </Button>
@@ -218,14 +230,19 @@ export default function ScreenDetailPage() {
                 ) : (
                   <div className="space-y-3">
                     {feedbackResults.map((result) => (
-                      <Link key={result.id} href={`/projects/${projectId}/screens/${screenId}/feedback/${result.id}`}>
-                        <Card className="hover:border-primary/50 transition-colors">
+                      <Link
+                        key={result.id}
+                        href={`/projects/${projectId}/screens/${screenId}/feedback/${result.id}`}
+                      >
+                        <Card className="my-4 hover:border-primary/50 transition-colors">
                           <CardContent className="p-3">
                             <div className="flex items-center justify-between mb-2">
                               <Badge variant="outline" className="text-xs">
                                 {result.version}
                               </Badge>
-                              <span className="text-xs text-muted-foreground">{formatDate(result.createdAt)}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(result.createdAt)}
+                              </span>
                             </div>
                             <p className="text-sm text-muted-foreground mb-1">
                               {truncateSummary(result.feedbackSummary)}
@@ -242,17 +259,10 @@ export default function ScreenDetailPage() {
                   </div>
                 )}
               </div>
-
-              <Link href={`/projects/${projectId}/screens/${screenId}/analyze`} className="block">
-                <Button className="w-full gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  New Analysis
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

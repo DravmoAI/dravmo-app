@@ -1,14 +1,19 @@
-"use client"
+"use client";
 
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Download, Share2 } from "lucide-react"
-import { useState } from "react"
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Download, Share2 } from "lucide-react";
+import { useState } from "react";
 
 export default function FeedbackPage() {
-  const [activeTab, setActiveTab] = useState("feedback")
+  const [activeTab, setActiveTab] = useState("feedback");
 
   // Mock feedback data
   const feedbackData = {
@@ -63,7 +68,7 @@ export default function FeedbackPage() {
         },
       ],
     },
-  }
+  };
 
   return (
     <DashboardLayout>
@@ -85,7 +90,9 @@ export default function FeedbackPage() {
             <div className="mb-6 flex gap-4 border-b">
               <button
                 className={`pb-2 px-1 ${
-                  activeTab === "feedback" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
+                  activeTab === "feedback"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
                 }`}
                 onClick={() => setActiveTab("feedback")}
               >
@@ -93,15 +100,19 @@ export default function FeedbackPage() {
               </button>
               <button
                 className={`pb-2 px-1 ${
-                  activeTab === "summary" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
+                  activeTab === "summary"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
                 }`}
                 onClick={() => setActiveTab("summary")}
               >
-                Summary
+                Analytics
               </button>
               <button
                 className={`pb-2 px-1 ${
-                  activeTab === "history" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
+                  activeTab === "history"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
                 }`}
                 onClick={() => setActiveTab("history")}
               >
@@ -113,7 +124,9 @@ export default function FeedbackPage() {
               <div className="space-y-6">
                 <Accordion type="single" collapsible className="w-full">
                   <AccordionItem value="layout">
-                    <AccordionTrigger className="text-lg font-medium">Layout & Structure</AccordionTrigger>
+                    <AccordionTrigger className="text-lg font-medium">
+                      Layout & Structure
+                    </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-4 pt-2">
                         {feedbackData.layout.items.map((item, index) => (
@@ -125,13 +138,15 @@ export default function FeedbackPage() {
                                     item.severity === "high"
                                       ? "bg-destructive"
                                       : item.severity === "medium"
-                                        ? "bg-tertiary"
-                                        : "bg-primary"
+                                      ? "bg-tertiary"
+                                      : "bg-primary"
                                   }`}
                                 />
                                 <div>
                                   <h4 className="font-medium">{item.title}</h4>
-                                  <p className="text-muted-foreground text-sm">{item.description}</p>
+                                  <p className="text-muted-foreground text-sm">
+                                    {item.description}
+                                  </p>
                                 </div>
                               </div>
                             </CardContent>
@@ -141,7 +156,9 @@ export default function FeedbackPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="typography">
-                    <AccordionTrigger className="text-lg font-medium">Typography & Readability</AccordionTrigger>
+                    <AccordionTrigger className="text-lg font-medium">
+                      Typography & Readability
+                    </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-4 pt-2">
                         {feedbackData.typography.items.map((item, index) => (
@@ -153,13 +170,15 @@ export default function FeedbackPage() {
                                     item.severity === "high"
                                       ? "bg-destructive"
                                       : item.severity === "medium"
-                                        ? "bg-tertiary"
-                                        : "bg-primary"
+                                      ? "bg-tertiary"
+                                      : "bg-primary"
                                   }`}
                                 />
                                 <div>
                                   <h4 className="font-medium">{item.title}</h4>
-                                  <p className="text-muted-foreground text-sm">{item.description}</p>
+                                  <p className="text-muted-foreground text-sm">
+                                    {item.description}
+                                  </p>
                                 </div>
                               </div>
                             </CardContent>
@@ -169,7 +188,9 @@ export default function FeedbackPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="color">
-                    <AccordionTrigger className="text-lg font-medium">Color & Visual Rhythm</AccordionTrigger>
+                    <AccordionTrigger className="text-lg font-medium">
+                      Color & Visual Rhythm
+                    </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-4 pt-2">
                         {feedbackData.color.items.map((item, index) => (
@@ -181,13 +202,15 @@ export default function FeedbackPage() {
                                     item.severity === "high"
                                       ? "bg-destructive"
                                       : item.severity === "medium"
-                                        ? "bg-tertiary"
-                                        : "bg-primary"
+                                      ? "bg-tertiary"
+                                      : "bg-primary"
                                   }`}
                                 />
                                 <div>
                                   <h4 className="font-medium">{item.title}</h4>
-                                  <p className="text-muted-foreground text-sm">{item.description}</p>
+                                  <p className="text-muted-foreground text-sm">
+                                    {item.description}
+                                  </p>
                                 </div>
                               </div>
                             </CardContent>
@@ -197,7 +220,9 @@ export default function FeedbackPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="masters">
-                    <AccordionTrigger className="text-lg font-medium">Design Master Review</AccordionTrigger>
+                    <AccordionTrigger className="text-lg font-medium">
+                      Design Master Review
+                    </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-4 pt-2">
                         <Card>
@@ -207,9 +232,9 @@ export default function FeedbackPage() {
                               <div>
                                 <h4 className="font-medium">Dieter Rams Would Say...</h4>
                                 <p className="text-muted-foreground text-sm">
-                                  "This design has potential but lacks restraint. Remember that good design is as little
-                                  design as possible. Consider removing decorative elements that don't serve a clear
-                                  purpose."
+                                  "This design has potential but lacks restraint. Remember that good
+                                  design is as little design as possible. Consider removing
+                                  decorative elements that don't serve a clear purpose."
                                 </p>
                               </div>
                             </div>
@@ -222,8 +247,9 @@ export default function FeedbackPage() {
                               <div>
                                 <h4 className="font-medium">Grid Alignment</h4>
                                 <p className="text-muted-foreground text-sm">
-                                  "Your layout would benefit from a more rigorous grid system. Rams' work always
-                                  featured precise alignment and mathematical proportions."
+                                  "Your layout would benefit from a more rigorous grid system. Rams'
+                                  work always featured precise alignment and mathematical
+                                  proportions."
                                 </p>
                               </div>
                             </div>
@@ -242,9 +268,9 @@ export default function FeedbackPage() {
                   <CardContent className="p-6">
                     <h3 className="text-xl font-bold mb-4">Design Summary</h3>
                     <p className="text-muted-foreground mb-4">
-                      Your design shows strong potential with its vibrant color choices and modern aesthetic. The
-                      primary areas for improvement are in typography contrast, layout hierarchy, and interactive
-                      element affordances.
+                      Your design shows strong potential with its vibrant color choices and modern
+                      aesthetic. The primary areas for improvement are in typography contrast,
+                      layout hierarchy, and interactive element affordances.
                     </p>
                     <h4 className="font-bold mt-6 mb-2">Strengths</h4>
                     <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
@@ -270,21 +296,27 @@ export default function FeedbackPage() {
                     <h3 className="text-xl font-bold mb-4">Version History</h3>
                     <div className="space-y-4">
                       <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">v3</div>
+                        <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
+                          v3
+                        </div>
                         <div>
                           <div className="font-medium">Current Version</div>
                           <div className="text-sm text-muted-foreground">Today, 2:45 PM</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">v2</div>
+                        <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
+                          v2
+                        </div>
                         <div>
                           <div className="font-medium">Second Iteration</div>
                           <div className="text-sm text-muted-foreground">Yesterday, 4:30 PM</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">v1</div>
+                        <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
+                          v1
+                        </div>
                         <div>
                           <div className="font-medium">Initial Upload</div>
                           <div className="text-sm text-muted-foreground">2 days ago, 10:15 AM</div>
@@ -324,5 +356,5 @@ export default function FeedbackPage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

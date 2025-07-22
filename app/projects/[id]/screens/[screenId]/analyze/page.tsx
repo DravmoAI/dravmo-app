@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -94,7 +94,7 @@ export default function ScreenAnalyzePage() {
   const [designMasters, setDesignMasters] = useState<DesignMaster[]>([]);
   const [selectedAnalyzers, setSelectedAnalyzers] = useState<SelectedAnalyzer[]>([]);
   const [selectedMaster, setSelectedMaster] = useState<string | null>(null);
-  const [isMastersMode, setIsMastersMode] = useState(false);
+  const [activeTab, setActiveTab] = useState("context");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageProcessing, setImageProcessing] = useState(false);
   const [processedImageData, setProcessedImageData] = useState<any>(null);
@@ -297,7 +297,9 @@ export default function ScreenAnalyzePage() {
   };
 
   const handleAnalyze = async () => {
-    if (selectedAnalyzers.length === 0) {
+    const isMasterMode = activeTab === "master";
+
+    if (!isMasterMode && selectedAnalyzers.length === 0) {
       toast({
         title: "Selection Required",
         description: "Please select at least one analysis point.",
@@ -306,7 +308,7 @@ export default function ScreenAnalyzePage() {
       return;
     }
 
-    if (isMastersMode && !selectedMaster) {
+    if (isMasterMode && !selectedMaster) {
       toast({
         title: "Selection Required",
         description: "Please select a design master for analysis.",
@@ -346,7 +348,7 @@ export default function ScreenAnalyzePage() {
         body: JSON.stringify({
           screenId,
           projectId,
-          designMasterId: selectedMaster,
+          designMasterId: isMasterMode ? selectedMaster : null,
           industry: formData.industry,
           productType: formData.productType,
           purpose: formData.purpose,
@@ -354,7 +356,7 @@ export default function ScreenAnalyzePage() {
           ageGroup: formData.ageGroup,
           brandPersonality: formData.brandPersonality,
           platform: formData.platform,
-          selectedAnalyzers,
+          selectedAnalyzers: isMasterMode ? [] : selectedAnalyzers,
           imageData: imageData, // Include the processed image data
         }),
       });
@@ -458,62 +460,18 @@ export default function ScreenAnalyzePage() {
             </Card>
 
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold font-krona-one">Context Setup</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Masters Mode</span>
-                  <Switch checked={isMastersMode} onCheckedChange={setIsMastersMode} />
-                </div>
-              </div>
+              <h3 className="text-xl font-bold font-krona-one">Analysis Configuration</h3>
 
-              {isMastersMode ? (
-                <div className="space-y-4">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="context">Context Setup</TabsTrigger>
+                  <TabsTrigger value="master">Master Mode</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="context" className="space-y-4 mt-6">
                   <p className="text-muted-foreground">
-                    Select a design master to analyze your design through their unique perspective
-                    and philosophy.
+                    Configure the context and criteria for AI-powered design analysis.
                   </p>
-                  <div className="grid gap-3">
-                    {designMasters.map((master) => (
-                      <Card
-                        key={master.id}
-                        className={`cursor-pointer transition-all ${
-                          selectedMaster === master.id
-                            ? "border-primary"
-                            : "hover:border-primary/50"
-                        }`}
-                        onClick={() => setSelectedMaster(master.id)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-full overflow-hidden bg-muted">
-                              <img
-                                src={master.avatarUrl || "/placeholder-user.jpg"}
-                                alt={master.name}
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-bold">{master.name}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                Philosophy: {master.philosophy}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Signature Gestures: {master.signatureGestures.join(", ")}
-                              </p>
-                            </div>
-                            {selectedMaster === master.id && (
-                              <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                                <Check className="h-3 w-3 text-primary-foreground" />
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="industry" className="font-quantico">
@@ -661,8 +619,54 @@ export default function ScreenAnalyzePage() {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-              )}
+                </TabsContent>
+
+                <TabsContent value="master" className="space-y-4 mt-6">
+                  <p className="text-muted-foreground">
+                    Select a design master to analyze your design through their unique perspective
+                    and philosophy.
+                  </p>
+                  <div className="grid gap-3">
+                    {designMasters.map((master) => (
+                      <Card
+                        key={master.id}
+                        className={`cursor-pointer transition-all ${
+                          selectedMaster === master.id
+                            ? "border-primary"
+                            : "hover:border-primary/50"
+                        }`}
+                        onClick={() => setSelectedMaster(master.id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-full overflow-hidden bg-muted">
+                              <img
+                                src={master.avatarUrl || "/placeholder-user.jpg"}
+                                alt={master.name}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold">{master.name}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                Philosophy: {master.philosophy}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Signature Gestures: {master.signatureGestures.join(", ")}
+                              </p>
+                            </div>
+                            {selectedMaster === master.id && (
+                              <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                                <Check className="h-3 w-3 text-primary-foreground" />
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
 
@@ -671,116 +675,125 @@ export default function ScreenAnalyzePage() {
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold mb-4 font-krona-one">Analysis Topics</h3>
-                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-                    {analyzerTopics.map((topic) => (
-                      <Accordion
-                        type="single"
-                        collapsible
-                        key={topic.id}
-                        className="border rounded-md"
-                      >
-                        <AccordionItem value={topic.id} className="border-none">
-                          <AccordionTrigger className="px-4 py-2 hover:no-underline">
-                            <div className="flex items-center gap-3">
-                              <Checkbox
-                                id={`topic-${topic.id}`}
-                                checked={isTopicSelected(topic.id)}
-                                onCheckedChange={() => handleTopicChange(topic.id)}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                              <Label
-                                htmlFor={`topic-${topic.id}`}
-                                className="font-medium cursor-pointer font-quantico"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleTopicChange(topic.id);
-                                }}
-                              >
-                                {topic.name}
-                              </Label>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent className="px-4 pb-2">
-                            <p className="text-sm text-muted-foreground mb-3">
-                              {topic.description}
-                            </p>
-                            <div className="space-y-1 pl-6">
-                              {topic.analyzerSubtopics.map((subtopic) => (
-                                <Accordion
-                                  type="single"
-                                  collapsible
-                                  key={subtopic.id}
-                                  className="border rounded-md mt-2"
+                  {activeTab === "context" ? (
+                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                      {analyzerTopics.map((topic) => (
+                        <Accordion
+                          type="single"
+                          collapsible
+                          key={topic.id}
+                          className="border rounded-md"
+                        >
+                          <AccordionItem value={topic.id} className="border-none">
+                            <AccordionTrigger className="px-4 py-2 hover:no-underline">
+                              <div className="flex items-center gap-3">
+                                <Checkbox
+                                  id={`topic-${topic.id}`}
+                                  checked={isTopicSelected(topic.id)}
+                                  onCheckedChange={() => handleTopicChange(topic.id)}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                                <Label
+                                  htmlFor={`topic-${topic.id}`}
+                                  className="font-medium cursor-pointer font-quantico"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTopicChange(topic.id);
+                                  }}
                                 >
-                                  <AccordionItem value={subtopic.id} className="border-none">
-                                    <AccordionTrigger className="px-4 py-2 hover:no-underline">
-                                      <div className="flex items-center gap-3">
-                                        <Checkbox
-                                          id={`subtopic-${subtopic.id}`}
-                                          checked={isSubtopicSelected(subtopic.id)}
-                                          onCheckedChange={() =>
-                                            handleSubtopicChange(subtopic.id, topic.id)
-                                          }
-                                          onClick={(e) => e.stopPropagation()}
-                                        />
-                                        <Label
-                                          htmlFor={`subtopic-${subtopic.id}`}
-                                          className="font-medium cursor-pointer font-quantico"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleSubtopicChange(subtopic.id, topic.id);
-                                          }}
-                                        >
-                                          {subtopic.name}
-                                        </Label>
-                                      </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="px-4 pb-2">
-                                      <p className="text-sm text-muted-foreground mb-3">
-                                        {subtopic.description}
-                                      </p>
-                                      <div className="space-y-2 pl-6">
-                                        {subtopic.analyzerPoints.map((point) => (
-                                          <div key={point.id} className="flex items-center gap-3">
-                                            <Checkbox
-                                              id={`point-${point.id}`}
-                                              checked={isPointSelected(point.id)}
-                                              onCheckedChange={() =>
-                                                handlePointChange(point.id, subtopic.id, topic.id)
-                                              }
-                                            />
-                                            <div>
-                                              <Label
-                                                htmlFor={`point-${point.id}`}
-                                                className="font-medium cursor-pointer font-quantico"
-                                              >
-                                                {point.name}
-                                              </Label>
-                                              <p className="text-xs text-muted-foreground">
-                                                {point.description}
-                                              </p>
+                                  {topic.name}
+                                </Label>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="px-4 pb-2">
+                              <p className="text-sm text-muted-foreground mb-3">
+                                {topic.description}
+                              </p>
+                              <div className="space-y-1 pl-6">
+                                {topic.analyzerSubtopics.map((subtopic) => (
+                                  <Accordion
+                                    type="single"
+                                    collapsible
+                                    key={subtopic.id}
+                                    className="border rounded-md mt-2"
+                                  >
+                                    <AccordionItem value={subtopic.id} className="border-none">
+                                      <AccordionTrigger className="px-4 py-2 hover:no-underline">
+                                        <div className="flex items-center gap-3">
+                                          <Checkbox
+                                            id={`subtopic-${subtopic.id}`}
+                                            checked={isSubtopicSelected(subtopic.id)}
+                                            onCheckedChange={() =>
+                                              handleSubtopicChange(subtopic.id, topic.id)
+                                            }
+                                            onClick={(e) => e.stopPropagation()}
+                                          />
+                                          <Label
+                                            htmlFor={`subtopic-${subtopic.id}`}
+                                            className="font-medium cursor-pointer font-quantico"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleSubtopicChange(subtopic.id, topic.id);
+                                            }}
+                                          >
+                                            {subtopic.name}
+                                          </Label>
+                                        </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent className="px-4 pb-2">
+                                        <p className="text-sm text-muted-foreground mb-3">
+                                          {subtopic.description}
+                                        </p>
+                                        <div className="space-y-2 pl-6">
+                                          {subtopic.analyzerPoints.map((point) => (
+                                            <div key={point.id} className="flex items-center gap-3">
+                                              <Checkbox
+                                                id={`point-${point.id}`}
+                                                checked={isPointSelected(point.id)}
+                                                onCheckedChange={() =>
+                                                  handlePointChange(point.id, subtopic.id, topic.id)
+                                                }
+                                              />
+                                              <div>
+                                                <Label
+                                                  htmlFor={`point-${point.id}`}
+                                                  className="font-medium cursor-pointer font-quantico"
+                                                >
+                                                  {point.name}
+                                                </Label>
+                                                <p className="text-xs text-muted-foreground">
+                                                  {point.description}
+                                                </p>
+                                              </div>
                                             </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </AccordionContent>
-                                  </AccordionItem>
-                                </Accordion>
-                              ))}
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    ))}
-                  </div>
+                                          ))}
+                                        </div>
+                                      </AccordionContent>
+                                    </AccordionItem>
+                                  </Accordion>
+                                ))}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="pt-4 text-center text-muted-foreground">
+                      <p>
+                        Analysis topics are automatically determined based on the chosen design
+                        master's expertise.
+                      </p>
+                    </div>
+                  )}
 
                   <div className="mt-8">
                     <Button
                       onClick={handleAnalyze}
                       className="w-full gap-2"
                       disabled={
-                        selectedAnalyzers.length === 0 ||
-                        (isMastersMode && !selectedMaster) ||
+                        (activeTab === "context" && selectedAnalyzers.length === 0) ||
+                        (activeTab === "master" && !selectedMaster) ||
                         isSubmitting ||
                         imageProcessing
                       }
