@@ -158,7 +158,7 @@
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 .checkbox .tgl + .tgl-btn:before {
-  content: "Off";
+  content: "";
   left: 28px;
   color: var(--g04);
   transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -179,7 +179,7 @@
   margin-left: -0.4em;
 }
 .checkbox .tgl:checked + .tgl-btn:before {
-  content: "On";
+  content: "";
   left: 4px;
   color: #0d1b2a;
 }
