@@ -92,6 +92,7 @@ interface BoundingBox {
   height: number
   judgement: string
   color: string
+  accordionValue?: string // For general review accordion navigation
 }
 
 export default function FeedbackDetailPage() {
@@ -108,8 +109,10 @@ export default function FeedbackDetailPage() {
   const [boundingBoxes, setBoundingBoxes] = useState<BoundingBox[]>([])
   const [selectedBoundingBox, setSelectedBoundingBox] = useState<string | null>(null)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [openAccordionValue, setOpenAccordionValue] = useState<string>("")
   const imageRef = useRef<HTMLImageElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const feedbackContentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -208,6 +211,7 @@ export default function FeedbackDetailPage() {
                   height,
                   judgement: item.judgement,
                   color: colors[colorIndex % colors.length],
+                  accordionValue: topicName, // Store the accordion value for navigation
                 })
                 colorIndex++
               }
@@ -246,8 +250,35 @@ export default function FeedbackDetailPage() {
     setImageLoaded(true)
   }
 
+  const scrollToFeedbackItem = (boxId: string) => {
+    // Switch to feedback tab if not already active
+    if (activeTab !== "feedback") {
+      setActiveTab("feedback")
+    }
+
+    // Find the bounding box to get accordion info
+    const boundingBox = boundingBoxes.find((box) => box.id === boxId)
+
+    // For general review, open the corresponding accordion
+    if (boundingBox?.accordionValue && aiFeedback?.general_review) {
+      setOpenAccordionValue(boundingBox.accordionValue)
+    }
+
+    // Wait for accordion to open and tab to switch, then scroll
+    setTimeout(() => {
+      const feedbackElement = document.querySelector(`[data-feedback-id="${boxId}"]`)
+      if (feedbackElement && feedbackContentRef.current) {
+        feedbackElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        })
+      }
+    }, 300)
+  }
+
   const handleBoundingBoxClick = (boxId: string) => {
     setSelectedBoundingBox(selectedBoundingBox === boxId ? null : boxId)
+    scrollToFeedbackItem(boxId)
   }
 
   const renderBoundingBoxes = () => {
@@ -353,6 +384,7 @@ export default function FeedbackDetailPage() {
                   return (
                     <div
                       key={reviewIndex}
+                      data-feedback-id={boxId}
                       className={`flex gap-3 p-4 rounded-lg cursor-pointer transition-colors ${
                         selectedBoundingBox === boxId
                           ? "bg-primary/10 border-2 border-primary"
@@ -402,7 +434,13 @@ export default function FeedbackDetailPage() {
 
     return (
       <div className="space-y-6">
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full"
+          value={openAccordionValue}
+          onValueChange={setOpenAccordionValue}
+        >
           {Object.entries(aiFeedback.general_review).map(([topicName, topicData]) => (
             <AccordionItem key={topicName} value={topicName}>
               <AccordionTrigger className="text-lg font-medium font-krona-one">{topicName}</AccordionTrigger>
@@ -421,6 +459,7 @@ export default function FeedbackDetailPage() {
                             return (
                               <Card
                                 key={index}
+                                data-feedback-id={boxId}
                                 className={`cursor-pointer transition-colors ${
                                   selectedBoundingBox === boxId ? "border-primary bg-primary/5" : "hover:bg-muted/50"
                                 }`}
@@ -618,7 +657,7 @@ export default function FeedbackDetailPage() {
                   </div>
                   {boundingBoxes.length > 0 && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      Click on numbered boxes to highlight corresponding feedback
+                      Click on numbered boxes to view corresponding feedback
                     </p>
                   )}
                 </div>
@@ -656,7 +695,7 @@ export default function FeedbackDetailPage() {
                 </button>
               </div>
 
-              <div className="max-h-[70vh] overflow-y-auto">
+              <div ref={feedbackContentRef} className="max-h-[70vh] overflow-y-auto">
                 {activeTab === "feedback" && renderFeedbackContent()}
 
                 {activeTab === "summary" && renderSummaryContent()}
