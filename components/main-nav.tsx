@@ -62,7 +62,7 @@ export function MainNav() {
         ))}
       </div>
 
-      <div className="mt-auto space-y-1">
+      <div className="mt-auto space-y-1 font-quantico">
         <Link
           href="/profile"
           className={cn(
