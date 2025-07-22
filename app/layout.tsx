@@ -41,9 +41,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Dravmo - AI Design Feedback Tool",
-  description: "Get expert AI feedback on your designs",
-  generator: "v0.dev",
+  title: "Dravmo",
+  description: "AI Design Review Engine",
 };
 
 export default function RootLayout({
