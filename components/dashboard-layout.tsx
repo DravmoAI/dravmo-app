@@ -8,7 +8,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-[#0F1619]">
       <aside className="w-64 border-r border-border/40 hidden md:block">
         <MainNav />
       </aside>
@@ -16,7 +16,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <header className="h-14 border-b border-border/40 flex items-center justify-end px-6">
           <UserNav />
         </header>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6 bg0">{children}</main>
       </div>
     </div>
   );
