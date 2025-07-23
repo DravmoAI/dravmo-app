@@ -68,30 +68,30 @@ export default function LandingPage() {
           alt="Dravmo" 
           width={5436} 
           height={585} 
-          className="w-full h-auto absolute top-full translate-y-[-44%] z-0" 
+          className="hidden md:visible w-full h-auto absolute top-full translate-y-[-44%] z-0" 
         />
         
         <HowItWorksSection />
         
-        <Image 
+       <Image 
           src="/landing-page/dotted-line-2.png" 
           alt="Dravmo" 
           width={5436} 
           height={585} 
-          className="w-full h-[146px] mt-12" 
+          className="hidden md:visible w-full h-[146px] mt-12" 
         />
         
         <FeaturesSection />
-        <MasterModeSection />
+        {/*  <MasterModeSection />
         
         <PricingSection 
           basicPlanFeatures={basicPlanFeatures}
           proPlanFeatures={proPlanFeatures}
           litePlanFeatures={litePlanFeatures}
-        />
-      </main>
+        /> */}
+      </main> 
+      {/* <FooterSection /> */}
 
-      <FooterSection />
     </div>
   )
 }

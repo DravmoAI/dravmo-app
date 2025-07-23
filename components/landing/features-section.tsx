@@ -10,7 +10,14 @@ export function FeaturesSection() {
         alt="Features" 
         width={5760} 
         height={2128} 
-        className="w-auto mx-auto" 
+        className="hidden md:visible w-auto mx-auto" 
+      />
+      <Image 
+        src="/landing-page/feature-phone.png" 
+        alt="Features" 
+        width={5760} 
+        height={2128} 
+        className="visible md:hidden w-auto mx-auto" 
       />
     </div>
   )
