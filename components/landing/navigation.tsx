@@ -4,7 +4,7 @@ import Image from "next/image"
 
 export function Navigation() {
   return (
-    <nav className="absolute top-[51px] left-1/2 transform -translate-x-1/2 z-30 hidden md:block">
+    <nav className="absolute top-[51px] left-1/2 transform -translate-x-1/2 z-30 hidden lg:block">
       <div className="relative">
         <div
           className="absolute w-[407px] h-[74px] bg-gradient-to-l from-[rgba(242,242,242,0.08)] to-[rgba(13,13,13,0.02)] rounded-[30px] flex justify-center items-center"

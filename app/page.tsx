@@ -68,7 +68,7 @@ export default function LandingPage() {
           alt="Dravmo" 
           width={5436} 
           height={585} 
-          className="hidden md:block w-full h-auto absolute top-full translate-y-[-44%] z-0" 
+          className="hidden lg:block w-full h-auto absolute top-full translate-y-[-44%] z-0" 
         />
         
         <HowItWorksSection />
@@ -78,14 +78,14 @@ export default function LandingPage() {
           alt="Dravmo" 
           width={5436} 
           height={585} 
-          className="hidden md:block w-full h-[146px] mt-12" 
+          className="hidden lg:block w-full h-[146px] mt-12" 
         />
        <Image 
           src="/landing-page/dotted-line-how-it-works-phone.png" 
           alt="Dravmo" 
           width={5436} 
           height={585} 
-          className="md:hidden w-full h-[146px] mt-12" 
+          className="lg:hidden w-full h-[146px] mt-12" 
         />
         
         <FeaturesSection /> 

@@ -7,39 +7,39 @@ import { Button } from "@/components/ui/button";
 export function HeroSection() {
   const router = useRouter();
   return (
-    <header className="md:h-screen flex flex-col items-center md:justify-center text-center bg-cover bg-center bg-no-repeat relative px-4">
+    <header className="lg:h-screen flex flex-col items-center lg:justify-center text-center bg-cover bg-center bg-no-repeat relative px-4">
       <Image
         src="/landing-page/dotted-line-1.png"
         alt="Dravmo"
         width={5436}
         height={585}
-        className="hidden md:block w-full md:w-[97%] md:h-[146px] absolute top-1/2 translate-y-[-69%] z-0"
+        className="hidden lg:block w-full lg:w-[97%] lg:h-[146px] absolute top-1/2 translate-y-[-69%] z-0"
       />
       <Image
         src="/landing-page/dotted-line-hero-phone.png"
         alt="Dravmo"
         width={5436}
         height={585}
-        className="md:hidden w-full md:w-[97%] absolute -top-6 translate-y-[-%] z-0"
+        className="lg:hidden w-full lg:w-[97%] absolute -top-6 translate-y-[-%] z-0"
       />
       <Image
         src="/dravmo-logo.png"
         alt="Dravmo"
         width={588}
         height={352}
-        className="w-[100px] h-[60px] md:w-[147px] md:h-[88px] absolute top-[20px] md:top-[40px] left-1/2 md:left-[24px] -translate-x-1/2 md:translate-x-0 z-20"
+        className="w-[100px] h-[60px] lg:w-[147px] lg:h-[88px] absolute top-[20px] lg:top-[40px] left-1/2 lg:left-[24px] -translate-x-1/2 lg:translate-x-0 z-20"
       />
       <Image
         src="/landing-page/header-image-main.png"
         alt="Dravmo"
         width={3066}
         height={1840}
-        className="w-[300px] h-[180px] md:w-[767px] md:h-[460px] relative z-10 mt-[102px]"
+        className="w-[300px] h-[180px] lg:w-[767px] lg:h-[460px] relative z-10 mt-[102px]"
       />
-      <h1 className="text-[14px] md:text-[20px] leading-[16px] md:leading-[20px] text-center tracking-[0.3em] md:tracking-[0.5em] uppercase text-[#F7EDE2] font-quantico -translate-y-16 md:-translate-y-32 relative z-10 px-4">
+      <h1 className="text-[14px] lg:text-[20px] leading-[16px] lg:leading-[20px] text-center tracking-[0.3em] lg:tracking-[0.5em] uppercase text-[#F7EDE2] font-quantico -translate-y-16 lg:-translate-y-32 relative z-10 px-4">
         AI Design Review Engine
       </h1>
-      <div className="hidden md:flex flex-col md:flex-row items-center justify-center gap-y-4 md:gap-y-0 md:gap-x-[20px] -translate-y-12 md:-translate-y-24 relative z-10 px-4">
+      <div className="hidden lg:flex flex-col lg:flex-row items-center justify-center gap-y-4 lg:gap-y-0 lg:gap-x-[20px] -translate-y-12 lg:-translate-y-24 relative z-10 px-4">
         <Button
           variant="outline"
           onClick={() => router.push("/login")}
@@ -56,8 +56,8 @@ export function HeroSection() {
         </Button>
       </div>
 
-      {/* Mobile-only navigation buttons */}
-      <div className="flex md:hidden flex-col items-center justify-center gap-y-6 -translate-y-8 relative z-10 px-4">
+      {/* Mobile & Tablet navigation buttons */}
+      <div className="flex lg:hidden flex-col items-center justify-center gap-y-6 -translate-y-8 relative z-10 px-4">
         <Button
           variant="outline"
           onClick={() => {
@@ -89,22 +89,22 @@ export function HeroSection() {
         </Button>
       </div>
 
-      <div className="hidden md:flex absolute bottom-0 left-4 right-4 md:left-[100px] md:right-[100px] flex-col md:flex-row justify-between items-start p-6 gap-y-6 md:gap-y-0">
+      <div className="hidden lg:flex absolute bottom-0 left-4 right-4 lg:left-[100px] lg:right-[100px] flex-col lg:flex-row justify-between items-start p-6 gap-y-6 lg:gap-y-0">
         <div className="text-left">
-          <h2 className="font-krona-one font-normal text-[18px] md:text-[24px] leading-[18px] md:leading-[20px] bg-gradient-to-t from-[#5BD5AF] via-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent mb-2">
+          <h2 className="font-krona-one font-normal text-[18px] lg:text-[24px] leading-[18px] lg:leading-[20px] bg-gradient-to-t from-[#5BD5AF] via-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent mb-2">
             NOW
           </h2>
-          <div className="font-roboto-flex font-medium text-[12px] md:text-[15px] leading-[18px] md:leading-[24px] tracking-[0.15em] text-white">
+          <div className="font-roboto-flex font-medium text-[12px] lg:text-[15px] leading-[18px] lg:leading-[24px] tracking-[0.15em] text-white">
             <p>every design decision</p>
             <p>you make is backed by a</p>
             <p>'Master-level feedback'</p>
           </div>
         </div>
-        <div className="text-left md:text-right">
-          <h2 className="font-krona-one font-normal text-[18px] md:text-[24px] leading-[18px] md:leading-[20px] bg-gradient-to-t from-[#5BD5AF] via-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent mb-2">
+        <div className="text-left lg:text-right">
+          <h2 className="font-krona-one font-normal text-[18px] lg:text-[24px] leading-[18px] lg:leading-[20px] bg-gradient-to-t from-[#5BD5AF] via-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent mb-2">
             PAY $0
           </h2>
-          <div className="font-roboto-flex font-medium text-[12px] md:text-[15px] leading-[18px] md:leading-[24px] tracking-[0.15em] text-white">
+          <div className="font-roboto-flex font-medium text-[12px] lg:text-[15px] leading-[18px] lg:leading-[24px] tracking-[0.15em] text-white">
             <p>10 reviews/month</p>
           </div>
         </div>
