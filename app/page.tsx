@@ -11,7 +11,7 @@ import { FooterSection } from "@/components/landing/footer-section"
 export default function LandingPage() {
   const basicPlanFeatures = [
     { label: "Unlimited projects", available: true },
-    { label: "20 reviews/month", available: true, note: "(daily limit 5)" },
+    { label: "10 reviews/month", available: true, note: "" },
     { label: "Design persona setup", available: true },
     { label: "Layout analysis", available: true },
     { label: "Typography review", available: true },
@@ -27,7 +27,7 @@ export default function LandingPage() {
   
   const proPlanFeatures = [
     { label: "Unlimited projects", available: true },
-    { label: "Unlimited reviews", available: true, note: "(200 daily limit)" },
+    { label: "200 reviews", available: true, note: "" },
     { label: "Design persona setup", available: true },
     { label: "Layout analysis", available: true },
     { label: "Typography review", available: true },
@@ -43,7 +43,7 @@ export default function LandingPage() {
 
   const litePlanFeatures = [
     { label: "Unlimited projects", available: true },
-    { label: "60 reviews/month", available: true, note: "(no daily limit)" },
+    { label: "60 reviews/month", available: true, note: "" },
     { label: "Design persona setup", available: true },
     { label: "Layout analysis", available: true },
     { label: "Typography review", available: true },
@@ -68,7 +68,7 @@ export default function LandingPage() {
           alt="Dravmo" 
           width={5436} 
           height={585} 
-          className="hidden md:visible w-full h-auto absolute top-full translate-y-[-44%] z-0" 
+          className="hidden md:block w-full h-auto absolute top-full translate-y-[-44%] z-0" 
         />
         
         <HowItWorksSection />
@@ -78,19 +78,26 @@ export default function LandingPage() {
           alt="Dravmo" 
           width={5436} 
           height={585} 
-          className="hidden md:visible w-full h-[146px] mt-12" 
+          className="hidden md:block w-full h-[146px] mt-12" 
+        />
+       <Image 
+          src="/landing-page/dotted-line-how-it-works-phone.png" 
+          alt="Dravmo" 
+          width={5436} 
+          height={585} 
+          className="md:hidden w-full h-[146px] mt-12" 
         />
         
-        <FeaturesSection />
-        {/*  <MasterModeSection />
+        <FeaturesSection /> 
+         <MasterModeSection /> 
         
         <PricingSection 
           basicPlanFeatures={basicPlanFeatures}
           proPlanFeatures={proPlanFeatures}
           litePlanFeatures={litePlanFeatures}
-        /> */}
+        />
       </main> 
-      {/* <FooterSection /> */}
+      <FooterSection />
 
     </div>
   )

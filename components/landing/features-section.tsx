@@ -4,13 +4,13 @@ import Image from "next/image"
 
 export function FeaturesSection() {
   return (
-    <div className="mt-[63px]">
-      <Image 
-        src="/landing-page/features.png" 
-        alt="Features" 
-        width={5760} 
-        height={2128} 
-        className="hidden md:visible w-auto mx-auto" 
+    <div id="features" className="mt-[63px]">
+      <Image
+        src="/landing-page/features.png"
+        alt="Features"
+        width={5760}
+        height={2128}
+        className="hidden md:block w-auto mx-auto" 
       />
       <Image 
         src="/landing-page/feature-phone.png" 

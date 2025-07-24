@@ -1,33 +1,81 @@
 "use client"
 
 import Image from "next/image"
-
+const mastersNames = [
+  "massimo vignelli",
+  "Paul rand",
+  "neville brody",
+  "dieter rams",
+  "paula scher",
+  "josef muller",
+  "susan kare",
+  "april greiman",
+  "saul bass",
+  "muriel cooper"
+]
 export function MasterModeSection() {
+
   return (
     <div className="flex flex-col items-center justify-center mt-[53px] mb-[100px]">
+      <Image 
+        src="/landing-page/dotted-line-master-mode-phone.png" 
+        alt="" 
+        width={544} 
+        height={5756} 
+        className="md:hidden w-full" 
+      />
       <Image 
         src="/landing-page/dotted-line-3.png" 
         alt="" 
         width={544} 
         height={5756} 
-        className="w-[146px] h-[1440px] absolute top-[3223px] right-0 translate-y-[-44%] z-0" 
+        className="hidden md:block w-[146px] h-[1440px] absolute top-[3223px] right-0 translate-y-[-44%] z-0" 
       />
-      <h2 className="font-quantico font-normal text-[20px] leading-[20px] flex items-center text-center tracking-[0.5em] uppercase mb-2 bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
+      <h2 className="font-quantico font-normal text-[12px] md:text-[20px] md:leading-[20px] flex items-center text-center md:tracking-[0.5em] uppercase md:mb-2 bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
         design legends inspired ai review
       </h2>
-      <h3 className="font-krona-one font-normal text-[96px] leading-[86px] text-center uppercase text-[#F7EDE2]">
+      <h3 className="font-krona-one font-normal text-[36px] md:text-[96px] md:leading-[86px] text-center uppercase text-[#F7EDE2]">
         master mode
       </h3>
-      <h4 className="font-['Roboto_Flex'] font-normal text-[16px] leading-[20px] text-center tracking-[0.15em] text-[#97FFEF] mt-[10px]">
+      <h4 className="font-roboto-flex font-normal text-[11px] md:text-[16px] md:leading-[20px] text-center md:tracking-[0.15em] text-[#97FFEF] md:mt-[10px]">
         See your work reimagined through their eyes
       </h4>
 
-      <div className="relative">
+      <div className="md:hidden mt-7">
+        {
+          mastersNames.map((name, index) => (
+            <div key={index} className="flex flex-col items-center justify-center mt-[10px]">
+              <span className="font-krona-one font-normal leading-[45px] text-[20px] text-center uppercase text-[#F7EDE2]">
+                {name.toUpperCase()}
+              </span>
+            </div>
+          ))
+        }
+        <div className="text-center mt-10">
+          <h1 className="font-krona-one font-normal text-[16px] leading-[20px] bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent uppercase">
+            10 MASTERS
+          </h1>
+          <h2 className="font-roboto-flex font-medium text-[12px] leading-[20px] tracking-[0.15em] text-white">
+            each with turn-key playbooks
+          </h2>
+        </div>
+
+        <div className="text-center mt-10">
+          <h1 className="font-krona-one font-normal text-[16px] leading-[20px] bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent uppercase">
+            10 AI MENTORS
+          </h1>
+          <h2 className="font-roboto-flex font-medium text-[12px] leading-[20px] tracking-[0.15em] text-white">
+            each with the brain of a master designer
+          </h2>
+        </div>
+      </div>
+
+      <div className="hidden md:block relative">
         <div className="absolute top-56 -right-36">
           <h1 className="font-krona-one font-normal text-[24px] leading-[20px] bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent uppercase">
             10 MASTERS
           </h1>
-          <h2 className="font-['Roboto_Flex'] font-medium text-[16px] leading-[20px] tracking-[0.15em] text-white">
+          <h2 className="font-roboto-flex font-medium text-[16px] leading-[20px] tracking-[0.15em] text-white">
             each with turn-key playbooks
           </h2>
         </div>
@@ -35,7 +83,7 @@ export function MasterModeSection() {
           <h1 className="font-krona-one font-normal text-[24px] leading-[20px] bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent uppercase">
             10 AI MENTORS
           </h1>
-          <h2 className="font-['Roboto_Flex'] font-medium text-[16px] leading-[20px] tracking-[0.15em] text-white">
+          <h2 className="font-roboto-flex font-medium text-[16px] leading-[20px] tracking-[0.15em] text-white">
             each with the brain of a master designer
           </h2>
         </div>
@@ -52,7 +100,7 @@ export function MasterModeSection() {
         alt="" 
         width={2342} 
         height={1049} 
-        className="w-[42%] h-auto mx-auto mt-[63px]" 
+        className="w-[100%] md:w-[42%] h-auto mx-auto mt-[63px]" 
       />
     </div>
   )

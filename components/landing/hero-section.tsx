@@ -16,6 +16,13 @@ export function HeroSection() {
         className="hidden md:block w-full md:w-[97%] md:h-[146px] absolute top-1/2 translate-y-[-69%] z-0"
       />
       <Image
+        src="/landing-page/dotted-line-hero-phone.png"
+        alt="Dravmo"
+        width={5436}
+        height={585}
+        className="md:hidden w-full md:w-[97%] absolute -top-6 translate-y-[-%] z-0"
+      />
+      <Image
         src="/dravmo-logo.png"
         alt="Dravmo"
         width={588}
@@ -53,20 +60,29 @@ export function HeroSection() {
       <div className="flex md:hidden flex-col items-center justify-center gap-y-6 -translate-y-8 relative z-10 px-4">
         <Button
           variant="outline"
-          onClick={() => router.push("/login")}
+          onClick={() => {
+            const section = document.getElementById('how-it-works');
+            section?.scrollIntoView({ behavior: 'smooth' });
+          }}
           className="w-[250px] h-[50px] bg-transparent border-[#97FFEF] border-2 rounded-[30px] text-[#97FFEF] font-roboto-flex hover:bg-[#97FFEF] hover:text-[#0F1619] transition-colors"
         >
           How It Works
         </Button>
         <Button
           variant="outline"
-          onClick={() => router.push("/login")}
+          onClick={() => {
+            const section = document.getElementById('features');
+            section?.scrollIntoView({ behavior: 'smooth' });
+          }}
           className="w-[250px] h-[50px] text-[#F7EDE2] border-2 rounded-[30px] border-[#F7EDE2] font-roboto-flex font-medium text-[14px] leading-[20px] tracking-[0.02em] bg-gradient-to-b from-[rgba(145,187,242,0.52)] to-[rgba(13,13,13,0.04)] hover:bg-gradient-to-b hover:from-[rgba(145,187,242,0.7)] hover:to-[rgba(13,13,13,0.1)] transition-all"
         >
           Explore Features
         </Button>
         <Button
-          onClick={() => router.push("/login")}
+          onClick={() => {
+            const section = document.getElementById('plans');
+            section?.scrollIntoView({ behavior: 'smooth' });
+          }}
           className="w-[250px] h-[50px] bg-[#5BD5AF] text-[#0F1619] font-roboto-flex font-medium rounded-[30px] hover:bg-[#4BC49F] transition-colors"
         >
           See Plans
@@ -89,7 +105,7 @@ export function HeroSection() {
             PAY $0
           </h2>
           <div className="font-roboto-flex font-medium text-[12px] md:text-[15px] leading-[18px] md:leading-[24px] tracking-[0.15em] text-white">
-            <p>20 reviews/month</p>
+            <p>10 reviews/month</p>
           </div>
         </div>
       </div>
