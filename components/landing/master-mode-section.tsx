@@ -22,26 +22,26 @@ export function MasterModeSection() {
         alt="" 
         width={544} 
         height={5756} 
-        className="md:hidden w-full" 
+        className="lg:hidden w-full" 
       />
       <Image 
         src="/landing-page/dotted-line-3.png" 
         alt="" 
         width={544} 
         height={5756} 
-        className="hidden md:block w-[146px] h-[1440px] absolute top-[3223px] right-0 translate-y-[-44%] z-0" 
+        className="hidden lg:block w-[146px] h-[1440px] absolute top-[3223px] right-0 translate-y-[-44%] z-0" 
       />
-      <h2 className="font-quantico font-normal text-[12px] md:text-[20px] md:leading-[20px] flex items-center text-center md:tracking-[0.5em] uppercase md:mb-2 bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
+      <h2 className="font-quantico font-normal text-[12px] lg:text-[20px] lg:leading-[20px] flex items-center text-center lg:tracking-[0.5em] uppercase lg:mb-2 bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
         design legends inspired ai review
       </h2>
-      <h3 className="font-krona-one font-normal text-[36px] md:text-[96px] md:leading-[86px] text-center uppercase text-[#F7EDE2]">
+      <h3 className="font-krona-one font-normal text-[36px] lg:text-[96px] lg:leading-[86px] text-center uppercase text-[#F7EDE2]">
         master mode
       </h3>
-      <h4 className="font-roboto-flex font-normal text-[11px] md:text-[16px] md:leading-[20px] text-center md:tracking-[0.15em] text-[#97FFEF] md:mt-[10px]">
+      <h4 className="font-roboto-flex font-normal text-[11px] lg:text-[16px] lg:leading-[20px] text-center lg:tracking-[0.15em] text-[#97FFEF] lg:mt-[10px]">
         See your work reimagined through their eyes
       </h4>
 
-      <div className="md:hidden mt-7">
+      <div className="lg:hidden mt-7">
         {
           mastersNames.map((name, index) => (
             <div key={index} className="flex flex-col items-center justify-center mt-[10px]">
@@ -70,7 +70,7 @@ export function MasterModeSection() {
         </div>
       </div>
 
-      <div className="hidden md:block relative">
+      <div className="hidden lg:block relative">
         <div className="absolute top-56 -right-36">
           <h1 className="font-krona-one font-normal text-[24px] leading-[20px] bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent uppercase">
             10 MASTERS
@@ -100,7 +100,7 @@ export function MasterModeSection() {
         alt="" 
         width={2342} 
         height={1049} 
-        className="w-[100%] md:w-[42%] h-auto mx-auto mt-[63px]" 
+        className="w-[100%] lg:w-[42%] h-auto mx-auto mt-[63px]" 
       />
     </div>
   )
