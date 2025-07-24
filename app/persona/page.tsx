@@ -339,7 +339,7 @@ export default function PersonaPage() {
                   key={persona.id}
                   className={`${
                     index === 4 ? "col-span-2 max-w-[374px]" : ""
-                  } cursor-pointer transition-all bg-[linear-gradient(156deg,_#91BBF2_-249.94%,_rgba(13,13,13,0.04)_103.13%)] shadow-[4px_3px_18px_-5px_rgba(91,213,175,0.14)] ${
+                  } cursor-pointer transition-all ${
                     formData.personaCardId === persona.id
                       ? "border-primary"
                       : "hover:border-primary/50"
