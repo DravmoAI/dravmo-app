@@ -174,7 +174,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Design Persona Section */}
-        <Card>
+        <Card className="bg-[#0F1619] outline outline-1 outline-[#4AB395]">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="font-krona-one">Design Persona</CardTitle>

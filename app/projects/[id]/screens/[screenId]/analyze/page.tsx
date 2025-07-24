@@ -671,7 +671,7 @@ export default function ScreenAnalyzePage() {
           </div>
 
           <div>
-            <div className="sticky top-6">
+            <div className="sticky top-[240px]">
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold mb-4 font-krona-one">Analysis Topics</h3>
