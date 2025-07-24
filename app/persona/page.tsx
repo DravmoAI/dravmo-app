@@ -348,9 +348,7 @@ export default function PersonaPage() {
                 >
                   <CardContent className="p-4">
                     <h4 className="font-bold">{persona.personaCardName}</h4>
-                    <p className="text-sm italic text-primary mb-2">
-                      "{persona.personaPhilosophy}"
-                    </p>
+                    <p className="text-sm italic text-primary mb-2">{persona.personaPhilosophy}</p>
                     <p className="text-sm text-white/90">{persona.personaMeaning}</p>
                   </CardContent>
                 </Card>
