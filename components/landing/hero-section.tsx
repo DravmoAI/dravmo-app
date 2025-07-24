@@ -43,7 +43,7 @@ export function HeroSection() {
         <Button
           variant="outline"
           onClick={() => router.push("/login")}
-          className="w-[150px] h-[50px] bg-[#0F1619] border-[#97FFEF] border rounded-[30px] text-[#97FFEF] font-roboto-flex"
+          className="w-[150px] h-[50px] bg-[#0F1619] border-[#97FFEF] border rounded-[30px] text-[#97FFEF] hover:bg-[#97FFEF] hover:text-[#0F1619] font-roboto-flex"
         >
           Begin Review
         </Button>
