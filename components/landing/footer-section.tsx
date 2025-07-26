@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import Image from "next/image"
+import Image from "next/image";
 
 export function FooterSection() {
   return (
@@ -13,7 +13,13 @@ export function FooterSection() {
         className="hidden lg:block w-[15%] absolute left-0 bottom-0"
       />
       <div className="relative flex items-center lg:min-w-[250px] lg:h-[80px]">
-        <span className="relative z-10 text-white text-[12px] lg:text-[16px] ml-2 lg:ml-6">2025 Dravmo Inc.</span>
+        <span className="relative z-10 text-white text-[12px] lg:text-[16px] ml-2 lg:ml-6">
+          2025{" "}
+          <a href="/" className="hover:underline text-primary transition-colors">
+            Dravmo
+          </a>{" "}
+          Inc.
+        </span>
       </div>
       <div className="flex items-center gap-x-12">
         <a href="/terms" className="text-white text-[12px] lg:text-[16px] hover:underline">
@@ -22,10 +28,10 @@ export function FooterSection() {
         <a href="/privacy" className="text-white text-[12px] lg:text-[16px] hover:underline">
           Privacy
         </a>
-        <a href="#" className="text-white text-[12px] lg:text-[16px] hover:underline">
+        {/* <a href="#" className="text-white text-[12px] lg:text-[16px] hover:underline">
           Contact
-        </a>
+        </a> */}
       </div>
     </footer>
-  )
+  );
 }

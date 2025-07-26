@@ -1,12 +1,12 @@
-"use client"
-import Image from "next/image"
-import { Navigation } from "@/components/landing/navigation"
-import { HeroSection } from "@/components/landing/hero-section"
-import { HowItWorksSection } from "@/components/landing/how-it-works-section"
-import { FeaturesSection } from "@/components/landing/features-section"
-import { MasterModeSection } from "@/components/landing/master-mode-section"
-import { PricingSection } from "@/components/landing/pricing-section"
-import { FooterSection } from "@/components/landing/footer-section"
+"use client";
+import Image from "next/image";
+import { Navigation } from "@/components/landing/navigation";
+import { HeroSection } from "@/components/landing/hero-section";
+import { HowItWorksSection } from "@/components/landing/how-it-works-section";
+import { FeaturesSection } from "@/components/landing/features-section";
+import { MasterModeSection } from "@/components/landing/master-mode-section";
+import { PricingSection } from "@/components/landing/pricing-section";
+import { FooterSection } from "@/components/landing/footer-section";
 
 export default function LandingPage() {
   const basicPlanFeatures = [
@@ -24,7 +24,7 @@ export default function LandingPage() {
     { label: "Master mode", available: false },
     { label: "Figma integration", available: false },
   ];
-  
+
   const proPlanFeatures = [
     { label: "Unlimited projects", available: true },
     { label: "200 reviews", available: true, note: "" },
@@ -61,44 +61,43 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col bg-[#0F1619]">
       <Navigation />
       <HeroSection />
-      
+
       <main className="">
-        <Image 
-          src="/landing-page/rotated-dotted-line.png" 
-          alt="Dravmo" 
-          width={5436} 
-          height={585} 
-          className="hidden lg:block w-full h-auto absolute top-full translate-y-[-44%] z-0" 
+        <Image
+          src="/landing-page/rotated-dotted-line.png"
+          alt="Dravmo"
+          width={5436}
+          height={585}
+          className="hidden lg:block w-full h-auto absolute top-full translate-y-[-44%] z-0"
         />
-        
+
         <HowItWorksSection />
-        
-       <Image 
-          src="/landing-page/dotted-line-2.png" 
-          alt="Dravmo" 
-          width={5436} 
-          height={585} 
-          className="hidden lg:block w-full h-[146px] mt-12" 
+
+        <Image
+          src="/landing-page/dotted-line-2.png"
+          alt="Dravmo"
+          width={5436}
+          height={585}
+          className="hidden lg:block w-full h-[146px] mt-12"
         />
-       <Image 
-          src="/landing-page/dotted-line-how-it-works-phone.png" 
-          alt="Dravmo" 
-          width={5436} 
-          height={585} 
-          className="lg:hidden w-full h-[146px] mt-12" 
+        <Image
+          src="/landing-page/dotted-line-how-it-works-phone.png"
+          alt="Dravmo"
+          width={5436}
+          height={585}
+          className="lg:hidden w-full h-[146px] mt-12"
         />
-        
-        <FeaturesSection /> 
-         <MasterModeSection /> 
-        
-        <PricingSection 
+
+        <FeaturesSection />
+        <MasterModeSection />
+
+        <PricingSection
           basicPlanFeatures={basicPlanFeatures}
           proPlanFeatures={proPlanFeatures}
           litePlanFeatures={litePlanFeatures}
         />
-      </main> 
+      </main>
       <FooterSection />
-
     </div>
-  )
+  );
 }
