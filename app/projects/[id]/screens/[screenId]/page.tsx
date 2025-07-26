@@ -237,9 +237,17 @@ export default function ScreenDetailPage() {
                         <Card className="my-4 hover:border-primary/50 transition-colors">
                           <CardContent className="p-3">
                             <div className="flex items-center justify-between mb-2">
-                              <Badge variant="outline" className="text-xs">
-                                {result.version}
-                              </Badge>
+                              <div className="flex flex-wrap gap-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {result.version}
+                                </Badge>
+                                {result.feedbackQuery.designMaster && (
+                                  <Badge variant="default" className="text-xs">
+                                    Master Review
+                                  </Badge>
+                                )}
+                              </div>
+
                               <span className="text-xs text-muted-foreground">
                                 {formatDate(result.createdAt)}
                               </span>
@@ -248,9 +256,9 @@ export default function ScreenDetailPage() {
                               {truncateSummary(result.feedbackSummary)}
                             </p>
                             {result.feedbackQuery.designMaster && (
-                              <p className="text-xs text-muted-foreground">
+                              <Badge variant="secondary" className="text-xs -ml-1">
                                 by {result.feedbackQuery.designMaster.name}
-                              </p>
+                              </Badge>
                             )}
                           </CardContent>
                         </Card>

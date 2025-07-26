@@ -664,13 +664,13 @@ export default function FeedbackDetailPage() {
           <div className="lg:col-span-3">
             <Card className="overflow-hidden">
               <CardContent className="p-0">
-                <div ref={containerRef} className="relative bg-muted" style={{ minHeight: "70vh" }}>
+                <div ref={containerRef} className="relative bg-muted">
                   <img
                     ref={imageRef}
-                    src={screen.sourceUrl || "/placeholder.svg?height=800&width=600"}
                     alt="Design preview"
-                    className="w-full h-full object-contain"
                     onLoad={handleImageLoad}
+                    className="w-full h-full object-contain"
+                    src={screen.sourceUrl || "/placeholder.svg?height=800&width=600"}
                   />
                   {renderBoundingBoxes()}
                 </div>
