@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,75 +13,75 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { User, LogOut, CreditCard } from "lucide-react"
-import { getSupabaseClient } from "@/lib/supabase"
+} from "@/components/ui/dropdown-menu";
+import { User, LogOut, CreditCard, Upload, LayoutGrid } from "lucide-react";
+import { getSupabaseClient } from "@/lib/supabase";
 
 export function UserNav() {
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const router = useRouter()
-  const supabase = getSupabaseClient()
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const router = useRouter();
+  const supabase = getSupabaseClient();
 
   useEffect(() => {
     // Get initial user
     const getUser = async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
+      } = await supabase.auth.getUser();
+      setUser(user);
 
       if (user) {
         // Get user profile from our API
         try {
-          const response = await fetch(`/api/profile/${user.id}`)
+          const response = await fetch(`/api/profile/${user.id}`);
           if (response.ok) {
-            const data = await response.json()
-            setProfile(data.profile)
+            const data = await response.json();
+            setProfile(data.profile);
           }
         } catch (error) {
-          console.error("Error fetching profile:", error)
+          console.error("Error fetching profile:", error);
         }
       }
-    }
+    };
 
-    getUser()
+    getUser();
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null)
+      setUser(session?.user ?? null);
 
       if (session?.user) {
         // Get user profile
         try {
-          const response = await fetch(`/api/profile/${session.user.id}`)
+          const response = await fetch(`/api/profile/${session.user.id}`);
           if (response.ok) {
-            const data = await response.json()
-            setProfile(data.profile)
+            const data = await response.json();
+            setProfile(data.profile);
           }
         } catch (error) {
-          console.error("Error fetching profile:", error)
+          console.error("Error fetching profile:", error);
         }
       } else {
-        setProfile(null)
+        setProfile(null);
       }
-    })
+    });
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push("/login")
-  }
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   if (!user) {
-    return null
+    return null;
   }
 
-  const displayName = profile?.fullName || user.email?.split("@")[0] || "User"
+  const displayName = profile?.fullName || user.email?.split("@")[0] || "User";
   const initials = profile?.fullName
     ? profile.fullName
         .split(" ")
@@ -89,7 +89,7 @@ export function UserNav() {
         .join("")
         .toUpperCase()
         .slice(0, 2)
-    : user.email?.[0]?.toUpperCase() || "U"
+    : user.email?.[0]?.toUpperCase() || "U";
 
   return (
     <DropdownMenu>
@@ -116,10 +116,22 @@ export function UserNav() {
               <span>Profile</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
+          {/* <DropdownMenuItem asChild>
             <Link href="/billing" className="cursor-pointer">
               <CreditCard className="mr-2 h-4 w-4" />
               <span>Billing</span>
+            </Link>
+          </DropdownMenuItem> */}
+          <DropdownMenuItem asChild>
+            <Link href="/upload" className="cursor-pointer">
+              <Upload className="mr-2 h-4 w-4" />
+              <span>Upload</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/projects" className="cursor-pointer">
+              <LayoutGrid className="mr-2 h-4 w-4" />
+              <span>Projects</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -132,5 +144,5 @@ export function UserNav() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

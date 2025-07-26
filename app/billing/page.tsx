@@ -1,31 +1,31 @@
-"use client"
+"use client";
 
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { CreditCard, Download, Star, CheckCircle } from "lucide-react"
-import { useState, useEffect } from "react"
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { CreditCard, Download, Star, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface Subscription {
-  id: string
-  planId: string
-  planName: string
-  price: number
-  status: "active" | "canceled" | "past_due"
-  autoRenew: boolean
-  currentPeriodStart: string
-  currentPeriodEnd: string
-  maxProjects: number
-  maxQueries: number
-  usedProjects: number
-  usedQueries: number
+  id: string;
+  planId: string;
+  planName: string;
+  price: number;
+  status: "active" | "canceled" | "past_due";
+  autoRenew: boolean;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  maxProjects: number;
+  maxQueries: number;
+  usedProjects: number;
+  usedQueries: number;
 }
 
 export default function BillingPage() {
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
-  const [billingHistory, setBillingHistory] = useState<any[]>([])
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [billingHistory, setBillingHistory] = useState<any[]>([]);
 
   useEffect(() => {
     // Mock subscription data
@@ -42,7 +42,7 @@ export default function BillingPage() {
       maxQueries: 500,
       usedProjects: 12,
       usedQueries: 156,
-    }
+    };
 
     const mockBillingHistory = [
       {
@@ -66,49 +66,51 @@ export default function BillingPage() {
         status: "paid",
         description: "Pro Plan - Monthly",
       },
-    ]
+    ];
 
-    setSubscription(mockSubscription)
-    setBillingHistory(mockBillingHistory)
-  }, [])
+    setSubscription(mockSubscription);
+    setBillingHistory(mockBillingHistory);
+  }, []);
 
   const handleUpgradePlan = () => {
     // In a real app, this would redirect to Stripe checkout
-    alert("Redirecting to Stripe checkout...")
-  }
+    alert("Redirecting to Stripe checkout...");
+  };
 
   const handleCancelSubscription = () => {
     // In a real app, this would call your API to cancel the subscription
     if (confirm("Are you sure you want to cancel your subscription?")) {
-      alert("Subscription canceled. You'll continue to have access until the end of your billing period.")
+      alert(
+        "Subscription canceled. You'll continue to have access until the end of your billing period."
+      );
     }
-  }
+  };
 
   const handleUpdatePaymentMethod = () => {
     // In a real app, this would redirect to Stripe customer portal
-    alert("Redirecting to payment method update...")
-  }
+    alert("Redirecting to payment method update...");
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "default"
+        return "default";
       case "canceled":
-        return "destructive"
+        return "destructive";
       case "past_due":
-        return "secondary"
+        return "secondary";
       default:
-        return "secondary"
+        return "secondary";
     }
-  }
+  };
 
   const plans = [
     {
@@ -150,17 +152,23 @@ export default function BillingPage() {
         "API access",
       ],
     },
-  ]
+  ];
 
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h2 className="text-3xl font-bold">Billing & Subscription</h2>
+          <h2 className="text-3xl font-bold font-krona-one">Billing & Subscription</h2>
           <p className="text-muted-foreground">Manage your subscription and billing information</p>
         </div>
 
-        {subscription && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-quantico">Will be available soon</CardTitle>
+          </CardHeader>
+        </Card>
+
+        {/* {subscription && (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -302,8 +310,8 @@ export default function BillingPage() {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </DashboardLayout>
-  )
+  );
 }

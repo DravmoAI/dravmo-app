@@ -232,8 +232,8 @@ export default function UploadPage() {
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold">Upload Design</h1>
+        <div>
+          <h1 className="text-3xl font-bold font-krona-one">Upload Design</h1>
           <p className="text-muted-foreground mt-2">
             Connect from Figma or upload your design files to get AI-powered feedback
           </p>
