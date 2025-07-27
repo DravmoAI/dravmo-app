@@ -198,7 +198,7 @@ export default function PrivacyPage() {
         <p className="mb-4">
           Questions, concerns, or requests regarding your privacy? Reach out to:
         </p>
-        <div className="bg-gray-50 p-4 rounded-lg mb-6">
+        <div className="p-4 rounded-lg mb-6">
           <p className="font-semibold">Dravmo Inc.</p>
           <p>Virtual Mailing Address: 8 The Green, STE R, Dover, DE 19901, USA</p>
         </div>

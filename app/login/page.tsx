@@ -94,6 +94,7 @@ export default function LoginPage() {
 
   const handleLoginWithGoogle = async () => {
     setIsLoading(true);
+    console.log("Initiating Google OAuth login...", window.location.origin);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
