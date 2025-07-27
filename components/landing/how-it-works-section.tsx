@@ -55,7 +55,7 @@ export function HowItWorksSection() {
             select project
           </h1>
           <Image 
-            src="/landing-page/Figma.png" 
+            src="/landing-page/Slider.png" 
             alt="Dravmo" 
             width={800} 
             height={800} 
@@ -83,7 +83,7 @@ export function HowItWorksSection() {
             analyze design
           </h1>
           <Image 
-            src="/landing-page/Figma.png" 
+            src="/landing-page/Monitor.png" 
             alt="Dravmo" 
             width={800} 
             height={800} 
