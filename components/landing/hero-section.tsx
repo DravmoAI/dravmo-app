@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Link } from "lucide-react";
 
 export function HeroSection() {
   const router = useRouter();
@@ -49,10 +50,10 @@ export function HeroSection() {
         </Button>
         <Button
           variant="outline"
-          onClick={() => router.push("/login")}
+          onClick={() => window.open("https://discord.gg/6XEZDwCDSk", "_blank")}
           className="w-[150px] h-[50px] text-[#F7EDE2] border rounded-[30px] border-[#F7EDE2] font-roboto-flex font-medium text-[14px] leading-[20px] tracking-[0.02em] bg-gradient-to-b from-[rgba(145,187,242,0.52)] to-[rgba(13,13,13,0.04)]"
         >
-          Access Dashboard
+          Join Discord
         </Button>
       </div>
 
@@ -61,8 +62,8 @@ export function HeroSection() {
         <Button
           variant="outline"
           onClick={() => {
-            const section = document.getElementById('how-it-works');
-            section?.scrollIntoView({ behavior: 'smooth' });
+            const section = document.getElementById("how-it-works");
+            section?.scrollIntoView({ behavior: "smooth" });
           }}
           className="w-[250px] h-[50px] bg-transparent border-[#97FFEF] border-2 rounded-[30px] text-[#97FFEF] font-roboto-flex hover:bg-[#97FFEF] hover:text-[#0F1619] transition-colors"
         >
@@ -71,8 +72,8 @@ export function HeroSection() {
         <Button
           variant="outline"
           onClick={() => {
-            const section = document.getElementById('features');
-            section?.scrollIntoView({ behavior: 'smooth' });
+            const section = document.getElementById("features");
+            section?.scrollIntoView({ behavior: "smooth" });
           }}
           className="w-[250px] h-[50px] text-[#F7EDE2] border-2 rounded-[30px] border-[#F7EDE2] font-roboto-flex font-medium text-[14px] leading-[20px] tracking-[0.02em] bg-gradient-to-b from-[rgba(145,187,242,0.52)] to-[rgba(13,13,13,0.04)] hover:bg-gradient-to-b hover:from-[rgba(145,187,242,0.7)] hover:to-[rgba(13,13,13,0.1)] transition-all"
         >
@@ -80,8 +81,8 @@ export function HeroSection() {
         </Button>
         <Button
           onClick={() => {
-            const section = document.getElementById('plans');
-            section?.scrollIntoView({ behavior: 'smooth' });
+            const section = document.getElementById("plans");
+            section?.scrollIntoView({ behavior: "smooth" });
           }}
           className="w-[250px] h-[50px] bg-[#5BD5AF] text-[#0F1619] font-roboto-flex font-medium rounded-[30px] hover:bg-[#4BC49F] transition-colors"
         >
