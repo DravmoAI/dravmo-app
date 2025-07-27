@@ -96,12 +96,18 @@ export default function LoginPage() {
     setIsLoading(true);
     console.log("Initiating Google OAuth login...", window.location.origin);
 
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error, data } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/dashboard`,
       },
     });
+
+    if (data.url) {
+      console.log("Google OAuth initiated successfully:", data);
+      window.location.href = data.url;
+      return;
+    }
 
     if (error) setError(error.message);
 
