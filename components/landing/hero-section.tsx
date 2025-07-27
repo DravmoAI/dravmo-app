@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { FaDiscord } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Link } from "lucide-react";
 
 export function HeroSection() {
   const router = useRouter();
@@ -53,6 +53,7 @@ export function HeroSection() {
           onClick={() => window.open("https://discord.gg/6XEZDwCDSk", "_blank")}
           className="w-[150px] h-[50px] text-[#F7EDE2] border rounded-[30px] border-[#F7EDE2] font-roboto-flex font-medium text-[14px] leading-[20px] tracking-[0.02em] bg-gradient-to-b from-[rgba(145,187,242,0.52)] to-[rgba(13,13,13,0.04)]"
         >
+          <FaDiscord className="inline-block text-[#F7EDE2] h-4 w-4" />
           Join Discord
         </Button>
       </div>
