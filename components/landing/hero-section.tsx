@@ -105,7 +105,7 @@ export function HeroSection() {
             PAY $0
           </h2>
           <div className="font-roboto-flex font-medium text-[12px] lg:text-[15px] leading-[18px] lg:leading-[24px] tracking-[0.15em] text-white">
-            <p>10 reviews/month</p>
+            <p>20 reviews/month</p>
           </div>
         </div>
       </div>

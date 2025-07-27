@@ -18,7 +18,7 @@ export default function LandingPage() {
 
   const basicPlanFeatures = [
     { label: "Unlimited projects", available: true },
-    { label: "10 reviews/month", available: true, note: "" },
+    { label: "20 reviews/month", available: true, note: "" },
     { label: "Design persona setup", available: true },
     { label: "Layout analysis", available: true },
     { label: "Typography review", available: true },
