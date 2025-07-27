@@ -1,25 +1,26 @@
 "use client";
 
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { DashboardLayout } from "@/components/dashboard-layout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { getSupabaseClient } from "@/lib/supabase";
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 
 interface Project {
   id: string;
   name: string;
+  status: string;
   createdAt: string;
+  thumbnail?: string;
   updatedAt: string;
   screenCount: number;
   lastFeedback: string;
-  status: string;
-  thumbnail?: string;
 }
 
 const mapColorBoldnessToName = {
@@ -47,11 +48,13 @@ const mapMotionDramaToName = {
 };
 
 export default function DashboardPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [persona, setPersona] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const supabase = getSupabaseClient();
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [persona, setPersona] = useState<any>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchUserAndProjects() {
@@ -79,9 +82,7 @@ export default function DashboardPage() {
 
         // Fetch projects from API
         const response = await fetch(`/api/projects?userId=${user.id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch projects");
-        }
+        if (!response.ok) throw new Error("Failed to fetch projects");
 
         const data = await response.json();
 
@@ -121,12 +122,61 @@ export default function DashboardPage() {
       }
     }
 
-    fetchUserAndProjects();
+    const checkAndRedirectUser = async () => {
+      console.log("Checking user authentication status...");
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      console.log("Fetched user:", user);
+
+      if (user) {
+        console.log("User is logged in:", user);
+
+        try {
+          const response = await fetch(`/api/profile/${user.id}`);
+
+          if (response.ok) {
+            const data = await response.json();
+
+            if (data.profile?.persona) {
+              console.log("User has completed persona setup, loading projects...");
+              fetchUserAndProjects();
+            } else {
+              router.push("/persona");
+            }
+          } else {
+            const response = await fetch("/api/profile", {
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json",
+              },
+
+              body: JSON.stringify({
+                id: user.id,
+                email: user.email,
+                fullName: `${user.user_metadata.full_name}`,
+              }),
+            });
+
+            if (!response.ok) throw new Error("Failed to create profile");
+            router.push("/persona");
+          }
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+          router.push("/login"); // Redirect to login if there's an error
+        }
+      }
+    };
+
+    checkAndRedirectUser();
   }, []);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
     const now = new Date();
+    const date = new Date(dateString);
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 

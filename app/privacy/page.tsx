@@ -143,8 +143,8 @@ export default function PrivacyPage() {
         </ul>
         <p className="mb-4">
           To exercise these rights, email us at{" "}
-          <a href="mailto:privacy@dravmo.com" className="text-blue-600 hover:underline">
-            privacy@dravmo.com
+          <a href="mailto:privacy@dravmo.io" className="text-blue-600 hover:underline">
+            privacy@dravmo.io
           </a>{" "}
           with "Privacy Request" in the subject line.
         </p>

@@ -332,16 +332,14 @@ export default function FeedbackDetailPage() {
             <div
               key={box.id}
               className={`absolute border-2 pointer-events-auto cursor-pointer transition-all duration-200 ${
-                selectedBoundingBox === box.id
-                  ? "border-4 bg-black/20"
-                  : "border-2 hover:bg-black/10"
+                selectedBoundingBox === box.id ? "border-4" : "border-2"
               }`}
               style={{
                 left: `${scaledX}px`,
                 top: `${scaledY}px`,
                 width: `${scaledWidth}px`,
                 height: `${scaledHeight}px`,
-                borderColor: box.color,
+                borderColor: "transparent",
               }}
               onClick={() => handleBoundingBoxClick(box.id)}
               title={box.judgement.substring(0, 100) + "..."}

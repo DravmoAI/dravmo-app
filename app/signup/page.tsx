@@ -170,13 +170,19 @@ export default function SignupPage() {
   };
 
   const handleLoginWithGoogle = async () => {
+    setErrors({});
+    setSuccess("");
+    setIsLoading(true);
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
     });
 
-    if (error) {
-      console.error("OAuth login error:", error.message);
-    }
+    if (error) setErrors({ general: error.message });
+    setIsLoading(false);
   };
 
   return (
