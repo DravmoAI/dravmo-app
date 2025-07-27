@@ -113,6 +113,9 @@ importers:
       '@types/react-dom':
         specifier: ^18
         version: 18.0.0
+      '@types/react-icons':
+        specifier: ^3.0.0
+        version: 3.0.0(react@18.0.0)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -155,6 +158,9 @@ importers:
       react-hook-form:
         specifier: latest
         version: 7.60.0(react@18.0.0)
+      react-icons:
+        specifier: ^5.5.0
+        version: 5.5.0(react@18.0.0)
       react-resizable-panels:
         specifier: latest
         version: 3.0.3(react-dom@18.0.0(react@18.0.0))(react@18.0.0)
@@ -1120,6 +1126,10 @@ packages:
 
   '@types/react-dom@18.0.0':
     resolution: {integrity: sha512-49897Y0UiCGmxZqpC8Blrf6meL8QUla6eb+BBhn69dTXlmuOlzkfr7HHY/O8J25e1lTUMs+YYxSlVDAaGHCOLg==}
+
+  '@types/react-icons@3.0.0':
+    resolution: {integrity: sha512-Vefs6LkLqF61vfV7AiAqls+vpR94q67gunhMueDznG+msAkrYgRxl7gYjNem/kZ+as2l2mNChmF1jRZzzQQtMg==}
+    deprecated: This is a stub types definition. react-icons provides its own type definitions, so you do not need this installed.
 
   '@types/react@18.0.0':
     resolution: {integrity: sha512-7+K7zEQYu7NzOwQGLR91KwWXXDzmTFODRVizJyIALf6RfLv2GDpqpknX64pvRVILXCpXi7O/pua8NGk44dLvJw==}
@@ -2472,6 +2482,11 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
+
+  react-icons@5.5.0:
+    resolution: {integrity: sha512-MEFcXdkP3dLo8uumGI5xN3lDFNsRtrjbOEKDLD7yv76v4wpnEq2Lt2qeHaQOr34I/wPN3s3+N08WkQ+CW37Xiw==}
+    peerDependencies:
+      react: '*'
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -3962,6 +3977,12 @@ snapshots:
     dependencies:
       '@types/react': 18.0.0
 
+  '@types/react-icons@3.0.0(react@18.0.0)':
+    dependencies:
+      react-icons: 5.5.0(react@18.0.0)
+    transitivePeerDependencies:
+      - react
+
   '@types/react@18.0.0':
     dependencies:
       '@types/prop-types': 15.7.15
@@ -5426,6 +5447,10 @@ snapshots:
       scheduler: 0.21.0
 
   react-hook-form@7.60.0(react@18.0.0):
+    dependencies:
+      react: 18.0.0
+
+  react-icons@5.5.0(react@18.0.0):
     dependencies:
       react: 18.0.0
 

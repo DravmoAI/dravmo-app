@@ -3,34 +3,37 @@
 import type React from "react";
 import Image from "next/image";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import { FcGoogle } from "react-icons/fc";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { getSupabaseClient } from "@/lib/supabase";
+import { Checkbox } from "@/components/ui/checkbox";
 import { initStorageBuckets } from "@/lib/supabase-storage";
+import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function SignupPage() {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [success, setSuccess] = useState("");
   const router = useRouter();
   const supabase = getSupabaseClient();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    lastName: "",
+    password: "",
+    firstName: "",
+    confirmPassword: "",
+  });
+
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -38,10 +41,12 @@ export default function SignupPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
       if (user) {
         router.push("/dashboard");
       }
     };
+
     checkUser();
 
     // Initialize storage buckets
@@ -161,6 +166,16 @@ export default function SignupPage() {
       setErrors({ general: "An unexpected error occurred. Please try again." });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleLoginWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+    });
+
+    if (error) {
+      console.error("OAuth login error:", error.message);
     }
   };
 
@@ -327,10 +342,24 @@ export default function SignupPage() {
               </div>
               {errors.terms && <p className="text-xs text-destructive">{errors.terms}</p>}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || Object.keys(errors).length > 0 || !agreeToTerms}
+              >
                 {isLoading ? "Creating account..." : "Create account"}
               </Button>
             </form>
+
+            <div>
+              <h5 className="text-center mt-2">Or</h5>
+              <div className="flex items-center justify-center mt-4">
+                <Button variant="outline" className="w-full" onClick={handleLoginWithGoogle}>
+                  <FcGoogle className="h-4 w-4 mr-2 inline" />
+                  Sign up with Google
+                </Button>
+              </div>
+            </div>
 
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
