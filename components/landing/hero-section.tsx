@@ -36,7 +36,7 @@ export function HeroSection() {
         height={1840}
         className="w-[300px] h-[180px] lg:w-[767px] lg:h-[460px] relative z-10 mt-[102px]"
       />
-      <h1 className="text-[14px] lg:text-[20px] leading-[16px] lg:leading-[20px] text-center tracking-[0.3em] lg:tracking-[0.5em] uppercase text-[#F7EDE2] font-quantico -translate-y-16 lg:-translate-y-32 relative z-10 px-4">
+      <h1 className="text-[14px] lg:text-[20px] leading-[16px] lg:leading-[20px] text-center tracking-[0.3em] lg:tracking-[0.5em] uppercase text-[#F7EDE2] font-quantico -translate-y-16 lg:-translate-y-32 relative z-10 px-4 mt-3">
         AI Design Review Engine
       </h1>
       <div className="hidden lg:flex flex-col lg:flex-row items-center justify-center gap-y-4 lg:gap-y-0 lg:gap-x-[20px] -translate-y-12 lg:-translate-y-24 relative z-10 px-4">
