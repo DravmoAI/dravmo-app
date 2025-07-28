@@ -12,15 +12,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSupabaseClient } from "@/lib/supabase";
+import { FcGoogle } from "react-icons/fc";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
   const supabase = getSupabaseClient();
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -91,6 +92,28 @@ export default function LoginPage() {
     }
   };
 
+  const handleLoginWithGoogle = async () => {
+    setIsLoading(true);
+    console.log("Initiating Google OAuth login...", window.location.origin);
+
+    const { error, data } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    if (data.url) {
+      console.log("Google OAuth initiated successfully:", data);
+      window.location.href = data.url;
+      return;
+    }
+
+    if (error) setError(error.message);
+
+    setIsLoading(false);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0F1619] px-4 py-8 relative">
       {/* Background overlay image */}
@@ -144,6 +167,7 @@ export default function LoginPage() {
                     Forgot password?
                   </Link>
                 </div>
+
                 <div className="relative">
                   <Input
                     id="password"
@@ -169,6 +193,16 @@ export default function LoginPage() {
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
+
+            <div>
+              <h5 className="text-center mt-2">Or</h5>
+              <div className="flex items-center justify-center mt-4">
+                <Button variant="outline" className="w-full" onClick={handleLoginWithGoogle}>
+                  <FcGoogle className="h-4 w-4 mr-2 inline" />
+                  Sign in with Google
+                </Button>
+              </div>
+            </div>
 
             <div className="mt-4 text-center text-sm">
               Don't have an account?{" "}

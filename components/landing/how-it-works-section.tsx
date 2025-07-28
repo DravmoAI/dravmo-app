@@ -52,10 +52,10 @@ export function HowItWorksSection() {
           }}
         >
           <h1 className="w-32 lg:w-auto h-24 font-krona-one font-normal text-[24px] lg:text-[40px] bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent leading-7 lg:leading-10 ml-[22px] lg:ml-[34px]">
-            select project
+            setup project
           </h1>
           <Image 
-            src="/landing-page/Figma.png" 
+            src="/landing-page/Slider.png" 
             alt="Dravmo" 
             width={800} 
             height={800} 
@@ -83,7 +83,7 @@ export function HowItWorksSection() {
             analyze design
           </h1>
           <Image 
-            src="/landing-page/Figma.png" 
+            src="/landing-page/Monitor.png" 
             alt="Dravmo" 
             width={800} 
             height={800} 

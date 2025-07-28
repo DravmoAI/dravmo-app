@@ -2,16 +2,23 @@
 import Image from "next/image";
 import { Navigation } from "@/components/landing/navigation";
 import { HeroSection } from "@/components/landing/hero-section";
-import { HowItWorksSection } from "@/components/landing/how-it-works-section";
+import { FooterSection } from "@/components/landing/footer-section";
+import { PricingSection } from "@/components/landing/pricing-section";
 import { FeaturesSection } from "@/components/landing/features-section";
 import { MasterModeSection } from "@/components/landing/master-mode-section";
-import { PricingSection } from "@/components/landing/pricing-section";
-import { FooterSection } from "@/components/landing/footer-section";
+import { HowItWorksSection } from "@/components/landing/how-it-works-section";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getSupabaseClient } from "@/lib/supabase";
 
 export default function LandingPage() {
+  const router = useRouter();
+  const supabase = getSupabaseClient();
+
   const basicPlanFeatures = [
     { label: "Unlimited projects", available: true },
-    { label: "10 reviews/month", available: true, note: "" },
+    { label: "20 reviews/month", available: true, note: "" },
     { label: "Design persona setup", available: true },
     { label: "Layout analysis", available: true },
     { label: "Typography review", available: true },
@@ -27,7 +34,7 @@ export default function LandingPage() {
 
   const proPlanFeatures = [
     { label: "Unlimited projects", available: true },
-    { label: "200 reviews", available: true, note: "" },
+    { label: "200 reviews/month", available: true, note: "" },
     { label: "Design persona setup", available: true },
     { label: "Layout analysis", available: true },
     { label: "Typography review", available: true },

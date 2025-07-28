@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { FaDiscord } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -36,7 +37,7 @@ export function HeroSection() {
         height={1840}
         className="w-[300px] h-[180px] lg:w-[767px] lg:h-[460px] relative z-10 mt-[102px]"
       />
-      <h1 className="text-[14px] lg:text-[20px] leading-[16px] lg:leading-[20px] text-center tracking-[0.3em] lg:tracking-[0.5em] uppercase text-[#F7EDE2] font-quantico -translate-y-16 lg:-translate-y-32 relative z-10 px-4">
+      <h1 className="text-[14px] lg:text-[20px] leading-[16px] lg:leading-[20px] text-center tracking-[0.3em] lg:tracking-[0.5em] uppercase text-[#F7EDE2] font-quantico -translate-y-16 lg:-translate-y-32 relative z-10 px-4 mt-3">
         AI Design Review Engine
       </h1>
       <div className="hidden lg:flex flex-col lg:flex-row items-center justify-center gap-y-4 lg:gap-y-0 lg:gap-x-[20px] -translate-y-12 lg:-translate-y-24 relative z-10 px-4">
@@ -49,10 +50,11 @@ export function HeroSection() {
         </Button>
         <Button
           variant="outline"
-          onClick={() => router.push("/login")}
+          onClick={() => window.open("https://discord.gg/6XEZDwCDSk", "_blank")}
           className="w-[150px] h-[50px] text-[#F7EDE2] border rounded-[30px] border-[#F7EDE2] font-roboto-flex font-medium text-[14px] leading-[20px] tracking-[0.02em] bg-gradient-to-b from-[rgba(145,187,242,0.52)] to-[rgba(13,13,13,0.04)]"
         >
-          Access Dashboard
+          <FaDiscord className="inline-block text-[#F7EDE2] h-4 w-4" />
+          Join Discord
         </Button>
       </div>
 
@@ -60,19 +62,16 @@ export function HeroSection() {
       <div className="flex lg:hidden flex-col items-center justify-center gap-y-6 -translate-y-8 relative z-10 px-4">
         <Button
           variant="outline"
-          onClick={() => {
-            const section = document.getElementById('how-it-works');
-            section?.scrollIntoView({ behavior: 'smooth' });
-          }}
+          onClick={() => router.push("/login")}
           className="w-[250px] h-[50px] bg-transparent border-[#97FFEF] border-2 rounded-[30px] text-[#97FFEF] font-roboto-flex hover:bg-[#97FFEF] hover:text-[#0F1619] transition-colors"
         >
-          How It Works
+          Begin Review
         </Button>
         <Button
           variant="outline"
           onClick={() => {
-            const section = document.getElementById('features');
-            section?.scrollIntoView({ behavior: 'smooth' });
+            const section = document.getElementById("features");
+            section?.scrollIntoView({ behavior: "smooth" });
           }}
           className="w-[250px] h-[50px] text-[#F7EDE2] border-2 rounded-[30px] border-[#F7EDE2] font-roboto-flex font-medium text-[14px] leading-[20px] tracking-[0.02em] bg-gradient-to-b from-[rgba(145,187,242,0.52)] to-[rgba(13,13,13,0.04)] hover:bg-gradient-to-b hover:from-[rgba(145,187,242,0.7)] hover:to-[rgba(13,13,13,0.1)] transition-all"
         >
@@ -80,8 +79,8 @@ export function HeroSection() {
         </Button>
         <Button
           onClick={() => {
-            const section = document.getElementById('plans');
-            section?.scrollIntoView({ behavior: 'smooth' });
+            const section = document.getElementById("plans");
+            section?.scrollIntoView({ behavior: "smooth" });
           }}
           className="w-[250px] h-[50px] bg-[#5BD5AF] text-[#0F1619] font-roboto-flex font-medium rounded-[30px] hover:bg-[#4BC49F] transition-colors"
         >
@@ -105,7 +104,7 @@ export function HeroSection() {
             PAY $0
           </h2>
           <div className="font-roboto-flex font-medium text-[12px] lg:text-[15px] leading-[18px] lg:leading-[24px] tracking-[0.15em] text-white">
-            <p>10 reviews/month</p>
+            <p>20 reviews/month</p>
           </div>
         </div>
       </div>
