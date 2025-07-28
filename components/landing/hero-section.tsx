@@ -62,13 +62,10 @@ export function HeroSection() {
       <div className="flex lg:hidden flex-col items-center justify-center gap-y-6 -translate-y-8 relative z-10 px-4">
         <Button
           variant="outline"
-          onClick={() => {
-            const section = document.getElementById("how-it-works");
-            section?.scrollIntoView({ behavior: "smooth" });
-          }}
+          onClick={() => router.push("/login")}
           className="w-[250px] h-[50px] bg-transparent border-[#97FFEF] border-2 rounded-[30px] text-[#97FFEF] font-roboto-flex hover:bg-[#97FFEF] hover:text-[#0F1619] transition-colors"
         >
-          How It Works
+          Begin Review
         </Button>
         <Button
           variant="outline"
