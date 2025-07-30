@@ -180,7 +180,6 @@ export default function UploadPage() {
   const handleFigmaLogin = async () => {
     setIsFigmaAuthLoading(true);
     try {
-      // Redirect to Figma OAuth
       window.location.href = '/api/figma/auth';
     } catch (error) {
       console.error('Error during Figma login:', error);
@@ -213,6 +212,20 @@ export default function UploadPage() {
     setIsUploading(true);
 
     try {
+      if (figmaUrl) {
+        const analyzeRes = await fetch('/api/figma/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ figmaUrl }),
+        });
+        const analyzeData = await analyzeRes.json();
+        console.log('Figma analyze response:', analyzeData);
+        if (analyzeData && analyzeData.data) {
+          console.error('Node data received! Check console for details.');
+        } else {
+          console.error('No node data found. Check console for details.');
+        }
+      }
       // Determine project ID
       let projectId = selectedProjectId;
       if (!projectId && newProjectName) {
