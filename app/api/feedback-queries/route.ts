@@ -10,6 +10,8 @@ interface SelectedAnalyzer {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    console.log("Request body parsed:", body);
+
     const {
       screenId,
       designMasterId,
@@ -25,10 +27,12 @@ export async function POST(request: Request) {
     } = body;
 
     if (!screenId) {
+      console.log("Validation failed: ScreenId is required");
       return NextResponse.json({ error: "ScreenId is required" }, { status: 400 });
     }
 
     if ((!selectedAnalyzers || selectedAnalyzers.length === 0) && !designMasterId) {
+      console.log("Validation failed: At least one analyzer must be selected");
       return NextResponse.json(
         { error: "At least one analyzer must be selected" },
         { status: 400 }
@@ -36,19 +40,22 @@ export async function POST(request: Request) {
     }
 
     if (!imageData) {
+      console.log("Validation failed: Image data is required");
       return NextResponse.json({ error: "Image data is required" }, { status: 400 });
     }
 
-    // First, verify the screen exists
+    // Verify the screen exists
     const screen = await prisma.screen.findUnique({
       where: { id: screenId },
     });
+    console.log("Screen fetched:", screen);
 
     if (!screen) {
+      console.log("Screen not found:", screenId);
       return NextResponse.json({ error: "Screen not found" }, { status: 404 });
     }
 
-    // Create the feedback query with proper relations
+    // Create the feedback query
     const feedbackQuery = await prisma.feedbackQuery.create({
       data: {
         screen: {
@@ -68,20 +75,23 @@ export async function POST(request: Request) {
         platform: platform || "Web",
       },
     });
+    console.log("Feedback query created:", feedbackQuery);
 
-    // Create the select analyzers - each point gets its own record with all three IDs
+    // Create the selected analyzers
     const analyzerData = selectedAnalyzers.map((analyzer: SelectedAnalyzer) => ({
       topicId: analyzer.topicId,
       pointId: analyzer.pointId,
       subtopicId: analyzer.subtopicId,
       feedbackQueryId: feedbackQuery.id,
     }));
+    console.log("Analyzer data prepared:", analyzerData);
 
     await prisma.selectAnalyzer.createMany({
       data: analyzerData,
     });
+    console.log("Selected analyzers created");
 
-    // Get the count of existing feedback results for this screen to determine version number
+    // Get the count of existing feedback results
     const existingFeedbackCount = await prisma.feedbackResult.count({
       where: {
         feedbackQuery: {
@@ -89,15 +99,17 @@ export async function POST(request: Request) {
         },
       },
     });
+    console.log("Existing feedback count fetched:", existingFeedbackCount);
 
-    // Generate version number (v1, v2, v3, etc.)
+    // Generate version number
     const versionNumber = existingFeedbackCount + 1;
     const version = `v${versionNumber}`;
+    console.log("Version number generated:", version);
 
     let reviewResult;
 
     if (designMasterId) {
-      // Use expert advice endpoint when design master is selected
+      // Fetch design master details
       const designMaster = await prisma.designMaster.findUnique({
         where: { id: designMasterId },
         include: {
@@ -105,11 +117,14 @@ export async function POST(request: Request) {
           blogs: true,
         },
       });
+      console.log("Design master fetched:", designMaster);
 
       if (!designMaster) {
+        console.log("Design master not found:", designMasterId);
         return NextResponse.json({ error: "Design master not found" }, { status: 404 });
       }
 
+      // Fetch expert advice
       const expertResponse = await fetch(
         `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/expert-advice`,
         {
@@ -143,14 +158,17 @@ export async function POST(request: Request) {
           }),
         }
       );
+      console.log("Expert advice response fetched:", expertResponse);
 
       if (!expertResponse.ok) {
+        console.log("Failed to fetch expert advice");
         throw new Error("Failed to get expert advice");
       }
 
       reviewResult = await expertResponse.json();
+      console.log("Expert advice received:", reviewResult);
     } else {
-      // Use general review endpoint when no design master is selected
+      // Fetch analyzer topics
       const analyzerTopics = await prisma.analyzerTopic.findMany({
         include: {
           analyzerSubtopics: {
@@ -160,8 +178,9 @@ export async function POST(request: Request) {
           },
         },
       });
+      console.log("Analyzer topics fetched:", analyzerTopics);
 
-      // Build criterias object based on selected analyzers
+      // Build criterias object
       const criterias: any = {};
 
       selectedAnalyzers.forEach((selectedAnalyzer: SelectedAnalyzer) => {
@@ -183,8 +202,9 @@ export async function POST(request: Request) {
           }
         }
       });
+      console.log("Criterias object built:", criterias);
 
-      // Generate review using AI backend
+      // Fetch general review
       const generalResponse = await fetch(
         `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/general-review`,
         {
@@ -205,28 +225,33 @@ export async function POST(request: Request) {
           }),
         }
       );
+      console.log("General review response fetched:", generalResponse);
 
       if (!generalResponse.ok) {
+        console.log("Failed to fetch general review");
         throw new Error("Failed to generate AI review");
       }
 
       reviewResult = await generalResponse.json();
+      console.log("General review received:", reviewResult);
     }
 
     if (!reviewResult.success) {
+      console.log("AI review failed:", reviewResult.error || "Unknown error");
       throw new Error(reviewResult.error || "AI review failed");
     }
 
-    // Create a feedback result with AI-generated content
+    // Create feedback result
     const feedbackResult = await prisma.feedbackResult.create({
       data: {
         feedbackQuery: {
           connect: { id: feedbackQuery.id },
         },
-        feedbackSummary: JSON.stringify(reviewResult.data), // Store the full AI response
+        feedbackSummary: JSON.stringify(reviewResult.data),
         version: version,
       },
     });
+    console.log("Feedback result created:", feedbackResult);
 
     return NextResponse.json(
       {
