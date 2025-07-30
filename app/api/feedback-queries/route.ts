@@ -180,7 +180,6 @@ export async function POST(request: Request) {
       });
       console.log("Analyzer topics fetched:", analyzerTopics);
 
-      // Build criterias object
       const criterias: any = {};
 
       selectedAnalyzers.forEach((selectedAnalyzer: SelectedAnalyzer) => {
