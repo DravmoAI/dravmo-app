@@ -20,7 +20,7 @@ export function PricingSection({
   proPlanFeatures,
   litePlanFeatures,
 }: PricingSectionProps) {
-  const [isUnlimited, setIsUnlimited] = useState(false);
+  const [isPro, setIsPro] = useState(false);
   const [isYearly, setIsYearly] = useState(true);
 
   return (
@@ -92,21 +92,23 @@ export function PricingSection({
           <div className="flex justify-between items-start w-full">
             <div className="mt-[52px] lg:mt-[82px]">
               <h1 className="font-krona-one font-normal text-[32px] lg:text-[48px] lg:leading-[48px] text-[#F7EDE2]">
-                {isUnlimited ? "Pro" : "Lite"}
+                {isPro ? "Pro" : "Lite"}
               </h1>
               <h2 className="font-poppins text-[14px] ">
                 <i className="text-[14px] font-light mr-1">for</i>{" "}
-                {isUnlimited ? "Design Professionals" : "Design Enthusiasts"}
+                {isPro ? "Design Professionals" : "Design Enthusiasts"}
               </h2>
-              <div className="flex items-center justify-center gap-x-3 lg:gap-x-5 translate-y-2">
-                <p className="italic text-sm lg:text-base font-normal text-[#5BD5AF] -ml-2 lg:-ml-3">Go Unlimited</p>
-                <div className="checkbox">
+              <div className="flex items-center justify-start gap-x-3 lg:gap-x-5 translate-y-2">
+                <p className="italic text-sm lg:text-base font-normal text-[#5BD5AF]">
+                  {isPro ? "Go Lite" : "Go Pro"}
+                </p>
+                <div className="checkbox select-none">
                   <input
-                    className="tgl"
+                    className="tgl select-none"
                     id="toggle"
                     type="checkbox"
-                    checked={isUnlimited}
-                    onChange={() => setIsUnlimited(!isUnlimited)}
+                    checked={isPro}
+                    onChange={() => setIsPro(!isPro)}
                   />
                   <label className="tgl-btn" htmlFor="toggle"></label>
                 </div>
@@ -114,7 +116,7 @@ export function PricingSection({
             </div>
             <div className="w-auto leading-none mt-[59px] lg:mt-[67px]">
               <h1 className="font-quantico font-bold text-[48px] lg:text-[96px] text-right text-[#5BD5AF]">
-                ${isUnlimited ? (isYearly ? 28 : 35) : isYearly ? 12 : 15}
+                ${isPro ? (isYearly ? 28 : 35) : isYearly ? 12 : 15}
               </h1>
               <h2 className="font-poppins font-light text-[12px] lg:text-[20px] text-right tracking-[0.02em] text-[#97FFEF]">
                 monthly
@@ -123,7 +125,7 @@ export function PricingSection({
           </div>
 
           <ul className="mt-[44px] lg:mt-[70px] space-y-3 lg:space-y-4 text-[18px] font-poppins font-semibold">
-            {(isUnlimited ? proPlanFeatures : litePlanFeatures).map((item, idx) => (
+            {(isPro ? proPlanFeatures : litePlanFeatures).map((item, idx) => (
               <li
                 key={idx}
                 className={`flex gap-[15px] lg:gap-[23px] items-start lg:mt-[10px] text-[12px] lg:text-[20px] ${
