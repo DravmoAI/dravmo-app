@@ -1,107 +1,113 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
+import Image from "next/image";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
-import { getSupabaseClient } from "@/lib/supabase"
-import { initStorageBuckets } from "@/lib/supabase-storage"
+import Link from "next/link";
+import { FcGoogle } from "react-icons/fc";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { getSupabaseClient } from "@/lib/supabase";
+import { Checkbox } from "@/components/ui/checkbox";
+import { initStorageBuckets } from "@/lib/supabase-storage";
+import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function SignupPage() {
+  const router = useRouter();
+  const supabase = getSupabaseClient();
+
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
     email: "",
+    lastName: "",
     password: "",
+    firstName: "",
     confirmPassword: "",
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [agreeToTerms, setAgreeToTerms] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [success, setSuccess] = useState("")
-  const router = useRouter()
-  const supabase = getSupabaseClient()
+  });
+
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Check if user is already logged in
   useEffect(() => {
     const checkUser = async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser()
+      } = await supabase.auth.getUser();
+
       if (user) {
-        router.push("/dashboard")
+        router.push("/dashboard");
       }
-    }
-    checkUser()
+    };
+
+    checkUser();
 
     // Initialize storage buckets
-    initStorageBuckets()
-  }, [router])
+    initStorageBuckets();
+  }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
+    }));
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
         [name]: "",
-      }))
+      }));
     }
-  }
+  };
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required"
+      newErrors.firstName = "First name is required";
     }
     if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required"
+      newErrors.lastName = "Last name is required";
     }
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required"
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid"
+      newErrors.email = "Email is invalid";
     }
     if (!formData.password) {
-      newErrors.password = "Password is required"
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters"
+      newErrors.password = "Password must be at least 6 characters";
     }
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match"
+      newErrors.confirmPassword = "Passwords do not match";
     }
     if (!agreeToTerms) {
-      newErrors.terms = "You must agree to the terms and conditions"
+      newErrors.terms = "You must agree to the terms and conditions";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!validateForm()) {
-      return
+      return;
     }
 
-    setIsLoading(true)
-    setErrors({})
-    setSuccess("")
+    setIsLoading(true);
+    setErrors({});
+    setSuccess("");
 
     try {
       // 1. Create user with Supabase Auth
@@ -115,11 +121,11 @@ export default function SignupPage() {
             full_name: `${formData.firstName} ${formData.lastName}`,
           },
         },
-      })
+      });
 
       if (error) {
-        setErrors({ general: error.message })
-        return
+        setErrors({ general: error.message });
+        return;
       }
 
       if (data.user) {
@@ -135,46 +141,71 @@ export default function SignupPage() {
               email: formData.email,
               fullName: `${formData.firstName} ${formData.lastName}`,
             }),
-          })
+          });
 
           if (!response.ok) {
-            throw new Error("Failed to create profile")
+            throw new Error("Failed to create profile");
           }
 
           // 3. Check if email confirmation is required
           if (data.user.email_confirmed_at) {
             // User is automatically confirmed, redirect to persona setup
-            router.push("/persona")
+            router.push("/persona");
           } else {
             // User needs to confirm email
-            setSuccess("Please check your email and click the confirmation link to complete your registration.")
+            setSuccess(
+              "Please check your email and click the confirmation link to complete your registration."
+            );
           }
         } catch (profileError) {
-          console.error("Profile creation error:", profileError)
-          setErrors({ general: "Failed to create profile. Please try again." })
+          console.error("Profile creation error:", profileError);
+          setErrors({ general: "Failed to create profile. Please try again." });
         }
       }
     } catch (err) {
-      setErrors({ general: "An unexpected error occurred. Please try again." })
+      setErrors({ general: "An unexpected error occurred. Please try again." });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+
+  const handleLoginWithGoogle = async () => {
+    setErrors({});
+    setSuccess("");
+    setIsLoading(true);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    if (error) setErrors({ general: error.message });
+    setIsLoading(false);
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="font-bold text-primary-foreground">D</span>
-            </div>
-            <span className="text-2xl font-bold">Dravmo</span>
-          </Link>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-[#0F1619] px-4 py-8">
+      {/* Background overlay image */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-full h-full bg-[url('/landing-page/dotted-line-2.png')] bg-no-repeat bg-center bg-contain"></div>
+      </div>
 
+      <div className="w-full max-w-md relative z-10">
         <Card>
           <CardHeader className="text-center">
+            <div className="flex justify-center">
+              <Link href="/" className="flex justify-center items-center gap-2">
+                <Image
+                  width={128}
+                  height={128}
+                  src="/logo.svg"
+                  alt="Dravmo Logo"
+                  className="rounded-full flex items-center justify-center object-contain object-center"
+                />
+              </Link>
+            </div>
             <CardTitle className="text-2xl">Create your account</CardTitle>
             <CardDescription>Get started with AI-powered design feedback</CardDescription>
           </CardHeader>
@@ -205,7 +236,9 @@ export default function SignupPage() {
                     onChange={handleInputChange}
                     className={errors.firstName ? "border-destructive" : ""}
                   />
-                  {errors.firstName && <p className="text-xs text-destructive">{errors.firstName}</p>}
+                  {errors.firstName && (
+                    <p className="text-xs text-destructive">{errors.firstName}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last name</Label>
@@ -279,10 +312,16 @@ export default function SignupPage() {
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
-                {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && (
+                  <p className="text-xs text-destructive">{errors.confirmPassword}</p>
+                )}
               </div>
 
               <div className="flex items-center space-x-2">
@@ -290,9 +329,9 @@ export default function SignupPage() {
                   id="terms"
                   checked={agreeToTerms}
                   onCheckedChange={(checked) => {
-                    setAgreeToTerms(checked === true)
+                    setAgreeToTerms(checked === true);
                     if (errors.terms) {
-                      setErrors((prev) => ({ ...prev, terms: "" }))
+                      setErrors((prev) => ({ ...prev, terms: "" }));
                     }
                   }}
                 />
@@ -309,10 +348,24 @@ export default function SignupPage() {
               </div>
               {errors.terms && <p className="text-xs text-destructive">{errors.terms}</p>}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || Object.keys(errors).length > 0 || !agreeToTerms}
+              >
                 {isLoading ? "Creating account..." : "Create account"}
               </Button>
             </form>
+
+            <div>
+              <h5 className="text-center mt-2">Or</h5>
+              <div className="flex items-center justify-center mt-4">
+                <Button variant="outline" className="w-full" onClick={handleLoginWithGoogle}>
+                  <FcGoogle className="h-4 w-4 mr-2 inline" />
+                  Sign up with Google
+                </Button>
+              </div>
+            </div>
 
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
@@ -324,5 +377,5 @@ export default function SignupPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

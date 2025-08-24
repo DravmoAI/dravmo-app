@@ -2,326 +2,353 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
 }
 
 model Profile {
-  id        String   @id
-  fullName  String?  @map("full_name")
-  email     String   @unique
-  avatarUrl String?  @map("avatar_url")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+    id        String   @id
+    fullName  String?  @map("full_name")
+    email     String   @unique
+    avatarUrl String?  @map("avatar_url")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // Relations
-  projects      Project[]
-  subscriptions Subscription[]
-  persona       Persona?
+    // Relations
+    projects      Project[]
+    subscriptions Subscription[]
+    persona       Persona?
 
-  @@map("profiles")
+    @@map("profiles")
 }
 
 model Persona {
-  id            String   @id @default(uuid())
-  userId        String   @unique @map("user_id")
-  personaCardId String   @map("persona_card_id")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+    id            String   @id @default(uuid())
+    userId        String   @unique @map("user_id")
+    personaCardId String   @map("persona_card_id")
+    createdAt     DateTime @default(now()) @map("created_at")
+    updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // Relations
-  profile           Profile             @relation(fields: [userId], references: [id])
-  personaCard       PersonaCard         @relation(fields: [personaCardId], references: [id])
-  personaMoodboards PersonaMoodboard[]
-  personaVibes      PersonaVibe[]
-  personaKeywords   PersonaKeyword[]
+    // Relations
+    profile           Profile            @relation(fields: [userId], references: [id])
+    personaCard       PersonaCard        @relation(fields: [personaCardId], references: [id])
+    personaMoodboards PersonaMoodboard[]
+    personaVibes      PersonaVibe[]
+    personaKeywords   PersonaKeyword[]
 
-  @@map("personas")
+    @@map("personas")
 }
 
 model PersonaCard {
-  id               String @id @default(uuid()) @map("persona_card_id")
-  personaCardName  String @map("persona_card_name")
-  personaPhilosophy String @map("persona_philosophy")
-  personaMeaning   String @map("persona_meaning")
+    id                String @id @default(uuid()) @map("persona_card_id")
+    personaCardName   String @map("persona_card_name")
+    personaPhilosophy String @map("persona_philosophy")
+    personaMeaning    String @map("persona_meaning")
 
-  // Relations
-  personas Persona[]
+    // Relations
+    personas Persona[]
 
-  @@map("persona_cards")
+    @@map("persona_cards")
 }
 
 model PersonaMoodboard {
-  id          String    @id @default(uuid())
-  personaId   String    @map("persona_id")
-  snapshotUrl String    @map("snapshot_url")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime? @map("updated_at")
+    id          String    @id @default(uuid())
+    personaId   String    @map("persona_id")
+    snapshotUrl String    @map("snapshot_url")
+    createdAt   DateTime  @default(now()) @map("created_at")
+    updatedAt   DateTime? @map("updated_at")
 
-  // Relations
-  persona Persona @relation(fields: [personaId], references: [id])
+    // Relations
+    persona Persona @relation(fields: [personaId], references: [id])
 
-  @@map("persona_moodboards")
+    @@map("persona_moodboards")
 }
 
 model PersonaVibe {
-  id               String    @id @default(uuid())
-  personaId        String    @map("persona_id")
-  colorBoldness    Int       @map("color_boldness")
-  typeTemperament  Int       @map("type_temperament")
-  spacingAiriness  Int       @map("spacing_airiness")
-  motionDrama      Int       @map("motion_drama")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime? @map("updated_at")
+    id              String    @id @default(uuid())
+    personaId       String    @map("persona_id")
+    colorBoldness   Int       @map("color_boldness")
+    typeTemperament Int       @map("type_temperament")
+    spacingAiriness Int       @map("spacing_airiness")
+    motionDrama     Int       @map("motion_drama")
+    createdAt       DateTime  @default(now()) @map("created_at")
+    updatedAt       DateTime? @map("updated_at")
 
-  // Relations
-  persona Persona @relation(fields: [personaId], references: [id])
+    // Relations
+    persona Persona @relation(fields: [personaId], references: [id])
 
-  @@map("persona_vibes")
+    @@map("persona_vibes")
 }
 
 model PersonaKeyword {
-  id        String    @id @default(uuid())
-  personaId String    @map("persona_id")
-  keyword   String
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime? @map("updated_at")
+    id        String    @id @default(uuid())
+    personaId String    @map("persona_id")
+    keyword   String
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime? @map("updated_at")
 
-  // Relations
-  persona Persona @relation(fields: [personaId], references: [id])
+    // Relations
+    persona Persona @relation(fields: [personaId], references: [id])
 
-  @@map("persona_keywords")
+    @@map("persona_keywords")
 }
 
 model Project {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  name      String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+    id        String   @id @default(uuid())
+    userId    String   @map("user_id")
+    name      String
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // Relations
-  profile Profile  @relation(fields: [userId], references: [id])
-  screens Screen[]
+    // Relations
+    profile Profile  @relation(fields: [userId], references: [id])
+    screens Screen[]
 
-  @@map("projects")
+    @@map("projects")
 }
 
 model Screen {
-  id         String   @id @default(uuid())
-  projectId  String   @map("project_id")
-  sourceUrl  String   @map("source_url")
-  sourceType String   @map("source_type")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
+    id         String   @id @default(uuid())
+    projectId  String   @map("project_id")
+    sourceUrl  String   @map("source_url")
+    sourceType String   @map("source_type")
+    createdAt  DateTime @default(now()) @map("created_at")
+    updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // Relations
-  project         Project           @relation(fields: [projectId], references: [id])
-  feedbackQueries FeedbackQuery[]
+    // Relations
+    project         Project         @relation(fields: [projectId], references: [id])
+    feedbackQueries FeedbackQuery[]
 
-  @@map("screens")
+    @@map("screens")
 }
 
 model FeedbackQuery {
-  id               String   @id @default(uuid())
-  screenId         String   @map("screen_id")
-  designMasterId   String   @map("design_master_id")
-  industry         String
-  productType      String   @map("product_type")
-  purpose          String
-  audience         String
-  ageGroup         String   @map("age_group")
-  brandPersonality String   @map("brand_personality")
-  platform         String
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+    id               String   @id @default(uuid())
+    screenId         String   @map("screen_id")
+    designMasterId   String?  @map("design_master_id")
+    industry         String
+    productType      String   @map("product_type")
+    purpose          String
+    audience         String
+    ageGroup         String   @map("age_group")
+    brandPersonality String   @map("brand_personality")
+    platform         String
+    createdAt        DateTime @default(now()) @map("created_at")
+    updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // Relations
-  screen           Screen             @relation(fields: [screenId], references: [id])
-  designMaster     DesignMaster       @relation(fields: [designMasterId], references: [id])
-  feedbackResults  FeedbackResult[]
-  selectAnalyzers  SelectAnalyzer[]
+    // Relations
+    screen          Screen           @relation(fields: [screenId], references: [id])
+    designMaster    DesignMaster?    @relation(fields: [designMasterId], references: [id])
+    feedbackResults FeedbackResult[]
+    selectAnalyzers SelectAnalyzer[]
 
-  @@map("feedback_queries")
+    @@map("feedback_queries")
 }
 
 model FeedbackResult {
-  id              String   @id @default(uuid())
-  queryId         String   @map("query_id")
-  feedbackSummary String   @map("feedback_summary") @db.Text
-  version         String
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+    id              String   @id @default(uuid())
+    queryId         String   @map("query_id")
+    feedbackSummary String   @map("feedback_summary") @db.Text
+    version         String
+    createdAt       DateTime @default(now()) @map("created_at")
+    updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // Relations
-  feedbackQuery   FeedbackQuery     @relation(fields: [queryId], references: [id])
-  analyzerResults AnalyzerResult[]
+    // Relations
+    feedbackQuery   FeedbackQuery    @relation(fields: [queryId], references: [id])
+    analyzerResults AnalyzerResult[]
 
-  @@map("feedback_results")
+    @@map("feedback_results")
 }
 
 model DesignMaster {
-  id           String @id @default(uuid())
-  name         String
-  styleSummary String @map("style_summary") @db.Text
-  userfulFor   String @map("userful_for") @db.Text
-  bio          String @db.Text
-  avatarUrl    String @map("avatar_url") @db.Text
+    id                String   @id @default(uuid())
+    name              String
+    philosophy        String?  @db.Text
+    methodology       String[]
+    signatureGestures String[] @map("signature_gestures")
+    fitSummary        String?  @map("fit_summary") @db.Text
+    avatarUrl         String?  @map("avatar_url") @db.Text
 
-  // Relations
-  feedbackQueries FeedbackQuery[]
+    // Relations
+    feedbackQueries FeedbackQuery[]
+    talks           Talk[] // Optional by default
+    blogs           Blog[] // Optional by default
 
-  @@map("design_masters")
+    @@map("design_masters")
+}
+
+model Talk {
+    id             String @id @default(uuid())
+    designMasterId String @map("design_master_id")
+    title          String
+    content        String @db.Text
+
+    // Relation
+    designMaster DesignMaster @relation(fields: [designMasterId], references: [id])
+
+    @@map("talks")
+}
+
+model Blog {
+    id             String @id @default(uuid())
+    designMasterId String @map("design_master_id")
+    title          String
+    content        String @db.Text
+
+    // Relation
+    designMaster DesignMaster @relation(fields: [designMasterId], references: [id])
+
+    @@map("blogs")
 }
 
 model AnalyzerResult {
-  id               String   @id @default(uuid())
-  feedbackResultId String   @map("feedback_result_id")
-  pointId          String   @map("point_id")
-  confidence       Int
-  feedbackJSON     Json     @map("feedback_json")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+    id               String   @id @default(uuid())
+    feedbackResultId String   @map("feedback_result_id")
+    pointId          String   @map("point_id")
+    confidence       Int
+    feedbackJSON     Json     @map("feedback_json")
+    createdAt        DateTime @default(now()) @map("created_at")
+    updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // Relations
-  feedbackResult FeedbackResult @relation(fields: [feedbackResultId], references: [id])
-  analyzerPoint  AnalyzerPoint  @relation(fields: [pointId], references: [id])
+    // Relations
+    feedbackResult FeedbackResult @relation(fields: [feedbackResultId], references: [id])
+    analyzerPoint  AnalyzerPoint  @relation(fields: [pointId], references: [id])
 
-  @@map("analyzer_results")
+    @@map("analyzer_results")
 }
 
 model SelectAnalyzer {
-  id                String   @id @default(uuid())
-  pointId           String   @map("point_id")
-  subtopicId        String   @map("subtopic_id")
-  topicId           String   @map("topic_id")
-  feedbackQueryId   String   @map("feedback_query_id")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+    id              String   @id @default(uuid())
+    pointId         String   @map("point_id")
+    subtopicId      String   @map("subtopic_id")
+    topicId         String   @map("topic_id")
+    feedbackQueryId String   @map("feedback_query_id")
+    createdAt       DateTime @default(now()) @map("created_at")
+    updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // Relations
-  analyzerPoint    AnalyzerPoint    @relation(fields: [pointId], references: [id])
-  analyzerSubtopic AnalyzerSubtopic @relation(fields: [subtopicId], references: [id])
-  analyzerTopic    AnalyzerTopic    @relation(fields: [topicId], references: [id])
-  feedbackQuery    FeedbackQuery    @relation(fields: [feedbackQueryId], references: [id])
+    // Relations
+    analyzerPoint    AnalyzerPoint    @relation(fields: [pointId], references: [id])
+    analyzerSubtopic AnalyzerSubtopic @relation(fields: [subtopicId], references: [id])
+    analyzerTopic    AnalyzerTopic    @relation(fields: [topicId], references: [id])
+    feedbackQuery    FeedbackQuery    @relation(fields: [feedbackQueryId], references: [id])
 
-  @@map("select_analyzers")
+    @@map("select_analyzers")
 }
 
 model AnalyzerSubtopic {
-  id          String @id @default(uuid())
-  topicId     String @map("topic_id")
-  name        String
-  description String @db.Text
+    id          String @id @default(uuid())
+    topicId     String @map("topic_id")
+    name        String
+    description String @db.Text
 
-  // Relations
-  analyzerTopic  AnalyzerTopic    @relation(fields: [topicId], references: [id])
-  analyzerPoints AnalyzerPoint[]
-  selectAnalyzers SelectAnalyzer[]
+    // Relations
+    analyzerTopic   AnalyzerTopic    @relation(fields: [topicId], references: [id])
+    analyzerPoints  AnalyzerPoint[]
+    selectAnalyzers SelectAnalyzer[]
 
-  @@map("analyzer_subtopics")
+    @@map("analyzer_subtopics")
 }
 
 model AnalyzerPoint {
-  id          String @id @default(uuid())
-  subtopicId  String @map("subtopic_id")
-  name        String
-  description String @db.Text
+    id          String @id @default(uuid())
+    subtopicId  String @map("subtopic_id")
+    name        String
+    description String @db.Text
 
-  // Relations
-  analyzerSubtopic AnalyzerSubtopic @relation(fields: [subtopicId], references: [id])
-  analyzerResults  AnalyzerResult[]
-  selectAnalyzers  SelectAnalyzer[]
+    // Relations
+    analyzerSubtopic AnalyzerSubtopic @relation(fields: [subtopicId], references: [id])
+    analyzerResults  AnalyzerResult[]
+    selectAnalyzers  SelectAnalyzer[]
 
-  @@map("analyzer_points")
+    @@map("analyzer_points")
 }
 
 model AnalyzerTopic {
-  id          String @id @default(uuid())
-  name        String
-  description String @db.Text
+    id          String @id @default(uuid())
+    name        String
+    description String @db.Text
 
-  // Relations
-  analyzerSubtopics AnalyzerSubtopic[]
-  selectAnalyzers   SelectAnalyzer[]
+    // Relations
+    analyzerSubtopics AnalyzerSubtopic[]
+    selectAnalyzers   SelectAnalyzer[]
 
-  @@map("analyzer_topics")
+    @@map("analyzer_topics")
 }
 
 model Plan {
-  id           String  @id @default(uuid())
-  stripePriceId String @map("stripe_price_id")
-  price        Decimal @db.Decimal(10, 2)
-  isModel      Boolean @map("is_model")
-  maxProjects  Int     @map("max_projects")
-  maxQueries   Int     @map("max_queries")
+    id            String  @id @default(uuid())
+    stripePriceId String  @map("stripe_price_id")
+    price         Decimal @db.Decimal(10, 2)
+    isModel       Boolean @map("is_model")
+    maxProjects   Int     @map("max_projects")
+    maxQueries    Int     @map("max_queries")
 
-  // Relations
-  subscriptions Subscription[]
-  planFeatures  PlanFeature[]
+    // Relations
+    subscriptions Subscription[]
+    planFeatures  PlanFeature[]
 
-  @@map("plans")
+    @@map("plans")
 }
 
 model Subscription {
-  id          String   @id @default(uuid())
-  planId      String   @map("plan_id")
-  userId      String   @map("user_id")
-  stripeSubId String   @map("stripe_sub_id")
-  autoRenew   Boolean  @map("auto_renew")
-  status      String
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+    id          String   @id @default(uuid())
+    planId      String   @map("plan_id")
+    userId      String   @map("user_id")
+    stripeSubId String   @map("stripe_sub_id")
+    autoRenew   Boolean  @map("auto_renew")
+    status      String
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // Relations
-  plan                   Plan                     @relation(fields: [planId], references: [id])
-  profile                Profile                  @relation(fields: [userId], references: [id])
-  subscriptionFeatures   SubscriptionFeature[]
+    // Relations
+    plan                 Plan                  @relation(fields: [planId], references: [id])
+    profile              Profile               @relation(fields: [userId], references: [id])
+    subscriptionFeatures SubscriptionFeature[]
 
-  @@map("subscriptions")
+    @@map("subscriptions")
 }
 
 model PlanFeature {
-  id        String @id @default(uuid())
-  planId    String @map("plan_id")
-  featureId String @map("feature_id")
-  category  String
+    id        String @id @default(uuid())
+    planId    String @map("plan_id")
+    featureId String @map("feature_id")
+    category  String
 
-  // Relations
-  plan    Plan     @relation(fields: [planId], references: [id])
-  feature Feature  @relation(fields: [featureId], references: [id])
+    // Relations
+    plan    Plan    @relation(fields: [planId], references: [id])
+    feature Feature @relation(fields: [featureId], references: [id])
 
-  @@map("plan_features")
+    @@map("plan_features")
 }
 
 model Feature {
-  id          String @id @default(uuid())
-  name        String
-  slug        String @unique
-  category    String
-  description String @db.Text
+    id          String @id @default(uuid())
+    name        String
+    slug        String @unique
+    category    String
+    description String @db.Text
 
-  // Relations
-  planFeatures         PlanFeature[]
-  subscriptionFeatures SubscriptionFeature[]
+    // Relations
+    planFeatures         PlanFeature[]
+    subscriptionFeatures SubscriptionFeature[]
 
-  @@map("features")
+    @@map("features")
 }
 
 model SubscriptionFeature {
-  id             String @id @default(uuid())
-  subscriptionId String @map("subscription_id")
-  featureId      String @map("feature_id")
-  isEnabled      Boolean @default(true) @map("is_enabled")
+    id             String  @id @default(uuid())
+    subscriptionId String  @map("subscription_id")
+    featureId      String  @map("feature_id")
+    isEnabled      Boolean @default(true) @map("is_enabled")
 
-  // Relations
-  subscription Subscription @relation(fields: [subscriptionId], references: [id])
-  feature      Feature      @relation(fields: [featureId], references: [id])
+    // Relations
+    subscription Subscription @relation(fields: [subscriptionId], references: [id])
+    feature      Feature      @relation(fields: [featureId], references: [id])
 
-  @@map("subscription_features")
+    @@map("subscription_features")
 }

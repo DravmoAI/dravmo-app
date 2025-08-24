@@ -1,80 +1,103 @@
-"use client"
+"use client";
 
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react"
-import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
-import Link from "next/link"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { toast } from "@/hooks/use-toast"
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { toast } from "@/hooks/use-toast";
 
 interface Screen {
-  id: string
-  projectId: string
-  sourceUrl: string
-  sourceType: "upload" | "figma"
-  createdAt: string
+  id: string;
+  projectId: string;
+  sourceUrl: string;
+  sourceType: "upload" | "figma";
+  createdAt: string;
   project: {
-    id: string
-    name: string
-  }
+    id: string;
+    name: string;
+  };
 }
 
 interface DesignMaster {
-  id: string
-  name: string
-  styleSummary: string
-  userfulFor: string
-  bio: string
-  avatarUrl: string
+  id: string;
+  name: string;
+  avatarUrl: string;
+  fitSummary: string;
+  philosophy: string;
+  methodology: string[];
+  signatureGestures: string[];
+  talks: {
+    title: string;
+    content: string;
+  }[];
+
+  blogs: {
+    title: string;
+    content: string;
+  }[];
 }
 
 interface AnalyzerPoint {
-  id: string
-  name: string
-  description: string
+  id: string;
+  name: string;
+  description: string;
 }
 
 interface AnalyzerSubtopic {
-  id: string
-  name: string
-  description: string
-  analyzerPoints: AnalyzerPoint[]
+  id: string;
+  name: string;
+  description: string;
+  analyzerPoints: AnalyzerPoint[];
 }
 
 interface AnalyzerTopic {
-  id: string
-  name: string
-  description: string
-  analyzerSubtopics: AnalyzerSubtopic[]
+  id: string;
+  name: string;
+  description: string;
+  analyzerSubtopics: AnalyzerSubtopic[];
 }
 
 interface SelectedAnalyzer {
-  topicId: string
-  subtopicId: string
-  pointId: string
+  topicId: string;
+  subtopicId: string;
+  pointId: string;
 }
 
 export default function ScreenAnalyzePage() {
-  const params = useParams()
-  const router = useRouter()
-  const projectId = params.id as string
-  const screenId = params.screenId as string
+  const params = useParams();
+  const router = useRouter();
+  const projectId = params.id as string;
+  const screenId = params.screenId as string;
 
-  const [screen, setScreen] = useState<Screen | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [analyzerTopics, setAnalyzerTopics] = useState<AnalyzerTopic[]>([])
-  const [designMasters, setDesignMasters] = useState<DesignMaster[]>([])
-  const [selectedAnalyzers, setSelectedAnalyzers] = useState<SelectedAnalyzer[]>([])
-  const [selectedMaster, setSelectedMaster] = useState<string | null>(null)
-  const [isMastersMode, setIsMastersMode] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [screen, setScreen] = useState<Screen | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [analyzerTopics, setAnalyzerTopics] = useState<AnalyzerTopic[]>([]);
+  const [designMasters, setDesignMasters] = useState<DesignMaster[]>([]);
+  const [selectedAnalyzers, setSelectedAnalyzers] = useState<SelectedAnalyzer[]>([]);
+  const [selectedMaster, setSelectedMaster] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("context");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageProcessing, setImageProcessing] = useState(false);
+  const [processedImageData, setProcessedImageData] = useState<any>(null);
   const [formData, setFormData] = useState({
     industry: "Education",
     productType: "Mobile App",
@@ -83,81 +106,118 @@ export default function ScreenAnalyzePage() {
     ageGroup: "18-25",
     brandPersonality: "Professional",
     platform: "Web",
-  })
+  });
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
         // Fetch screen data
-        const screenRes = await fetch(`/api/screens/${screenId}`)
-        if (!screenRes.ok) throw new Error("Failed to fetch screen")
-        const screenData = await screenRes.json()
-        setScreen(screenData.screen)
+        const screenRes = await fetch(`/api/screens/${screenId}`);
+        if (!screenRes.ok) throw new Error("Failed to fetch screen");
+        const screenData = await screenRes.json();
+        setScreen(screenData.screen);
 
         // Fetch analyzer topics
-        const analyzerRes = await fetch("/api/analyzer")
-        if (!analyzerRes.ok) throw new Error("Failed to fetch analyzer topics")
-        const analyzerData = await analyzerRes.json()
-        setAnalyzerTopics(analyzerData.topics)
+        const analyzerRes = await fetch("/api/analyzer");
+        if (!analyzerRes.ok) throw new Error("Failed to fetch analyzer topics");
+        const analyzerData = await analyzerRes.json();
+        setAnalyzerTopics(analyzerData.topics);
 
         // Fetch design masters
-        const mastersRes = await fetch("/api/design-masters")
-        if (!mastersRes.ok) throw new Error("Failed to fetch design masters")
-        const mastersData = await mastersRes.json()
-        setDesignMasters(mastersData.designMasters)
+        const mastersRes = await fetch("/api/design-masters");
+        if (!mastersRes.ok) throw new Error("Failed to fetch design masters");
+        const mastersData = await mastersRes.json();
+        setDesignMasters(mastersData.designMasters);
 
         // Pre-select the first point from the first subtopic of the first topic
         if (analyzerData.topics.length > 0) {
-          const firstTopic = analyzerData.topics[0]
+          const firstTopic = analyzerData.topics[0];
           if (firstTopic.analyzerSubtopics.length > 0) {
-            const firstSubtopic = firstTopic.analyzerSubtopics[0]
+            const firstSubtopic = firstTopic.analyzerSubtopics[0];
             if (firstSubtopic.analyzerPoints.length > 0) {
-              const firstPoint = firstSubtopic.analyzerPoints[0]
+              const firstPoint = firstSubtopic.analyzerPoints[0];
               setSelectedAnalyzers([
                 {
                   topicId: firstTopic.id,
                   subtopicId: firstSubtopic.id,
                   pointId: firstPoint.id,
                 },
-              ])
+              ]);
             }
           }
         }
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error("Error fetching data:", error);
         toast({
           title: "Error",
           description: "Failed to load data. Please try again.",
           variant: "destructive",
-        })
+        });
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [screenId])
+    fetchData();
+  }, [screenId]);
+
+  const processImage = async (imageUrl: string) => {
+    setImageProcessing(true);
+    try {
+      const formData = new FormData();
+      formData.append("imageUrl", imageUrl);
+
+      const response = await fetch("/api/process-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to process image");
+      }
+
+      const result = await response.json();
+      setProcessedImageData(result.data);
+
+      toast({
+        title: "Success",
+        description: "Image processed successfully!",
+      });
+
+      return result.data;
+    } catch (error) {
+      console.error("Error processing image:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process image. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setImageProcessing(false);
+    }
+  };
 
   const isPointSelected = (pointId: string) => {
-    return selectedAnalyzers.some((analyzer) => analyzer.pointId === pointId)
-  }
+    return selectedAnalyzers.some((analyzer) => analyzer.pointId === pointId);
+  };
 
   const isSubtopicSelected = (subtopicId: string) => {
-    return selectedAnalyzers.some((analyzer) => analyzer.subtopicId === subtopicId)
-  }
+    return selectedAnalyzers.some((analyzer) => analyzer.subtopicId === subtopicId);
+  };
 
   const isTopicSelected = (topicId: string) => {
-    return selectedAnalyzers.some((analyzer) => analyzer.topicId === topicId)
-  }
+    return selectedAnalyzers.some((analyzer) => analyzer.topicId === topicId);
+  };
 
   const handlePointChange = (pointId: string, subtopicId: string, topicId: string) => {
     setSelectedAnalyzers((prev) => {
-      const isSelected = prev.some((analyzer) => analyzer.pointId === pointId)
+      const isSelected = prev.some((analyzer) => analyzer.pointId === pointId);
 
       if (isSelected) {
         // Remove the analyzer with this point
-        return prev.filter((analyzer) => analyzer.pointId !== pointId)
+        return prev.filter((analyzer) => analyzer.pointId !== pointId);
       } else {
         // Add new analyzer
         return [
@@ -167,50 +227,50 @@ export default function ScreenAnalyzePage() {
             subtopicId,
             pointId,
           },
-        ]
+        ];
       }
-    })
-  }
+    });
+  };
 
   const handleSubtopicChange = (subtopicId: string, topicId: string) => {
-    const topic = analyzerTopics.find((t) => t.id === topicId)
-    if (!topic) return
+    const topic = analyzerTopics.find((t) => t.id === topicId);
+    if (!topic) return;
 
-    const subtopic = topic.analyzerSubtopics.find((s) => s.id === subtopicId)
-    if (!subtopic) return
+    const subtopic = topic.analyzerSubtopics.find((s) => s.id === subtopicId);
+    if (!subtopic) return;
 
-    const isSelected = isSubtopicSelected(subtopicId)
+    const isSelected = isSubtopicSelected(subtopicId);
 
     if (isSelected) {
       // Remove all analyzers for this subtopic
-      setSelectedAnalyzers((prev) => prev.filter((analyzer) => analyzer.subtopicId !== subtopicId))
+      setSelectedAnalyzers((prev) => prev.filter((analyzer) => analyzer.subtopicId !== subtopicId));
     } else {
       // Add all points from this subtopic
       const newAnalyzers = subtopic.analyzerPoints.map((point) => ({
         topicId,
         subtopicId,
         pointId: point.id,
-      }))
+      }));
 
       setSelectedAnalyzers((prev) => [
         ...prev.filter((analyzer) => analyzer.subtopicId !== subtopicId),
         ...newAnalyzers,
-      ])
+      ]);
     }
-  }
+  };
 
   const handleTopicChange = (topicId: string) => {
-    const topic = analyzerTopics.find((t) => t.id === topicId)
-    if (!topic) return
+    const topic = analyzerTopics.find((t) => t.id === topicId);
+    if (!topic) return;
 
-    const isSelected = isTopicSelected(topicId)
+    const isSelected = isTopicSelected(topicId);
 
     if (isSelected) {
       // Remove all analyzers for this topic
-      setSelectedAnalyzers((prev) => prev.filter((analyzer) => analyzer.topicId !== topicId))
+      setSelectedAnalyzers((prev) => prev.filter((analyzer) => analyzer.topicId !== topicId));
     } else {
       // Add all points from all subtopics of this topic
-      const newAnalyzers: SelectedAnalyzer[] = []
+      const newAnalyzers: SelectedAnalyzer[] = [];
 
       topic.analyzerSubtopics.forEach((subtopic) => {
         subtopic.analyzerPoints.forEach((point) => {
@@ -218,43 +278,68 @@ export default function ScreenAnalyzePage() {
             topicId,
             subtopicId: subtopic.id,
             pointId: point.id,
-          })
-        })
-      })
+          });
+        });
+      });
 
-      setSelectedAnalyzers((prev) => [...prev.filter((analyzer) => analyzer.topicId !== topicId), ...newAnalyzers])
+      setSelectedAnalyzers((prev) => [
+        ...prev.filter((analyzer) => analyzer.topicId !== topicId),
+        ...newAnalyzers,
+      ]);
     }
-  }
+  };
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleAnalyze = async () => {
-    if (selectedAnalyzers.length === 0) {
+    const isMasterMode = activeTab === "master";
+
+    if (!isMasterMode && selectedAnalyzers.length === 0) {
       toast({
         title: "Selection Required",
         description: "Please select at least one analysis point.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    if (isMastersMode && !selectedMaster) {
+    if (isMasterMode && !selectedMaster) {
       toast({
         title: "Selection Required",
         description: "Please select a design master for analysis.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsSubmitting(true)
+    if (!screen?.sourceUrl) {
+      toast({
+        title: "Error",
+        description: "No image found to analyze.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
+      // First, process the image to get base64 data
+      let imageData = processedImageData;
+      if (!imageData) {
+        toast({
+          title: "Processing Image",
+          description: "Converting image for AI analysis...",
+        });
+        imageData = await processImage(screen.sourceUrl);
+      }
+
+      // Now proceed with the feedback query creation
       const response = await fetch("/api/feedback-queries", {
         method: "POST",
         headers: {
@@ -263,7 +348,7 @@ export default function ScreenAnalyzePage() {
         body: JSON.stringify({
           screenId,
           projectId,
-          designMasterId: selectedMaster,
+          designMasterId: isMasterMode ? selectedMaster : null,
           industry: formData.industry,
           productType: formData.productType,
           purpose: formData.purpose,
@@ -271,27 +356,28 @@ export default function ScreenAnalyzePage() {
           ageGroup: formData.ageGroup,
           brandPersonality: formData.brandPersonality,
           platform: formData.platform,
-          selectedAnalyzers,
+          selectedAnalyzers: isMasterMode ? [] : selectedAnalyzers,
+          imageData: imageData, // Include the processed image data
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to create feedback query")
+        throw new Error("Failed to create feedback query");
       }
 
-      const data = await response.json()
-      router.push(data.redirectUrl)
+      const data = await response.json();
+      router.push(data.redirectUrl);
     } catch (error) {
-      console.error("Error creating feedback query:", error)
+      console.error("Error creating feedback query:", error);
       toast({
         title: "Error",
         description: "Failed to create feedback. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -301,7 +387,7 @@ export default function ScreenAnalyzePage() {
           <span className="ml-2">Loading analysis options...</span>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   if (!screen) {
@@ -319,7 +405,7 @@ export default function ScreenAnalyzePage() {
           </div>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   return (
@@ -336,76 +422,61 @@ export default function ScreenAnalyzePage() {
 
         <div className="grid md:grid-cols-2 gap-8">
           <div>
-            <h2 className="text-3xl font-bold mb-6">Analyze Design</h2>
+            <h2 className="text-3xl font-bold mb-2 font-krona-one">Analyze Design</h2>
             <p className="text-muted-foreground mb-8">
-              Configure analysis options for <span className="font-medium">{screen.project?.name}</span>
+              Configure analysis options for{" "}
+              <span className="font-medium">{screen.project?.name}</span>
             </p>
 
             <Card className="mb-8">
               <CardContent className="p-6">
-                <div className="aspect-video bg-muted rounded-md overflow-hidden mb-4">
+                <div className="aspect-video bg-muted rounded-md overflow-hidden mb-4 relative">
                   <img
                     src={screen.sourceUrl || "/placeholder.svg"}
                     alt="Design to analyze"
                     className="w-full h-full object-cover"
                   />
+                  {imageProcessing && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <div className="text-white text-center">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                        <p>Processing image...</p>
+                      </div>
+                    </div>
+                  )}
+                  {processedImageData && (
+                    <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
+                      ✓ Processed
+                    </div>
+                  )}
                 </div>
+                {processedImageData && (
+                  <div className="text-sm text-muted-foreground">
+                    <p>Image processed successfully!</p>
+                    <p>MIME Type: {processedImageData.mime_type}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold">Context Setup</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Masters Mode</span>
-                  <Switch checked={isMastersMode} onCheckedChange={setIsMastersMode} />
-                </div>
-              </div>
+              <h3 className="text-xl font-bold font-krona-one">Analysis Configuration</h3>
 
-              {isMastersMode ? (
-                <div className="space-y-4">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="context">Context Setup</TabsTrigger>
+                  <TabsTrigger value="master">Master Mode</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="context" className="space-y-4 mt-6">
                   <p className="text-muted-foreground">
-                    Select a design master to analyze your design through their unique perspective and philosophy.
+                    Configure the context and criteria for AI-powered design analysis.
                   </p>
-                  <div className="grid gap-3">
-                    {designMasters.map((master) => (
-                      <Card
-                        key={master.id}
-                        className={`cursor-pointer transition-all ${
-                          selectedMaster === master.id ? "border-primary" : "hover:border-primary/50"
-                        }`}
-                        onClick={() => setSelectedMaster(master.id)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-full overflow-hidden bg-muted">
-                              <img
-                                src={master.avatarUrl || "/placeholder-user.jpg"}
-                                alt={master.name}
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-bold">{master.name}</h4>
-                              <p className="text-sm text-muted-foreground">{master.styleSummary}</p>
-                              <p className="text-xs text-muted-foreground mt-1">Useful for: {master.userfulFor}</p>
-                            </div>
-                            {selectedMaster === master.id && (
-                              <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                                <Check className="h-3 w-3 text-primary-foreground" />
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="industry">Industry</Label>
+                      <Label htmlFor="industry" className="font-quantico">
+                        Industry
+                      </Label>
                       <Select
                         value={formData.industry}
                         onValueChange={(value) => handleSelectChange("industry", value)}
@@ -424,7 +495,9 @@ export default function ScreenAnalyzePage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="productType">Product Type</Label>
+                      <Label htmlFor="productType" className="font-quantico">
+                        Product Type
+                      </Label>
                       <Select
                         value={formData.productType}
                         onValueChange={(value) => handleSelectChange("productType", value)}
@@ -443,8 +516,13 @@ export default function ScreenAnalyzePage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="purpose">Purpose</Label>
-                    <Select value={formData.purpose} onValueChange={(value) => handleSelectChange("purpose", value)}>
+                    <Label htmlFor="purpose" className="font-quantico">
+                      Purpose
+                    </Label>
+                    <Select
+                      value={formData.purpose}
+                      onValueChange={(value) => handleSelectChange("purpose", value)}
+                    >
                       <SelectTrigger id="purpose">
                         <SelectValue placeholder="Select purpose" />
                       </SelectTrigger>
@@ -459,8 +537,13 @@ export default function ScreenAnalyzePage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="audience">Target Audience</Label>
-                    <Select value={formData.audience} onValueChange={(value) => handleSelectChange("audience", value)}>
+                    <Label htmlFor="audience" className="font-quantico">
+                      Target Audience
+                    </Label>
+                    <Select
+                      value={formData.audience}
+                      onValueChange={(value) => handleSelectChange("audience", value)}
+                    >
                       <SelectTrigger id="audience">
                         <SelectValue placeholder="Select target audience" />
                       </SelectTrigger>
@@ -475,8 +558,13 @@ export default function ScreenAnalyzePage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="ageGroup">Age Group</Label>
-                    <Select value={formData.ageGroup} onValueChange={(value) => handleSelectChange("ageGroup", value)}>
+                    <Label htmlFor="ageGroup" className="font-quantico">
+                      Age Group
+                    </Label>
+                    <Select
+                      value={formData.ageGroup}
+                      onValueChange={(value) => handleSelectChange("ageGroup", value)}
+                    >
                       <SelectTrigger id="ageGroup">
                         <SelectValue placeholder="Select age group" />
                       </SelectTrigger>
@@ -491,7 +579,9 @@ export default function ScreenAnalyzePage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="brandPersonality">Brand Personality</Label>
+                    <Label htmlFor="brandPersonality" className="font-quantico">
+                      Brand Personality
+                    </Label>
                     <Select
                       value={formData.brandPersonality}
                       onValueChange={(value) => handleSelectChange("brandPersonality", value)}
@@ -510,8 +600,13 @@ export default function ScreenAnalyzePage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="platform">Platform</Label>
-                    <Select value={formData.platform} onValueChange={(value) => handleSelectChange("platform", value)}>
+                    <Label htmlFor="platform" className="font-quantico">
+                      Platform
+                    </Label>
+                    <Select
+                      value={formData.platform}
+                      onValueChange={(value) => handleSelectChange("platform", value)}
+                    >
                       <SelectTrigger id="platform">
                         <SelectValue placeholder="Select platform" />
                       </SelectTrigger>
@@ -524,114 +619,194 @@ export default function ScreenAnalyzePage() {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-              )}
+                </TabsContent>
+
+                <TabsContent value="master" className="space-y-4 mt-6">
+                  <p className="text-muted-foreground">
+                    Select a design master to analyze your design through their unique perspective
+                    and philosophy.
+                  </p>
+                  <div className="grid gap-3">
+                    {designMasters.map((master) => (
+                      <Card
+                        key={master.id}
+                        className={`cursor-pointer transition-all ${
+                          selectedMaster === master.id
+                            ? "border-primary"
+                            : "hover:border-primary/50"
+                        }`}
+                        onClick={() => setSelectedMaster(master.id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-full overflow-hidden bg-muted">
+                              <img
+                                src={master.avatarUrl || "/placeholder-user.jpg"}
+                                alt={master.name}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold">{master.name}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                Philosophy: {master.philosophy}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Signature Gestures: {master.signatureGestures.join(", ")}
+                              </p>
+                            </div>
+                            {selectedMaster === master.id && (
+                              <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                                <Check className="h-3 w-3 text-primary-foreground" />
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
 
           <div>
-            <div className="sticky top-6">
+            <div className="sticky top-[240px]">
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-4">Analysis Topics</h3>
-                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-                    {analyzerTopics.map((topic) => (
-                      <Accordion type="single" collapsible key={topic.id} className="border rounded-md">
-                        <AccordionItem value={topic.id} className="border-none">
-                          <AccordionTrigger className="px-4 py-2 hover:no-underline">
-                            <div className="flex items-center gap-3">
-                              <Checkbox
-                                id={`topic-${topic.id}`}
-                                checked={isTopicSelected(topic.id)}
-                                onCheckedChange={() => handleTopicChange(topic.id)}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                              <Label
-                                htmlFor={`topic-${topic.id}`}
-                                className="font-medium cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleTopicChange(topic.id)
-                                }}
-                              >
-                                {topic.name}
-                              </Label>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent className="px-4 pb-2">
-                            <p className="text-sm text-muted-foreground mb-3">{topic.description}</p>
-                            <div className="space-y-1 pl-6">
-                              {topic.analyzerSubtopics.map((subtopic) => (
-                                <Accordion
-                                  type="single"
-                                  collapsible
-                                  key={subtopic.id}
-                                  className="border rounded-md mt-2"
+                  <h3 className="text-xl font-bold mb-4 font-krona-one">Analysis Topics</h3>
+                  {activeTab === "context" ? (
+                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                      {analyzerTopics.map((topic) => (
+                        <Accordion
+                          type="single"
+                          collapsible
+                          key={topic.id}
+                          className="border rounded-md"
+                        >
+                          <AccordionItem value={topic.id} className="border-none">
+                            <AccordionTrigger className="px-4 py-2 hover:no-underline">
+                              <div className="flex items-center gap-3">
+                                <Checkbox
+                                  id={`topic-${topic.id}`}
+                                  checked={isTopicSelected(topic.id)}
+                                  onCheckedChange={() => handleTopicChange(topic.id)}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                                <Label
+                                  htmlFor={`topic-${topic.id}`}
+                                  className="font-medium cursor-pointer font-quantico"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTopicChange(topic.id);
+                                  }}
                                 >
-                                  <AccordionItem value={subtopic.id} className="border-none">
-                                    <AccordionTrigger className="px-4 py-2 hover:no-underline">
-                                      <div className="flex items-center gap-3">
-                                        <Checkbox
-                                          id={`subtopic-${subtopic.id}`}
-                                          checked={isSubtopicSelected(subtopic.id)}
-                                          onCheckedChange={() => handleSubtopicChange(subtopic.id, topic.id)}
-                                          onClick={(e) => e.stopPropagation()}
-                                        />
-                                        <Label
-                                          htmlFor={`subtopic-${subtopic.id}`}
-                                          className="font-medium cursor-pointer"
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            handleSubtopicChange(subtopic.id, topic.id)
-                                          }}
-                                        >
-                                          {subtopic.name}
-                                        </Label>
-                                      </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="px-4 pb-2">
-                                      <p className="text-sm text-muted-foreground mb-3">{subtopic.description}</p>
-                                      <div className="space-y-2 pl-6">
-                                        {subtopic.analyzerPoints.map((point) => (
-                                          <div key={point.id} className="flex items-center gap-3">
-                                            <Checkbox
-                                              id={`point-${point.id}`}
-                                              checked={isPointSelected(point.id)}
-                                              onCheckedChange={() => handlePointChange(point.id, subtopic.id, topic.id)}
-                                            />
-                                            <div>
-                                              <Label
-                                                htmlFor={`point-${point.id}`}
-                                                className="font-medium cursor-pointer"
-                                              >
-                                                {point.name}
-                                              </Label>
-                                              <p className="text-xs text-muted-foreground">{point.description}</p>
+                                  {topic.name}
+                                </Label>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="px-4 pb-2">
+                              <p className="text-sm text-muted-foreground mb-3">
+                                {topic.description}
+                              </p>
+                              <div className="space-y-1 pl-6">
+                                {topic.analyzerSubtopics.map((subtopic) => (
+                                  <Accordion
+                                    type="single"
+                                    collapsible
+                                    key={subtopic.id}
+                                    className="border rounded-md mt-2"
+                                  >
+                                    <AccordionItem value={subtopic.id} className="border-none">
+                                      <AccordionTrigger className="px-4 py-2 hover:no-underline">
+                                        <div className="flex items-center gap-3">
+                                          <Checkbox
+                                            id={`subtopic-${subtopic.id}`}
+                                            checked={isSubtopicSelected(subtopic.id)}
+                                            onCheckedChange={() =>
+                                              handleSubtopicChange(subtopic.id, topic.id)
+                                            }
+                                            onClick={(e) => e.stopPropagation()}
+                                          />
+                                          <Label
+                                            htmlFor={`subtopic-${subtopic.id}`}
+                                            className="font-medium cursor-pointer font-quantico"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleSubtopicChange(subtopic.id, topic.id);
+                                            }}
+                                          >
+                                            {subtopic.name}
+                                          </Label>
+                                        </div>
+                                      </AccordionTrigger>
+                                      <AccordionContent className="px-4 pb-2">
+                                        <p className="text-sm text-muted-foreground mb-3">
+                                          {subtopic.description}
+                                        </p>
+                                        <div className="space-y-2 pl-6">
+                                          {subtopic.analyzerPoints.map((point) => (
+                                            <div key={point.id} className="flex items-center gap-3">
+                                              <Checkbox
+                                                id={`point-${point.id}`}
+                                                checked={isPointSelected(point.id)}
+                                                onCheckedChange={() =>
+                                                  handlePointChange(point.id, subtopic.id, topic.id)
+                                                }
+                                              />
+                                              <div>
+                                                <Label
+                                                  htmlFor={`point-${point.id}`}
+                                                  className="font-medium cursor-pointer font-quantico"
+                                                >
+                                                  {point.name}
+                                                </Label>
+                                                <p className="text-xs text-muted-foreground">
+                                                  {point.description}
+                                                </p>
+                                              </div>
                                             </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </AccordionContent>
-                                  </AccordionItem>
-                                </Accordion>
-                              ))}
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    ))}
-                  </div>
+                                          ))}
+                                        </div>
+                                      </AccordionContent>
+                                    </AccordionItem>
+                                  </Accordion>
+                                ))}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="pt-4 text-center text-muted-foreground">
+                      <p>
+                        Analysis topics are automatically determined based on the chosen design
+                        master's expertise.
+                      </p>
+                    </div>
+                  )}
 
                   <div className="mt-8">
                     <Button
                       onClick={handleAnalyze}
                       className="w-full gap-2"
-                      disabled={selectedAnalyzers.length === 0 || (isMastersMode && !selectedMaster) || isSubmitting}
+                      disabled={
+                        (activeTab === "context" && selectedAnalyzers.length === 0) ||
+                        (activeTab === "master" && !selectedMaster) ||
+                        isSubmitting ||
+                        imageProcessing
+                      }
                     >
                       {isSubmitting ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Analyzing...
+                        </>
+                      ) : imageProcessing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Processing Image...
                         </>
                       ) : (
                         <>
@@ -647,5 +822,5 @@ export default function ScreenAnalyzePage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

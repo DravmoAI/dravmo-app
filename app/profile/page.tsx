@@ -1,33 +1,33 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect, useRef } from "react"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Camera, Eye, EyeOff, Save, Loader2, AlertCircle, CheckCircle } from "lucide-react"
-import Link from "next/link"
-import { getSupabaseClient } from "@/lib/supabase"
-import { uploadFile, STORAGE_BUCKETS } from "@/lib/supabase-storage"
-import { v4 as uuidv4 } from "uuid"
+import { useState, useEffect, useRef } from "react";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Camera, Eye, EyeOff, Save, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { getSupabaseClient } from "@/lib/supabase";
+import { uploadFile, STORAGE_BUCKETS } from "@/lib/supabase-storage";
+import { v4 as uuidv4 } from "uuid";
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [persona, setPersona] = useState<any>(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [persona, setPersona] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -35,9 +35,9 @@ export default function ProfilePage() {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-  })
+  });
 
-  const supabase = getSupabaseClient()
+  const supabase = getSupabaseClient();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -45,18 +45,18 @@ export default function ProfilePage() {
         // Get current user
         const {
           data: { user },
-        } = await supabase.auth.getUser()
+        } = await supabase.auth.getUser();
         if (!user) {
-          return
+          return;
         }
-        setUser(user)
+        setUser(user);
 
         // Fetch user profile with persona
-        const response = await fetch(`/api/profile/${user.id}`)
+        const response = await fetch(`/api/profile/${user.id}`);
         if (response.ok) {
-          const { profile } = await response.json()
-          setProfile(profile)
-          setPersona(profile?.persona)
+          const { profile } = await response.json();
+          setProfile(profile);
+          setPersona(profile?.persona);
 
           setFormData({
             fullName: profile?.fullName || "",
@@ -64,31 +64,31 @@ export default function ProfilePage() {
             currentPassword: "",
             newPassword: "",
             confirmPassword: "",
-          })
+          });
         }
       } catch (err) {
-        console.error("Error fetching user data:", err)
-        setError("Failed to load profile data")
+        console.error("Error fetching user data:", err);
+        setError("Failed to load profile data");
       }
-    }
+    };
 
-    fetchUserData()
-  }, [])
+    fetchUserData();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSaveProfile = async () => {
-    if (!user || !profile) return
+    if (!user || !profile) return;
 
-    setIsLoading(true)
-    setError("")
-    setSuccess("")
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
       const response = await fetch("/api/profile", {
@@ -101,78 +101,78 @@ export default function ProfilePage() {
           fullName: formData.fullName,
           avatarUrl: profile.avatarUrl,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to update profile")
+        throw new Error("Failed to update profile");
       }
 
-      const { profile: updatedProfile } = await response.json()
-      setProfile(updatedProfile)
-      setIsEditing(false)
-      setSuccess("Profile updated successfully")
+      const { profile: updatedProfile } = await response.json();
+      setProfile(updatedProfile);
+      setIsEditing(false);
+      setSuccess("Profile updated successfully");
     } catch (err) {
-      console.error("Error updating profile:", err)
-      setError("Failed to update profile")
+      console.error("Error updating profile:", err);
+      setError("Failed to update profile");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handlePasswordChange = async () => {
-    if (!user) return
+    if (!user) return;
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      return
+      setError("Passwords do not match");
+      return;
     }
 
     if (formData.newPassword.length < 6) {
-      setError("Password must be at least 6 characters")
-      return
+      setError("Password must be at least 6 characters");
+      return;
     }
 
-    setIsLoading(true)
-    setError("")
-    setSuccess("")
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
       const { error } = await supabase.auth.updateUser({
         password: formData.newPassword,
-      })
+      });
 
       if (error) {
-        throw error
+        throw error;
       }
 
-      setSuccess("Password updated successfully")
+      setSuccess("Password updated successfully");
       setFormData((prev) => ({
         ...prev,
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
-      }))
+      }));
     } catch (err: any) {
-      console.error("Error updating password:", err)
-      setError(err.message || "Failed to update password")
+      console.error("Error updating password:", err);
+      setError(err.message || "Failed to update password");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !user) return
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
 
-    setIsLoading(true)
-    setError("")
+    setIsLoading(true);
+    setError("");
 
     try {
-      const fileName = `${user.id}/${uuidv4()}-${file.name.replace(/\s+/g, "-")}`
-      const { url, error } = await uploadFile(STORAGE_BUCKETS.AVATARS, fileName, file)
+      const fileName = `${user.id}/${uuidv4()}-${file.name.replace(/\s+/g, "-")}`;
+      const { url, error } = await uploadFile(STORAGE_BUCKETS.AVATARS, fileName, file);
 
-      if (error) throw error
-      if (!url) throw new Error("Failed to upload image")
+      if (error) throw error;
+      if (!url) throw new Error("Failed to upload image");
 
       // Update profile with new avatar URL
       const response = await fetch("/api/profile", {
@@ -185,22 +185,22 @@ export default function ProfilePage() {
           fullName: profile.fullName,
           avatarUrl: url,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to update profile")
+        throw new Error("Failed to update profile");
       }
 
-      const { profile: updatedProfile } = await response.json()
-      setProfile(updatedProfile)
-      setSuccess("Profile image updated successfully")
+      const { profile: updatedProfile } = await response.json();
+      setProfile(updatedProfile);
+      setSuccess("Profile image updated successfully");
     } catch (err) {
-      console.error("Error uploading profile image:", err)
-      setError("Failed to upload profile image")
+      console.error("Error uploading profile image:", err);
+      setError("Failed to upload profile image");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -208,13 +208,13 @@ export default function ProfilePage() {
       .map((n) => n[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2)
-  }
+      .slice(0, 2);
+  };
 
   const getPersonaName = (personaId: string) => {
-    if (!persona?.personaCard) return personaId
-    return persona.personaCard.personaCardName
-  }
+    if (!persona?.personaCard) return personaId;
+    return persona.personaCard.personaCardName;
+  };
 
   if (!user) {
     return (
@@ -223,14 +223,14 @@ export default function ProfilePage() {
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h2 className="text-3xl font-bold">Profile Settings</h2>
+          <h2 className="text-3xl font-bold font-krona-one">Profile Settings</h2>
           <p className="text-muted-foreground">Manage your account settings and preferences</p>
         </div>
 
@@ -251,7 +251,7 @@ export default function ProfilePage() {
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="persona">Design Persona</TabsTrigger>
+
             <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
 
@@ -341,11 +341,11 @@ export default function ProfilePage() {
                       <Button
                         variant="outline"
                         onClick={() => {
-                          setIsEditing(false)
+                          setIsEditing(false);
                           setFormData((prev) => ({
                             ...prev,
                             fullName: profile?.fullName || "",
-                          }))
+                          }));
                         }}
                         disabled={isLoading}
                       >
@@ -356,104 +356,6 @@ export default function ProfilePage() {
                     <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="persona">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Design Persona</CardTitle>
-                  <Link href="/persona">
-                    <Button variant="outline" size="sm">
-                      {persona ? "Update Persona" : "Create Persona"}
-                    </Button>
-                  </Link>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {persona ? (
-                  <>
-                    <div>
-                      <h3 className="font-bold mb-2">Selected Persona</h3>
-                      <Badge variant="secondary" className="text-sm">
-                        {persona.personaCard?.personaCardName || "Custom Persona"}
-                      </Badge>
-                    </div>
-
-                    {persona.personaVibes && persona.personaVibes.length > 0 && (
-                      <div>
-                        <h3 className="font-bold mb-4">Design Preferences</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label>Color Boldness</Label>
-                            <div className="text-sm text-muted-foreground">
-                              {persona.personaVibes[0].colorBoldness}%
-                            </div>
-                          </div>
-                          <div>
-                            <Label>Typeface Temperament</Label>
-                            <div className="text-sm text-muted-foreground">
-                              {persona.personaVibes[0].typeTemperament}%
-                            </div>
-                          </div>
-                          <div>
-                            <Label>Spacing Airiness</Label>
-                            <div className="text-sm text-muted-foreground">
-                              {persona.personaVibes[0].spacingAiriness}%
-                            </div>
-                          </div>
-                          <div>
-                            <Label>Motion Drama</Label>
-                            <div className="text-sm text-muted-foreground">{persona.personaVibes[0].motionDrama}%</div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {persona.personaKeywords && persona.personaKeywords.length > 0 && (
-                      <div>
-                        <h3 className="font-bold mb-2">Style Keywords</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {persona.personaKeywords.map((keyword: any) => (
-                            <Badge key={keyword.id} variant="outline">
-                              {keyword.keyword}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {persona.personaMoodboards && persona.personaMoodboards.length > 0 && (
-                      <div>
-                        <h3 className="font-bold mb-2">Moodboard</h3>
-                        <div className="grid grid-cols-3 gap-2">
-                          {persona.personaMoodboards.map((moodboard: any) => (
-                            <div key={moodboard.id} className="relative">
-                              <img
-                                src={moodboard.snapshotUrl || "/placeholder.svg"}
-                                alt="Moodboard image"
-                                className="w-full h-20 object-cover rounded"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="text-xs text-muted-foreground">
-                      Persona created on {new Date(persona.createdAt).toLocaleDateString()}
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground mb-4">No design persona set up yet</p>
-                    <Link href="/persona">
-                      <Button>Set Up Your Persona</Button>
-                    </Link>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -485,7 +387,11 @@ export default function ProfilePage() {
                         onClick={() => setShowNewPassword(!showNewPassword)}
                         disabled={isLoading}
                       >
-                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -506,7 +412,11 @@ export default function ProfilePage() {
 
                 <Button
                   onClick={handlePasswordChange}
-                  disabled={isLoading || !formData.newPassword || formData.newPassword !== formData.confirmPassword}
+                  disabled={
+                    isLoading ||
+                    !formData.newPassword ||
+                    formData.newPassword !== formData.confirmPassword
+                  }
                 >
                   {isLoading ? (
                     <>
@@ -523,5 +433,5 @@ export default function ProfilePage() {
         </Tabs>
       </div>
     </DashboardLayout>
-  )
+  );
 }
