@@ -162,13 +162,7 @@ export default function BillingPage() {
           <p className="text-muted-foreground">Manage your subscription and billing information</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-quantico">Will be available soon</CardTitle>
-          </CardHeader>
-        </Card>
-
-        {/* {subscription && (
+        {subscription && (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -181,12 +175,15 @@ export default function BillingPage() {
                 <div>
                   <h3 className="text-2xl font-bold">{subscription.planName} Plan</h3>
                   <p className="text-muted-foreground">
-                    ${subscription.price}/month • Next billing: {formatDate(subscription.currentPeriodEnd)}
+                    ${subscription.price}/month • Next billing:{" "}
+                    {formatDate(subscription.currentPeriodEnd)}
                   </p>
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-muted-foreground">Auto-renewal</div>
-                  <div className="font-medium">{subscription.autoRenew ? "Enabled" : "Disabled"}</div>
+                  <div className="font-medium">
+                    {subscription.autoRenew ? "Enabled" : "Disabled"}
+                  </div>
                 </div>
               </div>
 
@@ -195,12 +192,15 @@ export default function BillingPage() {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Projects Used</span>
                     <span className="text-sm text-muted-foreground">
-                      {subscription.usedProjects}/{subscription.maxProjects === -1 ? "∞" : subscription.maxProjects}
+                      {subscription.usedProjects}/
+                      {subscription.maxProjects === -1 ? "∞" : subscription.maxProjects}
                     </span>
                   </div>
                   <Progress
                     value={
-                      subscription.maxProjects === -1 ? 0 : (subscription.usedProjects / subscription.maxProjects) * 100
+                      subscription.maxProjects === -1
+                        ? 0
+                        : (subscription.usedProjects / subscription.maxProjects) * 100
                     }
                     className="h-2"
                   />
@@ -209,12 +209,15 @@ export default function BillingPage() {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Queries Used</span>
                     <span className="text-sm text-muted-foreground">
-                      {subscription.usedQueries}/{subscription.maxQueries === -1 ? "∞" : subscription.maxQueries}
+                      {subscription.usedQueries}/
+                      {subscription.maxQueries === -1 ? "∞" : subscription.maxQueries}
                     </span>
                   </div>
                   <Progress
                     value={
-                      subscription.maxQueries === -1 ? 0 : (subscription.usedQueries / subscription.maxQueries) * 100
+                      subscription.maxQueries === -1
+                        ? 0
+                        : (subscription.usedQueries / subscription.maxQueries) * 100
                     }
                     className="h-2"
                   />
@@ -269,7 +272,13 @@ export default function BillingPage() {
                     </div>
                     <Button
                       className="w-full"
-                      variant={subscription?.planId === plan.id ? "outline" : plan.popular ? "default" : "outline"}
+                      variant={
+                        subscription?.planId === plan.id
+                          ? "outline"
+                          : plan.popular
+                          ? "default"
+                          : "outline"
+                      }
                       disabled={subscription?.planId === plan.id}
                       onClick={handleUpgradePlan}
                     >
@@ -289,7 +298,10 @@ export default function BillingPage() {
           <CardContent>
             <div className="space-y-4">
               {billingHistory.map((invoice) => (
-                <div key={invoice.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                <div
+                  key={invoice.id}
+                  className="flex items-center justify-between py-2 border-b last:border-b-0"
+                >
                   <div>
                     <div className="font-medium">{invoice.description}</div>
                     <div className="text-sm text-muted-foreground">{formatDate(invoice.date)}</div>
@@ -297,7 +309,10 @@ export default function BillingPage() {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <div className="font-medium">${invoice.amount}</div>
-                      <Badge variant={invoice.status === "paid" ? "default" : "destructive"} className="text-xs">
+                      <Badge
+                        variant={invoice.status === "paid" ? "default" : "destructive"}
+                        className="text-xs"
+                      >
                         {invoice.status}
                       </Badge>
                     </div>
@@ -310,7 +325,7 @@ export default function BillingPage() {
               ))}
             </div>
           </CardContent>
-        </Card> */}
+        </Card>
       </div>
     </DashboardLayout>
   );

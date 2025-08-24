@@ -281,12 +281,14 @@ model AnalyzerTopic {
 }
 
 model Plan {
-    id            String  @id @default(uuid())
-    stripePriceId String  @map("stripe_price_id")
-    price         Decimal @db.Decimal(10, 2)
-    isModel       Boolean @map("is_model")
-    maxProjects   Int     @map("max_projects")
-    maxQueries    Int     @map("max_queries")
+    id            String   @id @default(uuid())
+    stripePriceId String   @map("stripe_price_id")
+    name          String?  @map("name")
+    price         Decimal  @db.Decimal(10, 2)
+    aiModel       String   @map("ai_model")
+    maxProjects   Int      @map("max_projects")
+    maxQueries    Int      @map("max_queries")
+    features      String[]
 
     // Relations
     subscriptions Subscription[]
