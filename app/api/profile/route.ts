@@ -29,15 +29,37 @@ export async function POST(request: Request) {
       });
 
       // Create subscription for free plan
+      const subscriptionData: any = {
+        planId: freePlan.id,
+        userId: id,
+        autoRenew: false, // Free plan doesn't auto-renew
+        status: "active",
+      };
+
       const subscription = await tx.subscription.create({
-        data: {
+        data: subscriptionData,
+      });
+
+      // Get all plan features for the free plan
+      const planFeatures = await tx.planFeature.findMany({
+        where: {
           planId: freePlan.id,
-          userId: id,
-          stripeSubId: null, // Free plan doesn't need Stripe subscription ID
-          autoRenew: false, // Free plan doesn't auto-renew
-          status: "active",
+        },
+        include: {
+          feature: true,
         },
       });
+
+      // Copy plan features to subscription features
+      if (planFeatures.length > 0) {
+        await tx.subscriptionFeature.createMany({
+          data: planFeatures.map((planFeature) => ({
+            subscriptionId: subscription.id,
+            featureId: planFeature.featureId,
+            isEnabled: true, // All features enabled by default
+          })),
+        });
+      }
 
       return { profile, subscription };
     });
