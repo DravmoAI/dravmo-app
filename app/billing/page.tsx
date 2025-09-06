@@ -23,53 +23,91 @@ interface Subscription {
   usedQueries: number;
 }
 
+interface PlanFeature {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  slug: string;
+}
+
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  maxProjects: number;
+  maxQueries: number;
+  aiModel?: string;
+  stripePriceId?: string;
+  features: PlanFeature[];
+}
+
 export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [billingHistory, setBillingHistory] = useState<any[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock subscription data
-    const mockSubscription: Subscription = {
-      id: "sub_1234567890",
-      planId: "pro",
-      planName: "Pro",
-      price: 29,
-      status: "active",
-      autoRenew: true,
-      currentPeriodStart: "2024-01-01",
-      currentPeriodEnd: "2024-02-01",
-      maxProjects: 50,
-      maxQueries: 500,
-      usedProjects: 12,
-      usedQueries: 156,
+    const fetchData = async () => {
+      try {
+        // Fetch plans from API
+        const plansResponse = await fetch("/api/plans");
+        if (plansResponse.ok) {
+          const plansData = await plansResponse.json();
+          setPlans(plansData.plans);
+        }
+
+        // Mock subscription data (you can replace this with actual API call later)
+        const mockSubscription: Subscription = {
+          id: "sub_1234567890",
+          planId: "pro",
+          planName: "Pro",
+          price: 29,
+          status: "active",
+          autoRenew: true,
+          currentPeriodStart: "2024-01-01",
+          currentPeriodEnd: "2024-02-01",
+          maxProjects: 50,
+          maxQueries: 500,
+          usedProjects: 12,
+          usedQueries: 156,
+        };
+
+        const mockBillingHistory = [
+          {
+            id: "inv_001",
+            date: "2024-01-01",
+            amount: 29,
+            status: "paid",
+            description: "Pro Plan - Monthly",
+          },
+          {
+            id: "inv_002",
+            date: "2023-12-01",
+            amount: 29,
+            status: "paid",
+            description: "Pro Plan - Monthly",
+          },
+          {
+            id: "inv_003",
+            date: "2023-11-01",
+            amount: 29,
+            status: "paid",
+            description: "Pro Plan - Monthly",
+          },
+        ];
+
+        setSubscription(mockSubscription);
+        setBillingHistory(mockBillingHistory);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const mockBillingHistory = [
-      {
-        id: "inv_001",
-        date: "2024-01-01",
-        amount: 29,
-        status: "paid",
-        description: "Pro Plan - Monthly",
-      },
-      {
-        id: "inv_002",
-        date: "2023-12-01",
-        amount: 29,
-        status: "paid",
-        description: "Pro Plan - Monthly",
-      },
-      {
-        id: "inv_003",
-        date: "2023-11-01",
-        amount: 29,
-        status: "paid",
-        description: "Pro Plan - Monthly",
-      },
-    ];
-
-    setSubscription(mockSubscription);
-    setBillingHistory(mockBillingHistory);
+    fetchData();
   }, []);
 
   const handleUpgradePlan = () => {
@@ -112,47 +150,34 @@ export default function BillingPage() {
     }
   };
 
-  const plans = [
-    {
-      id: "free",
-      name: "Free",
-      price: 0,
-      maxProjects: 3,
-      maxQueries: 10,
-      features: ["Up to 3 projects", "10 feedback queries per month", "Basic analysis topics"],
-    },
-    {
-      id: "pro",
-      name: "Pro",
-      price: 29,
-      maxProjects: 50,
-      maxQueries: 500,
-      features: [
-        "Up to 50 projects",
-        "500 feedback queries per month",
-        "All analysis topics",
-        "Masters Mode access",
-        "Priority support",
-      ],
-      popular: true,
-    },
-    {
-      id: "enterprise",
-      name: "Enterprise",
-      price: 99,
-      maxProjects: -1,
-      maxQueries: -1,
-      features: [
-        "Unlimited projects",
-        "Unlimited feedback queries",
-        "All analysis topics",
-        "Masters Mode access",
-        "Custom design masters",
-        "Team collaboration",
-        "API access",
-      ],
-    },
-  ];
+  const formatPlanFeatures = (plan: Plan) => {
+    const features = [];
+
+    // Add basic plan limits
+    if (plan.maxProjects === -1) {
+      features.push("Unlimited projects");
+    } else {
+      features.push(`Up to ${plan.maxProjects} projects`);
+    }
+
+    if (plan.maxQueries === -1) {
+      features.push("Unlimited feedback queries");
+    } else {
+      features.push(`${plan.maxQueries} feedback queries per month`);
+    }
+
+    // Add AI model info if available
+    if (plan.aiModel) {
+      features.push(`${plan.aiModel} AI model`);
+    }
+
+    // Add features from database
+    plan.features.forEach((feature) => {
+      features.push(feature.name);
+    });
+
+    return features;
+  };
 
   return (
     <DashboardLayout>
@@ -243,55 +268,66 @@ export default function BillingPage() {
             <CardTitle>Available Plans</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-3 gap-6">
-              {plans.map((plan) => (
-                <Card key={plan.id} className={`relative ${plan.popular ? "border-primary" : ""}`}>
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                        <Star className="h-3 w-3" />
-                        Most Popular
-                      </div>
-                    </div>
-                  )}
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-xl">{plan.name}</CardTitle>
-                    <div className="text-2xl font-bold">
-                      ${plan.price}
-                      <span className="text-sm font-normal text-muted-foreground">/month</span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      {plan.features.map((feature, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-primary" />
-                          <span className="text-sm">{feature}</span>
+            {loading ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="text-muted-foreground">Loading plans...</div>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-3 gap-6">
+                {plans.map((plan, index) => {
+                  const isPopular = index === 1; // Make the middle plan popular
+                  const planFeatures = formatPlanFeatures(plan);
+
+                  return (
+                    <Card key={plan.id} className={`relative ${isPopular ? "border-primary" : ""}`}>
+                      {isPopular && (
+                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                          <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                            <Star className="h-3 w-3" />
+                            Most Popular
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                    <Button
-                      className="w-full"
-                      variant={
-                        subscription?.planId === plan.id
-                          ? "outline"
-                          : plan.popular
-                          ? "default"
-                          : "outline"
-                      }
-                      disabled={subscription?.planId === plan.id}
-                      onClick={handleUpgradePlan}
-                    >
-                      {subscription?.planId === plan.id ? "Current Plan" : "Select Plan"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      )}
+                      <CardHeader className="text-center">
+                        <CardTitle className="text-xl">{plan.name}</CardTitle>
+                        <div className="text-2xl font-bold">
+                          ${plan.price}
+                          <span className="text-sm font-normal text-muted-foreground">/month</span>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          {planFeatures.map((feature, featureIndex) => (
+                            <div key={featureIndex} className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-primary" />
+                              <span className="text-sm">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <Button
+                          className="w-full"
+                          variant={
+                            subscription?.planId === plan.id
+                              ? "outline"
+                              : isPopular
+                              ? "default"
+                              : "outline"
+                          }
+                          disabled={subscription?.planId === plan.id}
+                          onClick={handleUpgradePlan}
+                        >
+                          {subscription?.planId === plan.id ? "Current Plan" : "Select Plan"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Billing History</CardTitle>
           </CardHeader>
@@ -325,7 +361,7 @@ export default function BillingPage() {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </DashboardLayout>
   );
