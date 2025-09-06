@@ -282,10 +282,10 @@ model AnalyzerTopic {
 
 model Plan {
     id            String   @id @default(uuid())
-    stripePriceId String   @map("stripe_price_id")
+    stripePriceId String?   @map("stripe_price_id")
     name          String?  @map("name")
     price         Decimal  @db.Decimal(10, 2)
-    aiModel       String   @map("ai_model")
+    aiModel       String?   @map("ai_model")
     maxProjects   Int      @map("max_projects")
     maxQueries    Int      @map("max_queries")
     features      String[]
