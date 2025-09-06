@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { CreditCard, Download, Star, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
+import { StripeCheckoutModal } from "@/components/stripe-checkout-modal";
 
 interface Subscription {
   id: string;
@@ -48,6 +49,8 @@ export default function BillingPage() {
   const [billingHistory, setBillingHistory] = useState<any[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,32 +80,12 @@ export default function BillingPage() {
           setSubscription(subscriptionData.subscription);
         }
 
-        // Mock billing history (you can replace this with actual API call later)
-        const mockBillingHistory = [
-          {
-            id: "inv_001",
-            date: "2024-01-01",
-            amount: 29,
-            status: "paid",
-            description: "Pro Plan - Monthly",
-          },
-          {
-            id: "inv_002",
-            date: "2023-12-01",
-            amount: 29,
-            status: "paid",
-            description: "Pro Plan - Monthly",
-          },
-          {
-            id: "inv_003",
-            date: "2023-11-01",
-            amount: 29,
-            status: "paid",
-            description: "Pro Plan - Monthly",
-          },
-        ];
-
-        setBillingHistory(mockBillingHistory);
+        // Fetch user's transaction history
+        const transactionsResponse = await fetch(`/api/transactions?userId=${user.id}`);
+        if (transactionsResponse.ok) {
+          const transactionsData = await transactionsResponse.json();
+          setBillingHistory(transactionsData.transactions);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -113,9 +96,53 @@ export default function BillingPage() {
     fetchData();
   }, []);
 
-  const handleUpgradePlan = () => {
-    // In a real app, this would redirect to Stripe checkout
-    alert("Redirecting to Stripe checkout...");
+  const handleUpgradePlan = (plan: Plan) => {
+    // Don't allow upgrading to the same plan
+    if (subscription?.planId === plan.id) {
+      return;
+    }
+
+    // Don't allow upgrading to free plan
+    if (plan.price === 0) {
+      return;
+    }
+
+    setSelectedPlan(plan);
+    setShowCheckout(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    // Refresh subscription and transaction data after successful payment
+    const fetchData = async () => {
+      try {
+        const supabase = getSupabaseClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          // Refresh subscription data
+          const subscriptionResponse = await fetch(`/api/user-subscription?userId=${user.id}`);
+          if (subscriptionResponse.ok) {
+            const subscriptionData = await subscriptionResponse.json();
+            setSubscription(subscriptionData.subscription);
+          }
+
+          // Refresh transaction history
+          const transactionsResponse = await fetch(`/api/transactions?userId=${user.id}`);
+          if (transactionsResponse.ok) {
+            const transactionsData = await transactionsResponse.json();
+            setBillingHistory(transactionsData.transactions);
+          }
+        }
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+      }
+    };
+
+    fetchData();
+    setShowCheckout(false);
+    setSelectedPlan(null);
   };
 
   const handleCancelSubscription = () => {
@@ -253,7 +280,19 @@ export default function BillingPage() {
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={handleUpgradePlan}>Upgrade Plan</Button>
+                <Button
+                  onClick={() => {
+                    // Find the next available paid plan
+                    const paidPlans = plans.filter(
+                      (p) => p.price > 0 && p.id !== subscription?.planId
+                    );
+                    if (paidPlans.length > 0) {
+                      handleUpgradePlan(paidPlans[0]);
+                    }
+                  }}
+                >
+                  Upgrade Plan
+                </Button>
                 <Button variant="outline" onClick={handleUpdatePaymentMethod} className="gap-2">
                   <CreditCard className="h-4 w-4" />
                   Update Payment Method
@@ -316,10 +355,17 @@ export default function BillingPage() {
                               ? "default"
                               : "outline"
                           }
-                          disabled={subscription?.planId === plan.id}
-                          onClick={handleUpgradePlan}
+                          disabled={subscription?.planId === plan.id || plan.price === 0}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleUpgradePlan(plan);
+                          }}
                         >
-                          {subscription?.planId === plan.id ? "Current Plan" : "Select Plan"}
+                          {subscription?.planId === plan.id
+                            ? "Current Plan"
+                            : plan.price === 0
+                            ? "Free Plan"
+                            : "Select Plan"}
                         </Button>
                       </CardContent>
                     </Card>
@@ -330,41 +376,58 @@ export default function BillingPage() {
           </CardContent>
         </Card>
 
-        {/* <Card>
+        <Card>
           <CardHeader>
-            <CardTitle>Billing History</CardTitle>
+            <CardTitle>Transaction History</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {billingHistory.map((invoice) => (
-                <div
-                  key={invoice.id}
-                  className="flex items-center justify-between py-2 border-b last:border-b-0"
-                >
-                  <div>
-                    <div className="font-medium">{invoice.description}</div>
-                    <div className="text-sm text-muted-foreground">{formatDate(invoice.date)}</div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="font-medium">${invoice.amount}</div>
-                      <Badge
-                        variant={invoice.status === "paid" ? "default" : "destructive"}
-                        className="text-xs"
-                      >
-                        {invoice.status}
-                      </Badge>
+            {billingHistory.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">No transactions yet</div>
+            ) : (
+              <div className="space-y-4">
+                {billingHistory.map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between py-2 border-b last:border-b-0"
+                  >
+                    <div>
+                      <div className="font-medium">{transaction.description}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatDate(transaction.date)}
+                      </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="gap-2">
-                      <Download className="h-4 w-4" />
-                      Download
-                    </Button>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="font-medium">${transaction.amount}</div>
+                        <Badge
+                          variant={transaction.status === "succeeded" ? "default" : "destructive"}
+                          className="text-xs"
+                        >
+                          {transaction.status}
+                        </Badge>
+                      </div>
+                      <Button variant="ghost" size="sm" className="gap-2">
+                        <Download className="h-4 w-4" />
+                        Receipt
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
-        </Card> */}
+        </Card>
+
+        {/* Stripe Checkout Modal */}
+        <StripeCheckoutModal
+          isOpen={showCheckout}
+          onClose={() => {
+            setShowCheckout(false);
+            setSelectedPlan(null);
+          }}
+          plan={selectedPlan}
+          onSuccess={handlePaymentSuccess}
+        />
       </div>
     </DashboardLayout>
   );

@@ -22,6 +22,7 @@ model Profile {
     // Relations
     projects      Project[]
     subscriptions Subscription[]
+    transactions  Transaction[]
     persona       Persona?
 
     @@map("profiles")
@@ -310,6 +311,7 @@ model Subscription {
     plan                 Plan                  @relation(fields: [planId], references: [id])
     profile              Profile               @relation(fields: [userId], references: [id])
     subscriptionFeatures SubscriptionFeature[]
+    transactions         Transaction[]
 
     @@map("subscriptions")
 }
@@ -352,4 +354,23 @@ model SubscriptionFeature {
     feature      Feature      @relation(fields: [featureId], references: [id])
 
     @@map("subscription_features")
+}
+
+model Transaction {
+    id              String    @id @default(uuid())
+    userId          String    @map("user_id")
+    subscriptionId  String?   @map("subscription_id")
+    stripePaymentId String?   @map("stripe_payment_id") // payment_intent or charge id
+    stripeInvoiceId String?   @map("stripe_invoice_id")
+    amount          Decimal   @db.Decimal(10, 2)
+    currency        String    @default("usd")
+    status          String    // e.g. succeeded, pending, failed, refunded
+    description     String?
+    createdAt       DateTime  @default(now()) @map("created_at")
+
+    // Relations
+    user         Profile       @relation(fields: [userId], references: [id])
+    subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+
+    @@map("transactions")
 }
