@@ -300,7 +300,7 @@ model Subscription {
     id          String   @id @default(uuid())
     planId      String   @map("plan_id")
     userId      String   @map("user_id")
-    stripeSubId String   @map("stripe_sub_id")
+    stripeSubId String?  @map("stripe_sub_id")
     autoRenew   Boolean  @map("auto_renew")
     status      String
     createdAt   DateTime @default(now()) @map("created_at")

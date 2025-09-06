@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CreditCard, Download, Star, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { getSupabaseClient } from "@/lib/supabase";
 
 interface Subscription {
   id: string;
@@ -51,6 +52,17 @@ export default function BillingPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Get current user
+        const supabase = getSupabaseClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
         // Fetch plans from API
         const plansResponse = await fetch("/api/plans");
         if (plansResponse.ok) {
@@ -58,22 +70,14 @@ export default function BillingPage() {
           setPlans(plansData.plans);
         }
 
-        // Mock subscription data (you can replace this with actual API call later)
-        const mockSubscription: Subscription = {
-          id: "sub_1234567890",
-          planId: "pro",
-          planName: "Pro",
-          price: 29,
-          status: "active",
-          autoRenew: true,
-          currentPeriodStart: "2024-01-01",
-          currentPeriodEnd: "2024-02-01",
-          maxProjects: 50,
-          maxQueries: 500,
-          usedProjects: 12,
-          usedQueries: 156,
-        };
+        // Fetch user's subscription with real usage data
+        const subscriptionResponse = await fetch(`/api/user-subscription?userId=${user.id}`);
+        if (subscriptionResponse.ok) {
+          const subscriptionData = await subscriptionResponse.json();
+          setSubscription(subscriptionData.subscription);
+        }
 
+        // Mock billing history (you can replace this with actual API call later)
         const mockBillingHistory = [
           {
             id: "inv_001",
@@ -98,7 +102,6 @@ export default function BillingPage() {
           },
         ];
 
-        setSubscription(mockSubscription);
         setBillingHistory(mockBillingHistory);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -200,8 +203,8 @@ export default function BillingPage() {
                 <div>
                   <h3 className="text-2xl font-bold">{subscription.planName} Plan</h3>
                   <p className="text-muted-foreground">
-                    ${subscription.price}/month • Next billing:{" "}
-                    {formatDate(subscription.currentPeriodEnd)}
+                    ${subscription.price}/month
+                    {/* Next billing: {formatDate(subscription.currentPeriodEnd)} */}
                   </p>
                 </div>
                 <div className="text-right">
