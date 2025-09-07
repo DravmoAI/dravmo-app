@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getSupabaseClient } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-06-30.basil",
@@ -8,14 +9,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
-    const { planId, amount } = await request.json();
+    const { planId } = await request.json();
 
-    console.log("Payment intent request:", { planId, amount });
+    console.log("Subscription creation request:", { planId });
 
     // Validate input
-    if (!planId || !amount || amount < 50) {
-      // Stripe minimum is $0.50
-      return NextResponse.json({ error: "Invalid plan or amount" }, { status: 400 });
+    if (!planId) {
+      return NextResponse.json({ error: "Plan ID is required" }, { status: 400 });
     }
 
     // Check if Stripe secret key is available
@@ -42,27 +42,117 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid authentication" }, { status: 401 });
     }
 
-    // Create payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount), // Amount in cents
-      currency: "usd",
-      automatic_payment_methods: {
-        enabled: true,
-      },
-      metadata: {
-        planId: planId,
+    // Get the plan details
+    const plan = await prisma.plan.findUnique({
+      where: { id: planId },
+    });
+
+    if (!plan || !plan.stripePriceId) {
+      return NextResponse.json({ error: "Plan not found or not configured" }, { status: 404 });
+    }
+
+    // Check if user already has an active subscription
+    const existingSubscription = await prisma.subscription.findFirst({
+      where: {
         userId: user.id,
+        status: "active",
+      },
+      include: {
+        plan: true,
       },
     });
 
-    console.log("Payment intent created:", paymentIntent.id);
-    console.log("Client secret:", paymentIntent.client_secret?.substring(0, 20) + "...");
+    // If user has an active subscription, check if it's a free plan
+    if (existingSubscription) {
+      const existingPlanPrice = Number(existingSubscription.plan.price);
+      const newPlanPrice = Number(plan.price);
+
+      // Allow upgrade from free plan to paid plan
+      if (existingPlanPrice === 0 && newPlanPrice > 0) {
+        console.log(`User ${user.id} upgrading from free plan to paid plan ${plan.id}`);
+      } else if (existingSubscription.planId === plan.id) {
+        return NextResponse.json(
+          {
+            error: "You are already subscribed to this plan",
+          },
+          { status: 400 }
+        );
+      } else if (existingPlanPrice > 0 && newPlanPrice > 0) {
+        return NextResponse.json(
+          {
+            error:
+              "You already have an active paid subscription. Please cancel your current subscription first.",
+          },
+          { status: 400 }
+        );
+      } else {
+        return NextResponse.json(
+          {
+            error: "You already have an active subscription",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Create or retrieve Stripe customer
+    let customer;
+    try {
+      // Try to find existing customer by email
+      const customers = await stripe.customers.list({
+        email: user.email!,
+        limit: 1,
+      });
+
+      if (customers.data.length > 0) {
+        customer = customers.data[0];
+      } else {
+        // Create new customer
+        customer = await stripe.customers.create({
+          email: user.email!,
+          metadata: {
+            userId: user.id,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error creating/finding customer:", error);
+      return NextResponse.json({ error: "Failed to create customer" }, { status: 500 });
+    }
+
+    // Create Stripe checkout session for subscription
+    const session = await stripe.checkout.sessions.create({
+      customer: customer.id,
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price: plan.stripePriceId,
+          quantity: 1,
+        },
+      ],
+      mode: "subscription",
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing?canceled=true`,
+      metadata: {
+        userId: user.id,
+        planId: planId,
+      },
+      subscription_data: {
+        metadata: {
+          userId: user.id,
+          planId: planId,
+        },
+      },
+    });
+
+    console.log("Checkout session created:", session.id);
 
     return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
+      sessionId: session.id,
+      url: session.url,
     });
   } catch (error) {
-    console.error("Error creating payment intent:", error);
-    return NextResponse.json({ error: "Failed to create payment intent" }, { status: 500 });
+    console.error("Error creating subscription:", error);
+    return NextResponse.json({ error: "Failed to create subscription" }, { status: 500 });
   }
 }

@@ -27,17 +27,17 @@ export function StripeCheckoutModal({
   plan,
   onSuccess,
 }: StripeCheckoutModalProps) {
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && plan) {
-      createPaymentIntent();
+      createSubscription();
     }
   }, [isOpen, plan]);
 
-  const createPaymentIntent = async () => {
+  const createSubscription = async () => {
     if (!plan) return;
 
     setIsLoading(true);
@@ -62,33 +62,31 @@ export function StripeCheckoutModal({
         },
         body: JSON.stringify({
           planId: plan.id,
-          amount: Math.round(plan.price * 100), // Convert to cents
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create payment intent");
+        throw new Error(data.error || "Failed to create subscription");
       }
 
-      setClientSecret(data.clientSecret);
+      // Redirect to Stripe checkout
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL received");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("Error creating payment intent:", err);
+      console.error("Error creating subscription:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSuccess = () => {
-    setClientSecret(null);
-    onSuccess?.();
-    onClose();
-  };
-
   const handleClose = () => {
-    setClientSecret(null);
+    setCheckoutUrl(null);
     setError(null);
     onClose();
   };
@@ -99,34 +97,35 @@ export function StripeCheckoutModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Subscribe to Dravmo</DialogTitle>
+          <DialogTitle>Subscribe to {plan.name} Plan</DialogTitle>
         </DialogHeader>
 
         {isLoading && (
           <div className="flex items-center justify-center py-8">
             <LoadingSpinner />
-            <span className="ml-2">Setting up payment...</span>
+            <span className="ml-2">Redirecting to checkout...</span>
           </div>
         )}
 
         {error && (
           <div className="text-center py-8">
             <p className="text-destructive">{error}</p>
-            <button onClick={createPaymentIntent} className="mt-4 text-primary hover:underline">
+            <button onClick={createSubscription} className="mt-4 text-primary hover:underline">
               Try again
             </button>
           </div>
         )}
 
-        {clientSecret && (
-          <StripeProvider clientSecret={clientSecret}>
-            <StripePaymentForm
-              planName={plan.name}
-              price={plan.price}
-              onSuccess={handleSuccess}
-              onCancel={handleClose}
-            />
-          </StripeProvider>
+        {!isLoading && !error && (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">
+              You will be redirected to Stripe Checkout to complete your subscription.
+            </p>
+            <div className="space-y-2">
+              <p className="font-medium">{plan.name} Plan</p>
+              <p className="text-2xl font-bold">${plan.price}/month</p>
+            </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>
