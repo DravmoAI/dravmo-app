@@ -24,6 +24,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { toast } from "@/hooks/use-toast";
+import { getSupabaseClient } from "@/lib/supabase";
 
 interface Screen {
   id: string;
@@ -73,6 +74,7 @@ interface AnalyzerTopic {
   id: string;
   name: string;
   description: string;
+  tier: string;
   analyzerSubtopics: AnalyzerSubtopic[];
 }
 
@@ -98,6 +100,9 @@ export default function ScreenAnalyzePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageProcessing, setImageProcessing] = useState(false);
   const [processedImageData, setProcessedImageData] = useState<any>(null);
+  const [planInfo, setPlanInfo] = useState<any>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const supabase = getSupabaseClient();
   const [formData, setFormData] = useState({
     industry: "Education",
     productType: "Mobile App",
@@ -118,11 +123,20 @@ export default function ScreenAnalyzePage() {
         const screenData = await screenRes.json();
         setScreen(screenData.screen);
 
-        // Fetch analyzer topics
-        const analyzerRes = await fetch("/api/analyzer");
-        if (!analyzerRes.ok) throw new Error("Failed to fetch analyzer topics");
-        const analyzerData = await analyzerRes.json();
-        setAnalyzerTopics(analyzerData.topics);
+        // Get user and plan info first
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        // Fetch analyzer topics (will be filtered based on user's plan)
+        let analyzerData: any = null;
+        if (session?.user) {
+          const analyzerRes = await fetch(`/api/analyzer?userId=${session.user.id}`);
+          if (!analyzerRes.ok) throw new Error("Failed to fetch analyzer topics");
+          analyzerData = await analyzerRes.json();
+          setAnalyzerTopics(analyzerData.topics);
+          console.log(`Loaded ${analyzerData.topics.length} analyzer topics for user`);
+        }
 
         // Fetch design masters
         const mastersRes = await fetch("/api/design-masters");
@@ -130,20 +144,36 @@ export default function ScreenAnalyzePage() {
         const mastersData = await mastersRes.json();
         setDesignMasters(mastersData.designMasters);
 
-        // Pre-select the first point from the first subtopic of the first topic
-        if (analyzerData.topics.length > 0) {
-          const firstTopic = analyzerData.topics[0];
-          if (firstTopic.analyzerSubtopics.length > 0) {
-            const firstSubtopic = firstTopic.analyzerSubtopics[0];
-            if (firstSubtopic.analyzerPoints.length > 0) {
-              const firstPoint = firstSubtopic.analyzerPoints[0];
-              setSelectedAnalyzers([
-                {
-                  topicId: firstTopic.id,
-                  subtopicId: firstSubtopic.id,
-                  pointId: firstPoint.id,
-                },
-              ]);
+        if (session?.user) {
+          setUserId(session.user.id);
+          try {
+            const planRes = await fetch(`/api/user-plan-info?userId=${session.user.id}`);
+            if (planRes.ok) {
+              console.log("planRes");
+
+              const planData = await planRes.json();
+              setPlanInfo(planData);
+              console.log(planData);
+            }
+          } catch (error) {
+            console.error("Error fetching plan info:", error);
+          }
+
+          // Pre-select the first point from the first subtopic of the first topic
+          if (analyzerData.topics.length > 0) {
+            const firstTopic = analyzerData.topics[0];
+            if (firstTopic.analyzerSubtopics.length > 0) {
+              const firstSubtopic = firstTopic.analyzerSubtopics[0];
+              if (firstSubtopic.analyzerPoints.length > 0) {
+                const firstPoint = firstSubtopic.analyzerPoints[0];
+                setSelectedAnalyzers([
+                  {
+                    topicId: firstTopic.id,
+                    subtopicId: firstSubtopic.id,
+                    pointId: firstPoint.id,
+                  },
+                ]);
+              }
             }
           }
         }
@@ -326,6 +356,47 @@ export default function ScreenAnalyzePage() {
       return;
     }
 
+    // Check plan restrictions
+    if (planInfo) {
+      if (planInfo.usage.remainingQueries <= 0) {
+        toast({
+          title: "Query Limit Reached",
+          description:
+            planInfo.restrictions.maxQueriesPerMonth === 0
+              ? "You've reached your monthly query limit. Upgrade your plan for more queries."
+              : `You've used all ${planInfo.usage.currentQueriesThisMonth} queries this month. Upgrade your plan for more queries.`,
+          variant: "destructive",
+        });
+
+        const shouldUpgrade = confirm(
+          `You've reached your monthly query limit of ${planInfo.usage.currentQueriesThisMonth} queries.\n\nWould you like to upgrade your plan for more queries?`
+        );
+
+        if (shouldUpgrade) {
+          router.push("/billing");
+        }
+        return;
+      }
+
+      if (isMasterMode && !planInfo.restrictions.canUseMasterMode) {
+        toast({
+          title: "Master Mode Not Available",
+          description:
+            "Master mode is only available on paid plans. Upgrade to access this feature.",
+          variant: "destructive",
+        });
+
+        const shouldUpgrade = confirm(
+          "Master mode is only available on paid plans.\n\nWould you like to upgrade your plan to access this feature?"
+        );
+
+        if (shouldUpgrade) {
+          router.push("/billing");
+        }
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -362,7 +433,44 @@ export default function ScreenAnalyzePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create feedback query");
+        const errorData = await response.json();
+
+        // Handle plan restriction errors
+        if (errorData.code === "QUERY_LIMIT_EXCEEDED") {
+          toast({
+            title: "Query Limit Reached",
+            description: errorData.error,
+            variant: "destructive",
+          });
+
+          const shouldUpgrade = confirm(
+            `${errorData.error}\n\nWould you like to upgrade your plan for more queries?`
+          );
+
+          if (shouldUpgrade) {
+            router.push("/billing");
+          }
+          return;
+        }
+
+        if (errorData.code === "MASTER_MODE_NOT_ALLOWED") {
+          toast({
+            title: "Master Mode Not Available",
+            description: errorData.error,
+            variant: "destructive",
+          });
+
+          const shouldUpgrade = confirm(
+            `${errorData.error}\n\nWould you like to upgrade your plan to access this feature?`
+          );
+
+          if (shouldUpgrade) {
+            router.push("/billing");
+          }
+          return;
+        }
+
+        throw new Error(errorData.error || "Failed to create feedback query");
       }
 
       const data = await response.json();
@@ -371,7 +479,8 @@ export default function ScreenAnalyzePage() {
       console.error("Error creating feedback query:", error);
       toast({
         title: "Error",
-        description: "Failed to create feedback. Please try again.",
+        description:
+          error instanceof Error ? error.message : "Failed to create feedback. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -460,12 +569,31 @@ export default function ScreenAnalyzePage() {
             </Card>
 
             <div className="space-y-6">
-              <h3 className="text-xl font-bold font-krona-one">Analysis Configuration</h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold font-krona-one">Analysis Configuration</h3>
+                {planInfo && (
+                  <div className="text-sm text-muted-foreground">
+                    Queries this month: {planInfo.usage.currentQueriesThisMonth}/
+                    {planInfo.restrictions.maxQueriesPerMonth}
+                    {planInfo.usage.remainingQueries === 0 && (
+                      <span className="text-destructive ml-2">(Limit reached)</span>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="context">Context Setup</TabsTrigger>
-                  <TabsTrigger value="master">Master Mode</TabsTrigger>
+                  <TabsTrigger
+                    value="master"
+                    disabled={planInfo && !planInfo.restrictions.canUseMasterMode}
+                    className={
+                      planInfo && !planInfo.restrictions.canUseMasterMode ? "opacity-50" : ""
+                    }
+                  >
+                    Master Mode {planInfo && !planInfo.restrictions.canUseMasterMode && "(Premium)"}
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="context" className="space-y-4 mt-6">
@@ -692,16 +820,45 @@ export default function ScreenAnalyzePage() {
                                   checked={isTopicSelected(topic.id)}
                                   onCheckedChange={() => handleTopicChange(topic.id)}
                                   onClick={(e) => e.stopPropagation()}
+                                  disabled={
+                                    topic.tier === "premium" &&
+                                    planInfo &&
+                                    !planInfo.restrictions.canUsePremiumAnalyzers
+                                  }
                                 />
                                 <Label
                                   htmlFor={`topic-${topic.id}`}
-                                  className="font-medium cursor-pointer font-quantico"
+                                  className={`font-medium cursor-pointer font-quantico ${
+                                    topic.tier === "premium" &&
+                                    planInfo &&
+                                    !planInfo.restrictions.canUsePremiumAnalyzers
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
+                                  }`}
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    if (
+                                      topic.tier === "premium" &&
+                                      planInfo &&
+                                      !planInfo.restrictions.canUsePremiumAnalyzers
+                                    ) {
+                                      toast({
+                                        title: "Premium Feature",
+                                        description:
+                                          "This analyzer is only available on paid plans. Upgrade to access premium analyzers.",
+                                        variant: "destructive",
+                                      });
+                                      return;
+                                    }
                                     handleTopicChange(topic.id);
                                   }}
                                 >
                                   {topic.name}
+                                  {topic.tier === "premium" && (
+                                    <span className="ml-2 text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full">
+                                      Premium
+                                    </span>
+                                  )}
                                 </Label>
                               </div>
                             </AccordionTrigger>
@@ -727,12 +884,30 @@ export default function ScreenAnalyzePage() {
                                               handleSubtopicChange(subtopic.id, topic.id)
                                             }
                                             onClick={(e) => e.stopPropagation()}
+                                            disabled={
+                                              topic.tier === "premium" &&
+                                              planInfo &&
+                                              !planInfo.restrictions.canUsePremiumAnalyzers
+                                            }
                                           />
                                           <Label
                                             htmlFor={`subtopic-${subtopic.id}`}
-                                            className="font-medium cursor-pointer font-quantico"
+                                            className={`font-medium cursor-pointer font-quantico ${
+                                              topic.tier === "premium" &&
+                                              planInfo &&
+                                              !planInfo.restrictions.canUsePremiumAnalyzers
+                                                ? "opacity-50 cursor-not-allowed"
+                                                : ""
+                                            }`}
                                             onClick={(e) => {
                                               e.stopPropagation();
+                                              if (
+                                                topic.tier === "premium" &&
+                                                planInfo &&
+                                                !planInfo.restrictions.canUsePremiumAnalyzers
+                                              ) {
+                                                return;
+                                              }
                                               handleSubtopicChange(subtopic.id, topic.id);
                                             }}
                                           >
@@ -753,11 +928,22 @@ export default function ScreenAnalyzePage() {
                                                 onCheckedChange={() =>
                                                   handlePointChange(point.id, subtopic.id, topic.id)
                                                 }
+                                                disabled={
+                                                  topic.tier === "premium" &&
+                                                  planInfo &&
+                                                  !planInfo.restrictions.canUsePremiumAnalyzers
+                                                }
                                               />
                                               <div>
                                                 <Label
                                                   htmlFor={`point-${point.id}`}
-                                                  className="font-medium cursor-pointer font-quantico"
+                                                  className={`font-medium cursor-pointer font-quantico ${
+                                                    topic.tier === "premium" &&
+                                                    planInfo &&
+                                                    !planInfo.restrictions.canUsePremiumAnalyzers
+                                                      ? "opacity-50 cursor-not-allowed"
+                                                      : ""
+                                                  }`}
                                                 >
                                                   {point.name}
                                                 </Label>

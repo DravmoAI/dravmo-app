@@ -340,10 +340,12 @@ export default function BillingPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between capitalize">
+            <div className="flex items-center justify-between ">
               <CardTitle>Current Plan</CardTitle>
               {subscription && (
-                <Badge variant={getStatusColor(subscription.status)}>{subscription.status}</Badge>
+                <Badge variant={getStatusColor(subscription.status)} className="capitalize">
+                  {subscription.status}
+                </Badge>
               )}
             </div>
           </CardHeader>
@@ -352,7 +354,7 @@ export default function BillingPage() {
               <>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-2xl font-bold">{subscription.planName} Plan</h3>
+                    <h3 className="text-2xl font-bold capitalize">{subscription.planName} Plan</h3>
                     <p className="text-muted-foreground">
                       ${subscription.price}/month
                       {/* Next billing: {formatDate(subscription.currentPeriodEnd)} */}
@@ -417,18 +419,16 @@ export default function BillingPage() {
                   >
                     Upgrade Plan
                   </Button>
-                  <Button variant="outline" onClick={handleUpdatePaymentMethod} className="gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Update Payment Method
-                  </Button>
+
                   <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
                     <AlertDialogTrigger asChild>
                       <Button variant="outline">Cancel Subscription</Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="!min-w-[550px]">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
-                        <AlertDialogDescription>
+
+                        <AlertDialogDescription className="text-left">
                           Are you sure you want to cancel your subscription? You have two options:
                           <br />
                           <br />
@@ -441,7 +441,8 @@ export default function BillingPage() {
                           right away and you'll be downgraded to the free plan immediately.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
-                      <AlertDialogFooter>
+
+                      <AlertDialogFooter className="!justify-start">
                         <AlertDialogCancel disabled={cancelLoading}>
                           Keep Subscription
                         </AlertDialogCancel>
@@ -452,10 +453,11 @@ export default function BillingPage() {
                         >
                           {cancelLoading ? "Canceling..." : "Cancel at Period End"}
                         </Button>
+
                         <AlertDialogAction
                           onClick={() => handleCancelSubscription(true)}
                           disabled={cancelLoading}
-                          className="bg-destructive hover:bg-destructive/90"
+                          className="bg-destructive hover:bg-destructive/90 text-white"
                         >
                           {cancelLoading ? "Canceling..." : "Cancel Immediately"}
                         </AlertDialogAction>
@@ -514,7 +516,7 @@ export default function BillingPage() {
                         </div>
                       )}
                       <CardHeader className="text-center">
-                        <CardTitle className="text-xl">{plan.name}</CardTitle>
+                        <CardTitle className="text-xl capitalize">{plan.name}</CardTitle>
                         <div className="text-2xl font-bold">
                           ${plan.price}
                           <span className="text-sm font-normal text-muted-foreground">/month</span>

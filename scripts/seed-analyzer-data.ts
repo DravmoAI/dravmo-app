@@ -1,9 +1,9 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Starting to seed analyzer data...")
+  console.log("Starting to seed analyzer data...");
 
   // Create design masters
   const designMasters = [
@@ -42,57 +42,67 @@ async function main() {
       bio: "British-American industrial and product designer who was the Chief Design Officer of Apple Inc.",
       avatarUrl: "/placeholder.svg?height=200&width=200",
     },
-  ]
+  ];
 
   for (const master of designMasters) {
     await prisma.designMaster.upsert({
       where: { name: master.name },
       update: master,
       create: master,
-    })
+    });
   }
 
-  console.log("Design masters seeded successfully!")
+  console.log("Design masters seeded successfully!");
 
   // Create analyzer topics, subtopics, and points
   const layoutTopic = await prisma.analyzerTopic.upsert({
     where: { id: "layout-topic" },
     update: {
       name: "Layout & Structure",
-      description: "Analysis of the overall layout, grid system, and structural organization of the design.",
+      description:
+        "Analysis of the overall layout, grid system, and structural organization of the design.",
+      tier: "free",
     },
     create: {
       id: "layout-topic",
       name: "Layout & Structure",
-      description: "Analysis of the overall layout, grid system, and structural organization of the design.",
+      description:
+        "Analysis of the overall layout, grid system, and structural organization of the design.",
+      tier: "free",
     },
-  })
+  });
 
   const typographyTopic = await prisma.analyzerTopic.upsert({
     where: { id: "typography-topic" },
     update: {
       name: "Typography & Readability",
-      description: "Evaluation of font choices, text hierarchy, and overall readability of the content.",
+      description:
+        "Evaluation of font choices, text hierarchy, and overall readability of the content.",
+      tier: "free",
     },
     create: {
       id: "typography-topic",
       name: "Typography & Readability",
-      description: "Evaluation of font choices, text hierarchy, and overall readability of the content.",
+      description:
+        "Evaluation of font choices, text hierarchy, and overall readability of the content.",
+      tier: "free",
     },
-  })
+  });
 
   const colorTopic = await prisma.analyzerTopic.upsert({
     where: { id: "color-topic" },
     update: {
       name: "Color & Visual Rhythm",
       description: "Assessment of color palette, contrast, and visual flow throughout the design.",
+      tier: "free",
     },
     create: {
       id: "color-topic",
       name: "Color & Visual Rhythm",
       description: "Assessment of color palette, contrast, and visual flow throughout the design.",
+      tier: "free",
     },
-  })
+  });
 
   // Create layout subtopics
   const gridSubtopic = await prisma.analyzerSubtopic.upsert({
@@ -108,22 +118,24 @@ async function main() {
       name: "Grid System",
       description: "Analysis of the underlying grid structure and alignment principles.",
     },
-  })
+  });
 
   const spacingSubtopic = await prisma.analyzerSubtopic.upsert({
     where: { id: "spacing-subtopic" },
     update: {
       topicId: layoutTopic.id,
       name: "Spacing & Whitespace",
-      description: "Evaluation of the use of whitespace, margins, and padding throughout the design.",
+      description:
+        "Evaluation of the use of whitespace, margins, and padding throughout the design.",
     },
     create: {
       id: "spacing-subtopic",
       topicId: layoutTopic.id,
       name: "Spacing & Whitespace",
-      description: "Evaluation of the use of whitespace, margins, and padding throughout the design.",
+      description:
+        "Evaluation of the use of whitespace, margins, and padding throughout the design.",
     },
-  })
+  });
 
   // Create typography subtopics
   const fontSubtopic = await prisma.analyzerSubtopic.upsert({
@@ -131,30 +143,34 @@ async function main() {
     update: {
       topicId: typographyTopic.id,
       name: "Font Selection",
-      description: "Analysis of typeface choices and their appropriateness for the content and brand.",
+      description:
+        "Analysis of typeface choices and their appropriateness for the content and brand.",
     },
     create: {
       id: "font-subtopic",
       topicId: typographyTopic.id,
       name: "Font Selection",
-      description: "Analysis of typeface choices and their appropriateness for the content and brand.",
+      description:
+        "Analysis of typeface choices and their appropriateness for the content and brand.",
     },
-  })
+  });
 
   const textHierarchySubtopic = await prisma.analyzerSubtopic.upsert({
     where: { id: "text-hierarchy-subtopic" },
     update: {
       topicId: typographyTopic.id,
       name: "Text Hierarchy",
-      description: "Evaluation of heading, subheading, and body text relationships and visual hierarchy.",
+      description:
+        "Evaluation of heading, subheading, and body text relationships and visual hierarchy.",
     },
     create: {
       id: "text-hierarchy-subtopic",
       topicId: typographyTopic.id,
       name: "Text Hierarchy",
-      description: "Evaluation of heading, subheading, and body text relationships and visual hierarchy.",
+      description:
+        "Evaluation of heading, subheading, and body text relationships and visual hierarchy.",
     },
-  })
+  });
 
   // Create color subtopics
   const paletteSubtopic = await prisma.analyzerSubtopic.upsert({
@@ -162,15 +178,17 @@ async function main() {
     update: {
       topicId: colorTopic.id,
       name: "Color Palette",
-      description: "Analysis of the color scheme and its alignment with brand identity and user expectations.",
+      description:
+        "Analysis of the color scheme and its alignment with brand identity and user expectations.",
     },
     create: {
       id: "palette-subtopic",
       topicId: colorTopic.id,
       name: "Color Palette",
-      description: "Analysis of the color scheme and its alignment with brand identity and user expectations.",
+      description:
+        "Analysis of the color scheme and its alignment with brand identity and user expectations.",
     },
-  })
+  });
 
   const contrastSubtopic = await prisma.analyzerSubtopic.upsert({
     where: { id: "contrast-subtopic" },
@@ -185,7 +203,7 @@ async function main() {
       name: "Contrast & Accessibility",
       description: "Evaluation of color contrast for readability and accessibility compliance.",
     },
-  })
+  });
 
   // Create grid points
   await prisma.analyzerPoint.upsert({
@@ -201,7 +219,7 @@ async function main() {
       name: "Element Alignment",
       description: "Assessment of how well elements align to the grid system.",
     },
-  })
+  });
 
   await prisma.analyzerPoint.upsert({
     where: { id: "grid-consistency-point" },
@@ -216,7 +234,7 @@ async function main() {
       name: "Grid Consistency",
       description: "Evaluation of grid consistency across different sections and components.",
     },
-  })
+  });
 
   // Create spacing points
   await prisma.analyzerPoint.upsert({
@@ -232,7 +250,7 @@ async function main() {
       name: "Whitespace Usage",
       description: "Analysis of how whitespace is used to create visual breathing room and focus.",
     },
-  })
+  });
 
   await prisma.analyzerPoint.upsert({
     where: { id: "spacing-rhythm-point" },
@@ -247,7 +265,7 @@ async function main() {
       name: "Spacing Rhythm",
       description: "Evaluation of the rhythm and consistency of spacing throughout the design.",
     },
-  })
+  });
 
   // Create font points
   await prisma.analyzerPoint.upsert({
@@ -255,15 +273,17 @@ async function main() {
     update: {
       subtopicId: fontSubtopic.id,
       name: "Typeface Appropriateness",
-      description: "Assessment of how well the chosen typefaces match the brand personality and content.",
+      description:
+        "Assessment of how well the chosen typefaces match the brand personality and content.",
     },
     create: {
       id: "typeface-appropriateness-point",
       subtopicId: fontSubtopic.id,
       name: "Typeface Appropriateness",
-      description: "Assessment of how well the chosen typefaces match the brand personality and content.",
+      description:
+        "Assessment of how well the chosen typefaces match the brand personality and content.",
     },
-  })
+  });
 
   await prisma.analyzerPoint.upsert({
     where: { id: "font-pairing-point" },
@@ -278,7 +298,7 @@ async function main() {
       name: "Font Pairing",
       description: "Evaluation of how well different fonts work together in the design.",
     },
-  })
+  });
 
   // Create text hierarchy points
   await prisma.analyzerPoint.upsert({
@@ -294,7 +314,7 @@ async function main() {
       name: "Heading Hierarchy",
       description: "Analysis of the visual distinction between different heading levels.",
     },
-  })
+  });
 
   await prisma.analyzerPoint.upsert({
     where: { id: "text-emphasis-point" },
@@ -309,7 +329,7 @@ async function main() {
       name: "Text Emphasis",
       description: "Evaluation of how emphasis is applied to important text elements.",
     },
-  })
+  });
 
   // Create color palette points
   await prisma.analyzerPoint.upsert({
@@ -325,7 +345,7 @@ async function main() {
       name: "Color Harmony",
       description: "Assessment of how well colors work together to create a harmonious palette.",
     },
-  })
+  });
 
   await prisma.analyzerPoint.upsert({
     where: { id: "brand-alignment-point" },
@@ -340,7 +360,7 @@ async function main() {
       name: "Brand Alignment",
       description: "Evaluation of how well the color palette aligns with the brand identity.",
     },
-  })
+  });
 
   // Create contrast points
   await prisma.analyzerPoint.upsert({
@@ -356,7 +376,7 @@ async function main() {
       name: "Text Contrast",
       description: "Analysis of text-to-background contrast for readability.",
     },
-  })
+  });
 
   await prisma.analyzerPoint.upsert({
     where: { id: "wcag-compliance-point" },
@@ -371,16 +391,102 @@ async function main() {
       name: "WCAG Compliance",
       description: "Evaluation of color contrast compliance with accessibility standards.",
     },
-  })
+  });
 
-  console.log("Analyzer topics, subtopics, and points seeded successfully!")
+  // Create premium analyzer topics
+  const interactionTopic = await prisma.analyzerTopic.upsert({
+    where: { id: "interaction-topic" },
+    update: {
+      name: "Interaction & Feedback",
+      description:
+        "Guidelines for interactive elements, animations, user feedback, and intuitive navigation cues.",
+      tier: "premium",
+    },
+    create: {
+      id: "interaction-topic",
+      name: "Interaction & Feedback",
+      description:
+        "Guidelines for interactive elements, animations, user feedback, and intuitive navigation cues.",
+      tier: "premium",
+    },
+  });
+
+  const performanceTopic = await prisma.analyzerTopic.upsert({
+    where: { id: "performance-topic" },
+    update: {
+      name: "Performance & Responsiveness",
+      description:
+        "Covers loading speed, asset optimization, and responsive behaviors across breakpoints.",
+      tier: "premium",
+    },
+    create: {
+      id: "performance-topic",
+      name: "Performance & Responsiveness",
+      description:
+        "Covers loading speed, asset optimization, and responsive behaviors across breakpoints.",
+      tier: "premium",
+    },
+  });
+
+  const contentTopic = await prisma.analyzerTopic.upsert({
+    where: { id: "content-topic" },
+    update: {
+      name: "Content & Messaging",
+      description:
+        "Evaluates copy clarity, tone consistency, information structure, and localization readiness.",
+      tier: "premium",
+    },
+    create: {
+      id: "content-topic",
+      name: "Content & Messaging",
+      description:
+        "Evaluates copy clarity, tone consistency, information structure, and localization readiness.",
+      tier: "premium",
+    },
+  });
+
+  const accessibilityTopic = await prisma.analyzerTopic.upsert({
+    where: { id: "accessibility-topic" },
+    update: {
+      name: "Accessibility & Inclusivity",
+      description:
+        "Ensures designs are usable by all users through semantic HTML, assistive tech support, and inclusive language.",
+      tier: "premium",
+    },
+    create: {
+      id: "accessibility-topic",
+      name: "Accessibility & Inclusivity",
+      description:
+        "Ensures designs are usable by all users through semantic HTML, assistive tech support, and inclusive language.",
+      tier: "premium",
+    },
+  });
+
+  const brandTopic = await prisma.analyzerTopic.upsert({
+    where: { id: "brand-topic" },
+    update: {
+      name: "Brand & Context",
+      description:
+        "Assesses brand consistency, industry norms, and contextual alignment including legal/regulatory fit.",
+      tier: "premium",
+    },
+    create: {
+      id: "brand-topic",
+      name: "Brand & Context",
+      description:
+        "Assesses brand consistency, industry norms, and contextual alignment including legal/regulatory fit.",
+      tier: "premium",
+    },
+  });
+
+  console.log("Analyzer topics, subtopics, and points seeded successfully!");
 }
 
 main()
   .catch((e) => {
-    console.error(e)
-    process.exit(1)
+    console.error(e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });

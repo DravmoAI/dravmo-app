@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  canCreateFeedbackQuery,
+  canUseMasterMode,
+  canUsePremiumAnalyzers,
+} from "@/lib/plan-restrictions";
 
 interface SelectedAnalyzer {
   topicId: string;
@@ -44,16 +49,52 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Image data is required" }, { status: 400 });
     }
 
-    // Verify the screen exists
-    const screen = await prisma.screen.findUnique({
+    // Get the user ID from the screen's project
+    const screenWithProject = await prisma.screen.findUnique({
       where: { id: screenId },
+      include: {
+        project: true,
+      },
     });
-    console.log("Screen fetched:", screen);
 
-    if (!screen) {
+    if (!screenWithProject) {
       console.log("Screen not found:", screenId);
       return NextResponse.json({ error: "Screen not found" }, { status: 404 });
     }
+
+    const userId = screenWithProject.project.userId;
+
+    // Check if user can create a new feedback query
+    const canCreate = await canCreateFeedbackQuery(userId);
+    if (!canCreate.allowed) {
+      console.log("Query limit exceeded:", canCreate.reason);
+      return NextResponse.json(
+        {
+          error: canCreate.reason,
+          code: "QUERY_LIMIT_EXCEEDED",
+        },
+        { status: 403 }
+      );
+    }
+
+    // Check if user can use master mode (if designMasterId is provided)
+    if (designMasterId) {
+      const canUseMaster = await canUseMasterMode(userId);
+      if (!canUseMaster.allowed) {
+        console.log("Master mode not allowed:", canUseMaster.reason);
+        return NextResponse.json(
+          {
+            error: canUseMaster.reason,
+            code: "MASTER_MODE_NOT_ALLOWED",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Use the screen we already fetched
+    const screen = screenWithProject;
+    console.log("Screen fetched:", screen);
 
     // Create the feedback query
     const feedbackQuery = await prisma.feedbackQuery.create({

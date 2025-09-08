@@ -33,6 +33,7 @@ export default function ProjectsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [planInfo, setPlanInfo] = useState<any>(null);
   const router = useRouter();
   const supabase = getSupabaseClient();
 
@@ -47,6 +48,17 @@ export default function ProjectsPage() {
         return;
       }
       setUserId(session.user.id);
+
+      // Fetch plan info
+      try {
+        const planRes = await fetch(`/api/user-plan-info?userId=${session.user.id}`);
+        if (planRes.ok) {
+          const planData = await planRes.json();
+          setPlanInfo(planData);
+        }
+      } catch (error) {
+        console.error("Error fetching plan info:", error);
+      }
     };
 
     checkAuth();
@@ -122,6 +134,15 @@ export default function ProjectsPage() {
               <p className="text-muted-foreground">
                 Manage your design projects and feedback history
               </p>
+              {planInfo && (
+                <div className="text-sm text-muted-foreground mt-1">
+                  Projects used: {planInfo.usage.currentProjects}/
+                  {planInfo.restrictions.maxProjects}
+                  {planInfo.usage.remainingProjects === 0 && (
+                    <span className="text-destructive ml-2">(Limit reached)</span>
+                  )}
+                </div>
+              )}
             </div>
             <Button className="gap-2" disabled>
               <Plus className="h-4 w-4" />
@@ -143,8 +164,20 @@ export default function ProjectsPage() {
             <p className="text-muted-foreground">
               Manage your design projects and feedback history
             </p>
+            {planInfo && (
+              <div className="text-sm text-muted-foreground mt-1">
+                Projects used: {planInfo.usage.currentProjects}/{planInfo.restrictions.maxProjects}
+                {planInfo.usage.remainingProjects === 0 && (
+                  <span className="text-destructive ml-2">(Limit reached)</span>
+                )}
+              </div>
+            )}
           </div>
-          <Button className="gap-2" onClick={() => setIsCreateModalOpen(true)}>
+          <Button
+            className="gap-2"
+            onClick={() => setIsCreateModalOpen(true)}
+            disabled={planInfo && planInfo.usage.remainingProjects === 0}
+          >
             <Plus className="h-4 w-4" />
             New Project
           </Button>

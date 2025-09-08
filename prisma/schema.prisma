@@ -273,6 +273,7 @@ model AnalyzerTopic {
     id          String @id @default(uuid())
     name        String
     description String @db.Text
+    tier        String @default("free") // "free" or "premium"
 
     // Relations
     analyzerSubtopics AnalyzerSubtopic[]
@@ -334,6 +335,7 @@ model Feature {
     name        String
     slug        String @unique
     category    String
+	isPremium   Boolean @default(false) @map("is_premium")
     description String @db.Text
 
     // Relations
