@@ -12,9 +12,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useRef, useTransition } from "react";
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { LoadingProgressBar } from "@/components/loading-progress-bar";
 
 interface FeedbackJudgement {
   bbox: number[] | null;
@@ -103,6 +104,7 @@ interface BoundingBox {
 
 export default function FeedbackDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const projectId = params.id as string;
   const screenId = params.screenId as string;
   const feedbackId = params.feedbackId as string;
@@ -111,6 +113,7 @@ export default function FeedbackDetailPage() {
   const [screen, setScreen] = useState<Screen | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
   const [aiFeedback, setAiFeedback] = useState<AIFeedbackResponse | null>(null);
   const [boundingBoxes, setBoundingBoxes] = useState<BoundingBox[]>([]);
   const [selectedBoundingBox, setSelectedBoundingBox] = useState<string | null>(null);
@@ -617,6 +620,7 @@ export default function FeedbackDetailPage() {
   if (isLoading) {
     return (
       <DashboardLayout>
+        <LoadingProgressBar isPending={isPending} />
         <LoadingSpinner size="lg" text="Loading feedback..." />
       </DashboardLayout>
     );
@@ -625,6 +629,7 @@ export default function FeedbackDetailPage() {
   if (!feedbackResult || !screen || !project) {
     return (
       <DashboardLayout>
+        <LoadingProgressBar isPending={isPending} />
         <div className="flex items-center justify-center h-64">
           <div className="text-muted-foreground">Feedback not found</div>
         </div>
@@ -634,6 +639,7 @@ export default function FeedbackDetailPage() {
 
   return (
     <DashboardLayout>
+      <LoadingProgressBar isPending={isPending} />
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div className="flex flex-col gap-4">

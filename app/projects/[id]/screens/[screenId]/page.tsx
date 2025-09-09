@@ -6,9 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MessageSquare, Download, Share2, Pencil } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect, useTransition } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { LoadingProgressBar } from "@/components/loading-progress-bar";
 
 interface Screen {
   id: string;
@@ -40,12 +41,14 @@ interface FeedbackResult {
 
 export default function ScreenDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const projectId = params.id as string;
   const screenId = params.screenId as string;
   const [screen, setScreen] = useState<Screen | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [feedbackResults, setFeedbackResults] = useState<FeedbackResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,6 +101,7 @@ export default function ScreenDetailPage() {
   if (isLoading) {
     return (
       <DashboardLayout>
+        <LoadingProgressBar isPending={isPending} />
         <LoadingSpinner size="lg" text="Loading screen details..." />
       </DashboardLayout>
     );
@@ -106,6 +110,7 @@ export default function ScreenDetailPage() {
   if (!screen || !project) {
     return (
       <DashboardLayout>
+        <LoadingProgressBar isPending={isPending} />
         <div className="flex items-center justify-center h-64">
           <div className="text-muted-foreground">Screen not found</div>
         </div>
@@ -115,6 +120,7 @@ export default function ScreenDetailPage() {
 
   return (
     <DashboardLayout>
+      <LoadingProgressBar isPending={isPending} />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

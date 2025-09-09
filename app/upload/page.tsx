@@ -16,11 +16,12 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, LinkIcon, ArrowRight, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { uploadFile, STORAGE_BUCKETS } from "@/lib/supabase-storage";
 import { getSupabaseClient } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
+import { LoadingProgressBar } from "@/components/loading-progress-bar";
 
 interface Project {
   id: string;
@@ -31,6 +32,7 @@ export default function UploadPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedProjectId = searchParams.get("projectId");
+  const [isPending, startTransition] = useTransition();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>(preselectedProjectId || "");
@@ -54,7 +56,9 @@ export default function UploadPage() {
       if (session?.user) {
         setUserId(session.user.id);
       } else {
-        router.push("/login");
+        startTransition(() => {
+          router.push("/login");
+        });
       }
     };
     getUser();
@@ -263,7 +267,9 @@ export default function UploadPage() {
 
     if (!userId) {
       alert("You must be logged in to upload screens");
-      router.push("/login");
+      startTransition(() => {
+        router.push("/login");
+      });
       return;
     }
 
@@ -339,7 +345,9 @@ export default function UploadPage() {
       const screen = await createScreen(projectId, sourceUrl, sourceType);
 
       // Redirect to project page
-      router.push(`/projects/${projectId}`);
+      startTransition(() => {
+        router.push(`/projects/${projectId}`);
+      });
     } catch (error) {
       console.error("Error uploading:", error);
       alert("Failed to upload. Please try again.");
@@ -360,6 +368,7 @@ export default function UploadPage() {
 
   return (
     <DashboardLayout>
+      <LoadingProgressBar isPending={isPending} />
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold">Upload Design</h1>
@@ -459,7 +468,7 @@ export default function UploadPage() {
                           <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                           <Input
                             id="figma-url"
-                            placeholder="https://www.figma.com/file/..."
+                            placeholder="Paste your Figma file URL to import the design"
                             value={figmaUrl}
                             onChange={(e) => setFigmaUrl(e.target.value)}
                             className="pl-10"
@@ -467,7 +476,7 @@ export default function UploadPage() {
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Paste your Figma file URL to import the design
+                        Right click on a frame {">"} "Copy/Paste as" {">"} "Copy link to selection"
                       </p>
                     </div>
                   )}

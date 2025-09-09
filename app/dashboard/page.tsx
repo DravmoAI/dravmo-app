@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { LoadingSpinner } from "@/components/loading-spinner";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
+import { LoadingProgressBar } from "@/components/loading-progress-bar";
 
 interface Project {
   id: string;
@@ -50,6 +51,7 @@ const mapMotionDramaToName = {
 export default function DashboardPage() {
   const router = useRouter();
   const supabase = getSupabaseClient();
+  const [isPending, startTransition] = useTransition();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [persona, setPersona] = useState<any>(null);
@@ -144,7 +146,9 @@ export default function DashboardPage() {
               console.log("User has completed persona setup, loading projects...");
               fetchUserAndProjects();
             } else {
-              router.push("/persona");
+              startTransition(() => {
+                router.push("/persona");
+              });
             }
           } else {
             const response = await fetch("/api/profile", {
@@ -162,11 +166,15 @@ export default function DashboardPage() {
             });
 
             if (!response.ok) throw new Error("Failed to create profile");
-            router.push("/persona");
+            startTransition(() => {
+              router.push("/persona");
+            });
           }
         } catch (error) {
           console.error("Error fetching profile:", error);
-          router.push("/login"); // Redirect to login if there's an error
+          startTransition(() => {
+            router.push("/login"); // Redirect to login if there's an error
+          });
         }
       }
     };
@@ -189,6 +197,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <DashboardLayout>
+        <LoadingProgressBar isPending={isPending} />
         <LoadingSpinner className="min-h-[400px]" />
       </DashboardLayout>
     );
@@ -197,6 +206,7 @@ export default function DashboardPage() {
   if (error) {
     return (
       <DashboardLayout>
+        <LoadingProgressBar isPending={isPending} />
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <p className="text-red-500 mb-4">{error}</p>
@@ -211,6 +221,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
+      <LoadingProgressBar isPending={isPending} />
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold font-krona-one">

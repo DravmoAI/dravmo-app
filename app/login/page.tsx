@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
@@ -13,11 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSupabaseClient } from "@/lib/supabase";
 import { FcGoogle } from "react-icons/fc";
+import { LoadingProgressBar } from "@/components/loading-progress-bar";
 
 export default function LoginPage() {
   const router = useRouter();
   const supabase = getSupabaseClient();
   const [email, setEmail] = useState("");
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -36,14 +38,20 @@ export default function LoginPage() {
           if (response.ok) {
             const data = await response.json();
             if (data.profile?.persona) {
-              router.push("/dashboard");
+              startTransition(() => {
+                router.push("/dashboard");
+              });
             } else {
-              router.push("/persona");
+              startTransition(() => {
+                router.push("/persona");
+              });
             }
           }
         } catch (error) {
           console.error("Error fetching profile:", error);
-          router.push("/dashboard"); // Default to dashboard if we can't check persona status
+          startTransition(() => {
+            router.push("/dashboard");
+          }); // Default to dashboard if we can't check persona status
         }
       }
     };
@@ -73,16 +81,24 @@ export default function LoginPage() {
           if (response.ok) {
             const profileData = await response.json();
             if (profileData.profile?.persona) {
-              router.push("/dashboard");
+              startTransition(() => {
+                router.push("/dashboard");
+              });
             } else {
-              router.push("/persona");
+              startTransition(() => {
+                router.push("/persona");
+              });
             }
           } else {
-            router.push("/persona"); // Default to persona if we can't find profile
+            startTransition(() => {
+              router.push("/persona");
+            }); // Default to persona if we can't find profile
           }
         } catch (error) {
           console.error("Error fetching profile:", error);
-          router.push("/dashboard"); // Default to dashboard if we can't check persona status
+          startTransition(() => {
+            router.push("/dashboard");
+          }); // Default to dashboard if we can't check persona status
         }
       }
     } catch (err) {

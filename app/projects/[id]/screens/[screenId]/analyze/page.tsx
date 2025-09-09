@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { LoadingProgressBar } from "@/components/loading-progress-bar";
 import {
   Accordion,
   AccordionContent,
@@ -92,6 +93,7 @@ export default function ScreenAnalyzePage() {
 
   const [screen, setScreen] = useState<Screen | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
   const [analyzerTopics, setAnalyzerTopics] = useState<AnalyzerTopic[]>([]);
   const [designMasters, setDesignMasters] = useState<DesignMaster[]>([]);
   const [selectedAnalyzers, setSelectedAnalyzers] = useState<SelectedAnalyzer[]>([]);
@@ -373,7 +375,9 @@ export default function ScreenAnalyzePage() {
         );
 
         if (shouldUpgrade) {
-          router.push("/billing");
+          startTransition(() => {
+            router.push("/billing");
+          });
         }
         return;
       }
@@ -391,7 +395,9 @@ export default function ScreenAnalyzePage() {
         );
 
         if (shouldUpgrade) {
-          router.push("/billing");
+          startTransition(() => {
+            router.push("/billing");
+          });
         }
         return;
       }
@@ -448,7 +454,9 @@ export default function ScreenAnalyzePage() {
           );
 
           if (shouldUpgrade) {
-            router.push("/billing");
+            startTransition(() => {
+              router.push("/billing");
+            });
           }
           return;
         }
@@ -465,7 +473,9 @@ export default function ScreenAnalyzePage() {
           );
 
           if (shouldUpgrade) {
-            router.push("/billing");
+            startTransition(() => {
+              router.push("/billing");
+            });
           }
           return;
         }
@@ -474,7 +484,9 @@ export default function ScreenAnalyzePage() {
       }
 
       const data = await response.json();
-      router.push(data.redirectUrl);
+      startTransition(() => {
+        router.push(data.redirectUrl);
+      });
     } catch (error) {
       console.error("Error creating feedback query:", error);
       toast({
@@ -491,6 +503,7 @@ export default function ScreenAnalyzePage() {
   if (loading) {
     return (
       <DashboardLayout>
+        <LoadingProgressBar isPending={isPending} />
         <div className="flex items-center justify-center h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="ml-2">Loading analysis options...</span>
@@ -502,6 +515,7 @@ export default function ScreenAnalyzePage() {
   if (!screen) {
     return (
       <DashboardLayout>
+        <LoadingProgressBar isPending={isPending} />
         <div className="max-w-6xl mx-auto">
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold mb-2">Screen not found</h2>
@@ -519,6 +533,7 @@ export default function ScreenAnalyzePage() {
 
   return (
     <DashboardLayout>
+      <LoadingProgressBar isPending={isPending} />
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <Link href={`/projects/${projectId}/screens/${screenId}`}>
@@ -780,7 +795,7 @@ export default function ScreenAnalyzePage() {
                                 Philosophy: {master.philosophy}
                               </p>
                               <p className="text-xs text-muted-foreground mt-1">
-                                Signature Gestures: {master.signatureGestures.join(", ")}
+                                Speciality: <strong>{master.signatureGestures.join(", ")}</strong>
                               </p>
                             </div>
                             {selectedMaster === master.id && (

@@ -1,40 +1,48 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Save } from "lucide-react"
-import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, Save } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useTransition } from "react";
+import { LoadingProgressBar } from "@/components/loading-progress-bar";
 
 interface Project {
-  id: string
-  name: string
-  createdAt: string
-  updatedAt: string
-  status: "active" | "archived"
-  description?: string
-  category?: string
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  status: "active" | "archived";
+  description?: string;
+  category?: string;
 }
 
 export default function EditProjectPage() {
-  const params = useParams()
-  const router = useRouter()
-  const projectId = params.id as string
-  const [project, setProject] = useState<Project | null>(null)
+  const params = useParams();
+  const router = useRouter();
+  const projectId = params.id as string;
+  const [project, setProject] = useState<Project | null>(null);
+  const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     category: "ui",
     status: "active",
-  })
-  const [isLoading, setIsLoading] = useState(false)
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // Mock project data - in a real app, fetch from API
@@ -46,50 +54,58 @@ export default function EditProjectPage() {
       status: "active",
       description: "Landing page design for Praktika education app",
       category: "ui",
-    }
+    };
 
-    setProject(mockProject)
+    setProject(mockProject);
     setFormData({
       name: mockProject.name,
       description: mockProject.description || "",
       category: mockProject.category || "ui",
       status: mockProject.status,
-    })
-  }, [projectId])
+    });
+  }, [projectId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     // Mock API call - in a real app, save to backend
     setTimeout(() => {
       // Navigate back to project details
-      router.push(`/projects/${projectId}`)
-      setIsLoading(false)
-    }, 800)
-  }
+      startTransition(() => {
+        router.push(`/projects/${projectId}`);
+      });
+      setIsLoading(false);
+    }, 800);
+  };
 
   if (!project) {
-    return <DashboardLayout>Loading...</DashboardLayout>
+    return (
+      <DashboardLayout>
+        <LoadingProgressBar isPending={isPending} />
+        Loading...
+      </DashboardLayout>
+    );
   }
 
   return (
     <DashboardLayout>
+      <LoadingProgressBar isPending={isPending} />
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <Link href={`/projects/${projectId}`}>
@@ -132,7 +148,10 @@ export default function EditProjectPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleSelectChange("category", value)}>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => handleSelectChange("category", value)}
+                  >
                     <SelectTrigger id="category">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -148,7 +167,10 @@ export default function EditProjectPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => handleSelectChange("status", value)}>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => handleSelectChange("status", value)}
+                  >
                     <SelectTrigger id="status">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
@@ -181,5 +203,5 @@ export default function EditProjectPage() {
         </Card>
       </div>
     </DashboardLayout>
-  )
+  );
 }

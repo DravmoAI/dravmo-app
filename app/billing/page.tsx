@@ -17,9 +17,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { CreditCard, Download, Star, CheckCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 import { StripeCheckoutModal } from "@/components/stripe-checkout-modal";
+import { LoadingProgressBar } from "@/components/loading-progress-bar";
 
 interface Subscription {
   id: string;
@@ -56,6 +57,7 @@ interface Plan {
 }
 
 export default function BillingPage() {
+  const [isPending, startTransition] = useTransition();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [billingHistory, setBillingHistory] = useState<any[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -336,6 +338,7 @@ export default function BillingPage() {
 
   return (
     <DashboardLayout>
+      <LoadingProgressBar isPending={isPending} />
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h2 className="text-3xl font-bold font-krona-one">Billing & Subscription</h2>
@@ -598,7 +601,7 @@ export default function BillingPage() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <div className="font-medium">${transaction.amount}</div>
+                        <div className="font-medium mr-1">${transaction.amount}</div>
                         <Badge
                           variant={transaction.status === "succeeded" ? "default" : "destructive"}
                           className="text-xs"
@@ -606,10 +609,10 @@ export default function BillingPage() {
                           {transaction.status}
                         </Badge>
                       </div>
-                      <Button variant="ghost" size="sm" className="gap-2">
+                      {/* <Button variant="ghost" size="sm" className="gap-2">
                         <Download className="h-4 w-4" />
                         Receipt
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
                 ))}
