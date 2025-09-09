@@ -304,8 +304,12 @@ export default function BillingPage() {
   const formatPlanFeatures = (plan: Plan) => {
     const features = [];
 
-    // Add basic plan limits
-    if (plan.maxProjects === -1) {
+    // Add basic plan limits - show "Unlimited" for Lite and Pro plans
+    if (
+      plan.maxProjects === -1 ||
+      plan.name?.toLowerCase() === "lite" ||
+      plan.name?.toLowerCase() === "pro"
+    ) {
       features.push("Unlimited projects");
     } else {
       features.push(`Up to ${plan.maxProjects} projects`);
@@ -368,24 +372,35 @@ export default function BillingPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Projects Used</span>
-                      <span className="text-sm text-muted-foreground">
-                        {subscription.usedProjects}/
-                        {subscription.maxProjects === -1 ? "∞" : subscription.maxProjects}
-                      </span>
-                    </div>
-                    <Progress
-                      value={
-                        subscription.maxProjects === -1
-                          ? 0
-                          : (subscription.usedProjects / subscription.maxProjects) * 100
-                      }
-                      className="h-2"
-                    />
-                  </div>
+                <div
+                  className={`grid gap-6 ${
+                    subscription.planName?.toLowerCase() === "lite" ||
+                    subscription.planName?.toLowerCase() === "pro"
+                      ? "grid-cols-1"
+                      : "grid-cols-2"
+                  }`}
+                >
+                  {/* Only show project usage for non-Lite/Pro plans */}
+                  {subscription.planName?.toLowerCase() !== "lite" &&
+                    subscription.planName?.toLowerCase() !== "pro" && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium">Projects Used</span>
+                          <span className="text-sm text-muted-foreground">
+                            {subscription.usedProjects}/
+                            {subscription.maxProjects === -1 ? "∞" : subscription.maxProjects}
+                          </span>
+                        </div>
+                        <Progress
+                          value={
+                            subscription.maxProjects === -1
+                              ? 0
+                              : (subscription.usedProjects / subscription.maxProjects) * 100
+                          }
+                          className="h-2"
+                        />
+                      </div>
+                    )}
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium">Queries Used</span>

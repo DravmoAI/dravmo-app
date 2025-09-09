@@ -50,13 +50,16 @@ export async function getUserPlanRestrictions(userId: string): Promise<PlanRestr
 
   console.log(plan, features);
 
+  // Make Lite and Pro plans truly unlimited for projects
+  const isUnlimitedPlan = plan.name?.toLowerCase() === "lite" || plan.name?.toLowerCase() === "pro";
+
   return {
-    maxProjects: plan.maxProjects,
+    maxProjects: isUnlimitedPlan ? -1 : plan.maxProjects, // -1 means unlimited
     maxQueriesPerMonth: plan.maxQueries,
-    canUseMasterMode: features.some((f) => f.feature.slug === "master-mode" && f.isEnabled),
-    canUsePremiumAnalyzers: features.some((f) => f.feature.isPremium && f.isEnabled),
+    canUseMasterMode: features.some((f: any) => f.feature.slug === "master-mode" && f.isEnabled),
+    canUsePremiumAnalyzers: features.some((f: any) => f.feature.isPremium && f.isEnabled),
     canUseFigmaIntegration: features.some(
-      (f) => f.feature.slug === "figma-integration" && f.isEnabled
+      (f: any) => f.feature.slug === "figma-integration" && f.isEnabled
     ),
   };
 }
@@ -105,6 +108,13 @@ export async function getUserUsageStats(userId: string): Promise<UsageStats> {
 export async function canCreateProject(
   userId: string
 ): Promise<{ allowed: boolean; reason?: string }> {
+  const restrictions = await getUserPlanRestrictions(userId);
+
+  // If user has unlimited projects (Lite/Pro plans), always allow
+  if (restrictions.maxProjects === -1) {
+    return { allowed: true };
+  }
+
   const usage = await getUserUsageStats(userId);
 
   if (usage.remainingProjects <= 0) {
@@ -203,7 +213,7 @@ export async function getAvailableAnalyzerTopics(userId: string) {
   );
   console.log(
     `Available topics:`,
-    topics.map((t) => `${t.name} (${t.tier})`)
+    topics.map((t: any) => `${t.name} (${t.tier})`)
   );
 
   return topics;

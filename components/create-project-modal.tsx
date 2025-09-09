@@ -131,7 +131,7 @@ export function CreateProjectModal({
             <DialogDescription>
               Give your project a name to get started with design feedback.
             </DialogDescription>
-            {planInfo && (
+            {planInfo && planInfo.restrictions.maxProjects !== -1 && (
               <div className="text-sm text-muted-foreground">
                 Projects used: {planInfo.usage.currentProjects}/{planInfo.restrictions.maxProjects}
                 {planInfo.usage.remainingProjects === 0 && (
