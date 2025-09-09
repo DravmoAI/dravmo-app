@@ -71,18 +71,76 @@ export default function UploadPage() {
   useEffect(() => {
     const checkFigmaAuth = async () => {
       try {
-        const response = await fetch('/api/figma/check-auth');
+        // Get the access token from localStorage
+        const authData = localStorage.getItem("sb-localhost-auth-token");
+        if (!authData) {
+          setIsFigmaAuthenticated(false);
+          return;
+        }
+
+        const { access_token } = JSON.parse(authData);
+
+        const response = await fetch("/api/figma/check-auth", {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        });
+
         if (response.ok) {
           const data = await response.json();
           setIsFigmaAuthenticated(data.authenticated);
+        } else {
+          setIsFigmaAuthenticated(false);
         }
       } catch (error) {
-        console.error('Error checking Figma auth:', error);
+        console.error("Error checking Figma auth:", error);
         setIsFigmaAuthenticated(false);
       }
     };
 
     checkFigmaAuth();
+  }, []);
+
+  // Handle Figma OAuth callback
+  useEffect(() => {
+    const handleFigmaCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const figmaToken = urlParams.get("figma_token");
+
+      if (figmaToken) {
+        try {
+          // Get the access token from localStorage
+          const authData = localStorage.getItem("sb-localhost-auth-token");
+          if (!authData) {
+            console.error("No auth data found in localStorage");
+            return;
+          }
+
+          const { access_token } = JSON.parse(authData);
+
+          const response = await fetch("/api/figma/store-token", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${access_token}`,
+            },
+            body: JSON.stringify({ tempToken: figmaToken }),
+          });
+
+          if (response.ok) {
+            setIsFigmaAuthenticated(true);
+            // Clean up the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else {
+            console.error("Failed to store Figma token");
+          }
+        } catch (error) {
+          console.error("Error storing Figma token:", error);
+        }
+      }
+    };
+
+    handleFigmaCallback();
   }, []);
 
   const fetchProjects = async () => {
@@ -180,9 +238,9 @@ export default function UploadPage() {
   const handleFigmaLogin = async () => {
     setIsFigmaAuthLoading(true);
     try {
-      window.location.href = '/api/figma/auth';
+      window.location.href = "/api/figma/auth";
     } catch (error) {
-      console.error('Error during Figma login:', error);
+      console.error("Error during Figma login:", error);
       setIsFigmaAuthLoading(false);
     }
   };
@@ -212,20 +270,6 @@ export default function UploadPage() {
     setIsUploading(true);
 
     try {
-      if (figmaUrl) {
-        const analyzeRes = await fetch('/api/figma/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ figmaUrl }),
-        });
-        const analyzeData = await analyzeRes.json();
-        console.log('Figma analyze response:', analyzeData);
-        if (analyzeData && analyzeData.data) {
-          console.error('Node data received! Check console for details.');
-        } else {
-          console.error('No node data found. Check console for details.');
-        }
-      }
       // Determine project ID
       let projectId = selectedProjectId;
       if (!projectId && newProjectName) {
@@ -251,7 +295,43 @@ export default function UploadPage() {
         sourceUrl = url;
         sourceType = "upload";
       } else if (figmaUrl) {
-        sourceUrl = figmaUrl;
+        // Get the access token from localStorage
+        const authData = localStorage.getItem("sb-localhost-auth-token");
+        if (!authData) {
+          throw new Error("No auth data found in localStorage");
+        }
+
+        const { access_token } = JSON.parse(authData);
+
+        // Fetch Figma image
+        const analyzeRes = await fetch("/api/figma/analyze", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access_token}`,
+          },
+          body: JSON.stringify({ figmaUrl }),
+        });
+
+        if (!analyzeRes.ok) {
+          throw new Error("Failed to fetch Figma image");
+        }
+
+        // Convert image response to File object
+        const imageBlob = await analyzeRes.blob();
+        const figmaFile = new File([imageBlob], "figma-design.png", { type: "image/png" });
+
+        // Generate a unique file path for the Figma image
+        const filePath = `${userId}/${uuidv4()}.png`;
+
+        // Upload Figma image to Supabase storage
+        const { url, error } = await uploadFile(STORAGE_BUCKETS.SCREENS, filePath, figmaFile);
+
+        if (error || !url) {
+          throw new Error("Failed to upload Figma image to storage");
+        }
+
+        sourceUrl = url;
         sourceType = "figma";
       }
 
@@ -281,8 +361,8 @@ export default function UploadPage() {
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold font-krona-one">Upload Design</h1>
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Upload Design</h1>
           <p className="text-muted-foreground mt-2">
             Connect from Figma or upload your design files to get AI-powered feedback
           </p>
@@ -351,13 +431,13 @@ export default function UploadPage() {
               <TabsContent value="figma" className="space-y-4">
                 <div className="space-y-2">
                   <Label>Connect to Figma</Label>
-                  
+
                   {!isFigmaAuthenticated ? (
                     <div className="space-y-3">
                       <p className="text-sm text-muted-foreground">
                         Connect your Figma account to import designs directly from Figma files.
                       </p>
-                      <Button 
+                      <Button
                         onClick={handleFigmaLogin}
                         disabled={isFigmaAuthLoading}
                         className="w-full"
@@ -368,7 +448,7 @@ export default function UploadPage() {
                             Connecting...
                           </>
                         ) : (
-                          'Connect to Figma'
+                          "Connect to Figma"
                         )}
                       </Button>
                     </div>
@@ -431,8 +511,8 @@ export default function UploadPage() {
           className="w-full gap-2"
           size="lg"
           disabled={
-            isUploading || 
-            (!uploadedFile && !figmaUrl) || 
+            isUploading ||
+            (!uploadedFile && !figmaUrl) ||
             (!selectedProjectId && !newProjectName) ||
             (!!figmaUrl && !isFigmaAuthenticated)
           }
