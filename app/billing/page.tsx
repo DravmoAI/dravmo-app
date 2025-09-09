@@ -21,6 +21,7 @@ import { useState, useEffect, useTransition } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 import { StripeCheckoutModal } from "@/components/stripe-checkout-modal";
 import { LoadingProgressBar } from "@/components/loading-progress-bar";
+import { Switch } from "@/components/ui/switch";
 
 interface Subscription {
   id: string;
@@ -66,6 +67,7 @@ export default function BillingPage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [isYearly, setIsYearly] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -507,6 +509,29 @@ export default function BillingPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Billing Toggle */}
+        <div className="flex items-center justify-center space-x-4 py-4">
+          <span
+            className={`text-sm font-medium ${
+              !isYearly ? "text-foreground" : "text-muted-foreground"
+            }`}
+          >
+            Monthly
+          </span>
+          <Switch
+            checked={isYearly}
+            onCheckedChange={setIsYearly}
+            className="data-[state=checked]:bg-primary"
+          />
+          <span
+            className={`text-sm font-medium ${
+              isYearly ? "text-foreground" : "text-muted-foreground"
+            }`}
+          >
+            Yearly
+          </span>
+        </div>
 
         <Card>
           <CardHeader>
