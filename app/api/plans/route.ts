@@ -5,34 +5,55 @@ export async function GET() {
   try {
     const plans = await prisma.plan.findMany({
       include: {
-        planFeatures: {
-          include: {
-            feature: true,
-          },
+        prices: {
+          where: { isActive: true },
+          orderBy: { billingInterval: "asc" },
         },
       },
       orderBy: {
-        price: "asc",
+        name: "asc",
       },
     });
 
     // Transform the data to match the frontend interface
-    const transformedPlans = plans.map((plan) => ({
-      id: plan.id,
-      name: plan.name || "Unnamed Plan",
-      price: Number(plan.price),
-      maxProjects: plan.maxProjects,
-      maxQueries: plan.maxQueries,
-      aiModel: plan.aiModel,
-      stripePriceId: plan.stripePriceId,
-      features: plan.planFeatures.map((planFeature) => ({
-        id: planFeature.feature.id,
-        name: planFeature.feature.name,
-        description: planFeature.feature.description,
-        category: planFeature.category,
-        slug: planFeature.feature.slug,
-      })),
-    }));
+    const transformedPlans = plans.map((plan) => {
+      // Get monthly price as default (for backward compatibility)
+      const monthlyPrice = plan.prices.find((p) => p.billingInterval === "month");
+      const yearlyPrice = plan.prices.find((p) => p.billingInterval === "year");
+
+      return {
+        id: plan.id,
+        name: plan.name || "Unnamed Plan",
+        price: monthlyPrice ? monthlyPrice.amount / 100 : 0, // Convert cents to dollars
+        maxProjects: plan.maxProjects,
+        maxQueries: plan.maxQueries,
+        aiModel: plan.aiModel,
+        stripeProductId: plan.stripeProductId,
+        prices: plan.prices.map((price) => ({
+          id: price.id,
+          billingInterval: price.billingInterval,
+          amount: price.amount / 100, // Convert cents to dollars
+          currency: price.currency,
+          stripePriceId: price.stripePriceId,
+        })),
+        features: {
+          figmaIntegration: plan.figmaIntegration,
+          masterMode: plan.masterMode,
+          prioritySupport: plan.prioritySupport,
+          advancedAnalytics: plan.advancedAnalytics,
+          customBranding: plan.customBranding,
+          exportToPDF: plan.exportToPDF,
+          premiumAnalyzers: plan.premiumAnalyzers,
+        },
+        figmaIntegration: plan.figmaIntegration,
+        masterMode: plan.masterMode,
+        prioritySupport: plan.prioritySupport,
+        advancedAnalytics: plan.advancedAnalytics,
+        customBranding: plan.customBranding,
+        exportToPDF: plan.exportToPDF,
+        premiumAnalyzers: plan.premiumAnalyzers,
+      };
+    });
 
     return NextResponse.json({ plans: transformedPlans }, { status: 200 });
   } catch (error) {

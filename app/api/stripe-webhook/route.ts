@@ -22,19 +22,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
-    console.log("Received webhook event:", event.type);
+    console.log("=== WEBHOOK EVENT RECEIVED ===");
+    console.log("Event type:", event.type);
+    console.log("Event ID:", event.id);
     console.log("Event data:", JSON.stringify(event.data.object, null, 2));
 
     // Handle subscription creation
     if (event.type === "checkout.session.completed") {
+      console.log("Processing checkout.session.completed event");
       const session = event.data.object as Stripe.Checkout.Session;
+      console.log("Session mode:", session.mode);
+      console.log("Session metadata:", session.metadata);
 
       if (session.mode === "subscription") {
+        console.log("Retrieving subscription:", session.subscription);
         const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-        await handleSubscriptionCreated(subscription, session.metadata);
+        console.log("Subscription retrieved:", subscription.id);
+
+        try {
+          await handleSubscriptionCreated(subscription, session.metadata);
+          console.log("Subscription created successfully");
+        } catch (error) {
+          console.error("Error creating subscription:", error);
+        }
 
         // Also try to create transaction record immediately if invoice is available
-        await handleInitialPaymentTransaction(subscription, session.metadata);
+        try {
+          await handleInitialPaymentTransaction(subscription, session.metadata);
+          console.log("Initial payment transaction handled");
+        } catch (error) {
+          console.error("Error handling initial payment transaction:", error);
+        }
+      } else {
+        console.log("Session mode is not subscription, skipping");
       }
     }
 
@@ -75,15 +95,15 @@ export async function POST(request: NextRequest) {
       console.log("Payment succeeded:", paymentIntent.id);
       console.log("Metadata:", paymentIntent.metadata);
 
-      const { planId, userId } = paymentIntent.metadata;
+      const { planPriceId, userId } = paymentIntent.metadata;
 
-      if (!planId || !userId) {
-        console.error("Missing planId or userId in payment metadata");
+      if (!planPriceId || !userId) {
+        console.error("Missing planPriceId or userId in payment metadata");
         return NextResponse.json({ error: "Missing metadata" }, { status: 400 });
       }
 
       // Update user's subscription in database
-      const subscription = await updateUserSubscription(userId, planId, paymentIntent.id);
+      const subscription = await updateUserSubscription(userId, planPriceId, paymentIntent.id);
 
       // Create transaction record
       await createTransactionRecord({
@@ -93,7 +113,7 @@ export async function POST(request: NextRequest) {
         amount: paymentIntent.amount / 100, // Convert from cents to dollars
         currency: paymentIntent.currency,
         status: paymentIntent.status,
-        description: `Payment for plan ${planId}`,
+        description: `Payment for plan price ${planPriceId}`,
       });
     }
 
@@ -106,26 +126,22 @@ export async function POST(request: NextRequest) {
 
 async function updateUserSubscription(
   userId: string,
-  planId: string,
+  planPriceId: string,
   stripePaymentIntentId: string
 ) {
   try {
-    console.log(`Updating subscription for user ${userId} to plan ${planId}`);
+    console.log(`Updating subscription for user ${userId} to plan price ${planPriceId}`);
 
-    // Get the plan details
-    const plan = await prisma.plan.findUnique({
-      where: { id: planId },
+    // Get the plan price details
+    const planPrice = await prisma.planPrice.findUnique({
+      where: { id: planPriceId },
       include: {
-        planFeatures: {
-          include: {
-            feature: true,
-          },
-        },
+        plan: true,
       },
     });
 
-    if (!plan) {
-      throw new Error(`Plan ${planId} not found`);
+    if (!planPrice) {
+      throw new Error(`Plan price ${planPriceId} not found`);
     }
 
     // Update subscription in a transaction
@@ -144,7 +160,7 @@ async function updateUserSubscription(
       // Create new subscription
       const newSubscription = await tx.subscription.create({
         data: {
-          planId: plan.id,
+          planPriceId: planPrice.id,
           userId,
           stripeSubId: stripePaymentIntentId, // Use payment intent ID as subscription ID
           autoRenew: true, // Paid plans auto-renew
@@ -152,29 +168,9 @@ async function updateUserSubscription(
         },
       });
 
-      // Remove old subscription features
-      await tx.subscriptionFeature.deleteMany({
-        where: {
-          subscription: {
-            userId,
-          },
-        },
-      });
-
-      // Add new subscription features
-      if (plan.planFeatures.length > 0) {
-        await tx.subscriptionFeature.createMany({
-          data: plan.planFeatures.map((planFeature) => ({
-            subscriptionId: newSubscription.id,
-            featureId: planFeature.featureId,
-            isEnabled: true, // All features enabled for paid plans
-          })),
-        });
-      }
-
       console.log(`Successfully updated subscription for user ${userId}`);
       console.log(`New subscription ID: ${newSubscription.id}`);
-      console.log(`Added ${plan.planFeatures.length} features`);
+      console.log(`Plan: ${planPrice.plan.name} (${planPrice.billingInterval})`);
 
       return newSubscription;
     });
@@ -188,24 +184,32 @@ async function updateUserSubscription(
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription, metadata: any) {
   try {
-    const { userId, planId } = metadata;
+    console.log("=== HANDLING SUBSCRIPTION CREATION ===");
+    console.log("Stripe subscription ID:", subscription.id);
+    console.log("Metadata received:", metadata);
 
-    console.log(`Creating subscription for user ${userId} with plan ${planId}`);
+    const { userId, planPriceId } = metadata;
 
-    // Get the plan details
-    const plan = await prisma.plan.findUnique({
-      where: { id: planId },
+    if (!userId) {
+      throw new Error("Missing userId in metadata");
+    }
+
+    if (!planPriceId) {
+      throw new Error("Missing planPriceId in metadata");
+    }
+
+    console.log(`Creating subscription for user ${userId} with plan price ${planPriceId}`);
+
+    // Get the plan price details
+    const planPrice = await prisma.planPrice.findUnique({
+      where: { id: planPriceId },
       include: {
-        planFeatures: {
-          include: {
-            feature: true,
-          },
-        },
+        plan: true,
       },
     });
 
-    if (!plan) {
-      throw new Error(`Plan ${planId} not found`);
+    if (!planPrice) {
+      throw new Error(`Plan price ${planPriceId} not found`);
     }
 
     // Create subscription in database
@@ -224,7 +228,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, meta
       // Create new subscription
       const newSubscription = await tx.subscription.create({
         data: {
-          planId: plan.id,
+          planPriceId: planPrice.id,
           userId,
           stripeSubId: subscription.id,
           autoRenew: true,
@@ -232,36 +236,19 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, meta
         },
       });
 
-      // Remove old subscription features
-      await tx.subscriptionFeature.deleteMany({
-        where: {
-          subscription: {
-            userId,
-          },
-        },
-      });
-
-      // Add new subscription features
-      if (plan.planFeatures.length > 0) {
-        await tx.subscriptionFeature.createMany({
-          data: plan.planFeatures.map((planFeature) => ({
-            subscriptionId: newSubscription.id,
-            featureId: planFeature.featureId,
-            isEnabled: true,
-          })),
-        });
-      }
-
       return newSubscription;
     });
 
     // Create transaction record for the initial subscription payment as backup
     try {
+      console.log("Creating transaction record for initial payment");
       // Get the latest invoice for this subscription to get payment details
       const invoices = await stripe.invoices.list({
         subscription: subscription.id,
         limit: 1,
       });
+
+      console.log(`Found ${invoices.data.length} invoices for subscription ${subscription.id}`);
 
       if (invoices.data.length > 0) {
         const invoice = invoices.data[0];
@@ -283,7 +270,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, meta
               amount: invoice.amount_paid / 100, // Convert from cents to dollars
               currency: invoice.currency,
               status: "succeeded",
-              description: `Initial payment for ${plan.name} subscription`,
+              description: `Initial payment for ${planPrice.plan.name} subscription`,
             },
           });
 
@@ -309,7 +296,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, meta
 
 async function handleInitialPaymentTransaction(subscription: Stripe.Subscription, metadata: any) {
   try {
-    const { userId, planId } = metadata;
+    const { userId, planPriceId } = metadata;
 
     console.log(`Handling initial payment transaction for subscription ${subscription.id}`);
 
@@ -508,7 +495,11 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
     const currentSubscription = await prisma.subscription.findFirst({
       where: { stripeSubId: subscription.id },
       include: {
-        plan: true,
+        planPrice: {
+          include: {
+            plan: true,
+          },
+        },
       },
     });
 
@@ -522,13 +513,11 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
     // Get the free plan
     const freePlan = await prisma.plan.findFirst({
       where: {
-        price: 0,
+        name: "Free",
       },
       include: {
-        planFeatures: {
-          include: {
-            feature: true,
-          },
+        prices: {
+          where: { billingInterval: "month" },
         },
       },
     });
@@ -549,10 +538,16 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
         },
       });
 
+      // Get the free plan's monthly price
+      const freePlanPrice = freePlan.prices.find((p) => p.billingInterval === "month");
+      if (!freePlanPrice) {
+        throw new Error("Free plan monthly price not found");
+      }
+
       // Create new free subscription
       const newSubscription = await tx.subscription.create({
         data: {
-          planId: freePlan.id,
+          planPriceId: freePlanPrice.id,
           userId: currentSubscription.userId,
           stripeSubId: null,
           autoRenew: false,
@@ -560,23 +555,7 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
         },
       });
 
-      // Remove old subscription features
-      await tx.subscriptionFeature.deleteMany({
-        where: {
-          subscriptionId: currentSubscription.id,
-        },
-      });
-
-      // Add free plan features
-      if (freePlan.planFeatures.length > 0) {
-        await tx.subscriptionFeature.createMany({
-          data: freePlan.planFeatures.map((planFeature) => ({
-            subscriptionId: newSubscription.id,
-            featureId: planFeature.featureId,
-            isEnabled: true,
-          })),
-        });
-      }
+      // No need to manage features as they are now part of the plan directly
 
       console.log(
         `User ${currentSubscription.userId} downgraded to free plan after subscription cancellation`

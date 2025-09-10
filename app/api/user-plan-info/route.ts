@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserPlanInfo } from "@/lib/plan-restrictions";
+import { PlanRestrictionsService } from "@/lib/services/plan-restrictions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
 
-    const planInfo = await getUserPlanInfo(userId);
+    const planInfo = await PlanRestrictionsService.getUserPlanInfo(userId);
 
     return NextResponse.json(planInfo, { status: 200 });
   } catch (error) {

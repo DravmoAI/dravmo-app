@@ -17,13 +17,9 @@ export async function GET(request: Request) {
         status: "active",
       },
       include: {
-        plan: {
+        planPrice: {
           include: {
-            planFeatures: {
-              include: {
-                feature: true,
-              },
-            },
+            plan: true,
           },
         },
       },
@@ -57,24 +53,26 @@ export async function GET(request: Request) {
     // Transform the data to match the frontend interface
     const transformedSubscription = {
       id: subscription.id,
-      planId: subscription.planId,
-      planName: subscription.plan.name || "Unnamed Plan",
-      price: Number(subscription.plan.price),
+      planId: subscription.planPrice.plan.id,
+      planName: subscription.planPrice.plan.name || "Unnamed Plan",
+      price: subscription.planPrice.amount / 100, // Convert cents to dollars
       status: subscription.status as "active" | "canceled" | "past_due",
       autoRenew: subscription.autoRenew,
       currentPeriodStart: subscription.createdAt.toISOString(),
       currentPeriodEnd: subscription.updatedAt.toISOString(),
-      maxProjects: subscription.plan.maxProjects,
-      maxQueries: subscription.plan.maxQueries,
+      maxProjects: subscription.planPrice.plan.maxProjects,
+      maxQueries: subscription.planPrice.plan.maxQueries,
       usedProjects: projectCount,
       usedQueries: queryCount,
-      features: subscription.plan.planFeatures.map((planFeature) => ({
-        id: planFeature.feature.id,
-        name: planFeature.feature.name,
-        description: planFeature.feature.description,
-        category: planFeature.category,
-        slug: planFeature.feature.slug,
-      })),
+      features: {
+        figmaIntegration: subscription.planPrice.plan.figmaIntegration,
+        masterMode: subscription.planPrice.plan.masterMode,
+        prioritySupport: subscription.planPrice.plan.prioritySupport,
+        advancedAnalytics: subscription.planPrice.plan.advancedAnalytics,
+        customBranding: subscription.planPrice.plan.customBranding,
+        exportToPDF: subscription.planPrice.plan.exportToPDF,
+        premiumAnalyzers: subscription.planPrice.plan.premiumAnalyzers,
+      },
     };
 
     return NextResponse.json({ subscription: transformedSubscription }, { status: 200 });

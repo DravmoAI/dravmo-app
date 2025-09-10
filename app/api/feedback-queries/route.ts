@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import {
-  canCreateFeedbackQuery,
-  canUseMasterMode,
-  canUsePremiumAnalyzers,
-} from "@/lib/plan-restrictions";
+import { PlanRestrictionsService } from "@/lib/services/plan-restrictions";
 
 interface SelectedAnalyzer {
   topicId: string;
@@ -65,13 +61,14 @@ export async function POST(request: Request) {
     const userId = screenWithProject.project.userId;
 
     // Check if user can create a new feedback query
-    const canCreate = await canCreateFeedbackQuery(userId);
+    const canCreate = await PlanRestrictionsService.canCreateFeedbackQuery(userId);
     if (!canCreate.allowed) {
       console.log("Query limit exceeded:", canCreate.reason);
       return NextResponse.json(
         {
           error: canCreate.reason,
           code: "QUERY_LIMIT_EXCEEDED",
+          upgradeRequired: canCreate.upgradeRequired,
         },
         { status: 403 }
       );
@@ -79,16 +76,42 @@ export async function POST(request: Request) {
 
     // Check if user can use master mode (if designMasterId is provided)
     if (designMasterId) {
-      const canUseMaster = await canUseMasterMode(userId);
+      const canUseMaster = await PlanRestrictionsService.canUseMasterMode(userId);
       if (!canUseMaster.allowed) {
         console.log("Master mode not allowed:", canUseMaster.reason);
         return NextResponse.json(
           {
             error: canUseMaster.reason,
             code: "MASTER_MODE_NOT_ALLOWED",
+            upgradeRequired: canUseMaster.upgradeRequired,
           },
           { status: 403 }
         );
+      }
+    }
+
+    // Check if user can use selected analyzers
+    if (selectedAnalyzers && selectedAnalyzers.length > 0) {
+      // Get analyzer topics to check names
+      const analyzerTopics = await prisma.analyzerTopic.findMany();
+
+      for (const selectedAnalyzer of selectedAnalyzers) {
+        const topic = analyzerTopics.find((t) => t.id === selectedAnalyzer.topicId);
+        if (topic) {
+          const canUseAnalyzer = await PlanRestrictionsService.canUseAnalyzer(userId, topic.name);
+          if (!canUseAnalyzer.allowed) {
+            console.log("Analyzer not allowed:", canUseAnalyzer.reason);
+            return NextResponse.json(
+              {
+                error: canUseAnalyzer.reason,
+                code: "ANALYZER_NOT_ALLOWED",
+                upgradeRequired: canUseAnalyzer.upgradeRequired,
+                analyzerName: topic.name,
+              },
+              { status: 403 }
+            );
+          }
+        }
       }
     }
 

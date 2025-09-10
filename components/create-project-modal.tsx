@@ -86,13 +86,15 @@ export function CreateProjectModal({
             variant: "destructive",
           });
 
-          // Show upgrade prompt
-          const shouldUpgrade = confirm(
-            `${errorData.error}\n\nWould you like to upgrade your plan to create more projects?`
-          );
+          // Show upgrade prompt if upgrade is required
+          if (errorData.upgradeRequired) {
+            const shouldUpgrade = confirm(
+              `${errorData.error}\n\nWould you like to upgrade your plan to create more projects?`
+            );
 
-          if (shouldUpgrade) {
-            router.push("/billing");
+            if (shouldUpgrade) {
+              router.push("/billing");
+            }
           }
           return;
         }

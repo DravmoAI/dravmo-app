@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { canCreateProject } from "@/lib/plan-restrictions";
+import { PlanRestrictionsService } from "@/lib/services/plan-restrictions";
 
 export async function GET(request: Request) {
   try {
@@ -66,12 +66,13 @@ export async function POST(request: Request) {
     }
 
     // Check if user can create a new project
-    const canCreate = await canCreateProject(userId);
+    const canCreate = await PlanRestrictionsService.canCreateProject(userId);
     if (!canCreate.allowed) {
       return NextResponse.json(
         {
           error: canCreate.reason,
           code: "PROJECT_LIMIT_EXCEEDED",
+          upgradeRequired: canCreate.upgradeRequired,
         },
         { status: 403 }
       );

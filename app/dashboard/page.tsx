@@ -57,6 +57,7 @@ export default function DashboardPage() {
   const [persona, setPersona] = useState<any>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [planInfo, setPlanInfo] = useState<any>(null);
 
   useEffect(() => {
     async function fetchUserAndProjects() {
@@ -80,6 +81,13 @@ export default function DashboardPage() {
         if (profileResponse.ok) {
           const { profile } = await profileResponse.json();
           setPersona(profile?.persona);
+        }
+
+        // Fetch plan info
+        const planResponse = await fetch(`/api/user-plan-info?userId=${user.id}`);
+        if (planResponse.ok) {
+          const planData = await planResponse.json();
+          setPlanInfo(planData);
         }
 
         // Fetch projects from API
@@ -233,6 +241,65 @@ export default function DashboardPage() {
             </Button>
           </Link>
         </div>
+
+        {/* Plan Info Section */}
+        {planInfo && (
+          <Card className="bg-gradient-to-r from-[#0D1B2A] to-[#0F1619] dark:from-[#0D1B2A] dark:to-[#0F1619]">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="font-krona-one">Current Plan</CardTitle>
+                <Badge variant="secondary" className="bg-primary text-primary-foreground">
+                  {planInfo.planName}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {planInfo.restrictions.maxProjects === -1
+                      ? "∞"
+                      : planInfo.usage.currentProjects}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {planInfo.restrictions.maxProjects === -1
+                      ? "Unlimited Projects"
+                      : `Projects (${planInfo.usage.remainingProjects} remaining)`}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {planInfo.restrictions.maxQueries === -1 ? "∞" : planInfo.usage.currentQueries}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {planInfo.restrictions.maxQueries === -1
+                      ? "Unlimited Queries"
+                      : `Queries (${planInfo.usage.remainingQueries} remaining)`}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-primary">
+                    {planInfo.restrictions.premiumAnalyzers.length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Premium Analyzers</div>
+                </div>
+              </div>
+              {planInfo.planName === "Free" && (
+                <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    🚀 Upgrade to unlock unlimited projects, premium analyzers, and advanced
+                    features!
+                  </p>
+                  <Link href="/billing" className="mt-2 inline-block">
+                    <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700">
+                      View Plans
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Design Persona Section */}
         <Card className="bg-[#0F1619] outline outline-1 outline-[#4AB395]">

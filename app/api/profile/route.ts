@@ -9,7 +9,12 @@ export async function POST(request: Request) {
     // Find the free plan
     const freePlan = await prisma.plan.findFirst({
       where: {
-        OR: [{ name: "Free" }, { name: "free" }, { price: 0 }],
+        OR: [{ name: "Free" }, { name: "free" }],
+      },
+      include: {
+        prices: {
+          where: { billingInterval: "month" },
+        },
       },
     });
 
@@ -28,9 +33,15 @@ export async function POST(request: Request) {
         },
       });
 
+      // Get the free plan's monthly price
+      const freePlanPrice = freePlan.prices[0];
+      if (!freePlanPrice) {
+        throw new Error("Free plan price not found");
+      }
+
       // Create subscription for free plan
       const subscriptionData: any = {
-        planId: freePlan.id,
+        planPriceId: freePlanPrice.id,
         userId: id,
         autoRenew: false, // Free plan doesn't auto-renew
         status: "active",
@@ -40,26 +51,7 @@ export async function POST(request: Request) {
         data: subscriptionData,
       });
 
-      // Get all plan features for the free plan
-      const planFeatures = await tx.planFeature.findMany({
-        where: {
-          planId: freePlan.id,
-        },
-        include: {
-          feature: true,
-        },
-      });
-
-      // Copy plan features to subscription features
-      if (planFeatures.length > 0) {
-        await tx.subscriptionFeature.createMany({
-          data: planFeatures.map((planFeature) => ({
-            subscriptionId: subscription.id,
-            featureId: planFeature.featureId,
-            isEnabled: true, // All features enabled by default
-          })),
-        });
-      }
+      // No need to manage features as they are now part of the plan directly
 
       return { profile, subscription };
     });

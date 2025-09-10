@@ -17,9 +17,13 @@ export async function GET(request: Request) {
       include: {
         subscription: {
           include: {
-            plan: {
-              select: {
-                name: true,
+            planPrice: {
+              include: {
+                plan: {
+                  select: {
+                    name: true,
+                  },
+                },
               },
             },
           },
@@ -39,7 +43,7 @@ export async function GET(request: Request) {
       status: transaction.status,
       description:
         transaction.description ||
-        `Payment for ${transaction.subscription?.plan?.name || "Unknown Plan"}`,
+        `Payment for ${transaction.subscription?.planPrice?.plan?.name || "Unknown Plan"}`,
       stripePaymentId: transaction.stripePaymentId,
       stripeInvoiceId: transaction.stripeInvoiceId,
     }));

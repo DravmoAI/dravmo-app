@@ -12,6 +12,7 @@ interface Plan {
   name: string;
   price: number;
   stripePriceId?: string;
+  billingInterval?: "month" | "year";
 }
 
 interface StripeCheckoutModalProps {
@@ -62,6 +63,7 @@ export function StripeCheckoutModal({
         },
         body: JSON.stringify({
           planId: plan.id,
+          billingInterval: plan.billingInterval || "month",
         }),
       });
 
@@ -123,7 +125,9 @@ export function StripeCheckoutModal({
             </p>
             <div className="space-y-2">
               <p className="font-medium">{plan.name} Plan</p>
-              <p className="text-2xl font-bold">${plan.price}/month</p>
+              <p className="text-2xl font-bold">
+                ${plan.price}/{plan.billingInterval || "month"}
+              </p>
             </div>
           </div>
         )}

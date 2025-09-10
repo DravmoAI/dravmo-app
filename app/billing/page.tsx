@@ -38,23 +38,40 @@ interface Subscription {
   usedQueries: number;
 }
 
-interface PlanFeature {
+interface PlanPrice {
   id: string;
-  name: string;
-  description: string;
-  category: string;
-  slug: string;
+  billingInterval: "month" | "year";
+  amount: number; // in dollars
+  currency: string;
+  stripePriceId: string;
 }
 
 interface Plan {
   id: string;
   name: string;
-  price: number;
+  price: number; // monthly price for backward compatibility
   maxProjects: number;
   maxQueries: number;
   aiModel?: string;
-  stripePriceId?: string;
-  features: PlanFeature[];
+  stripeProductId?: string;
+  prices: PlanPrice[];
+  features: {
+    figmaIntegration: boolean;
+    masterMode: boolean;
+    prioritySupport: boolean;
+    advancedAnalytics: boolean;
+    customBranding: boolean;
+    exportToPDF: boolean;
+    premiumAnalyzers: string[];
+  };
+  // Direct feature access for convenience
+  figmaIntegration: boolean;
+  masterMode: boolean;
+  prioritySupport: boolean;
+  advancedAnalytics: boolean;
+  customBranding: boolean;
+  exportToPDF: boolean;
+  premiumAnalyzers: string[];
 }
 
 export default function BillingPage() {
@@ -162,18 +179,26 @@ export default function BillingPage() {
     }
   }, []);
 
-  const handleUpgradePlan = (plan: Plan) => {
+  const handleUpgradePlan = (plan: Plan, selectedPrice?: PlanPrice) => {
     // Don't allow upgrading to the same plan
     if (subscription?.planId === plan.id) {
       return;
     }
 
     // Don't allow upgrading to free plan
-    if (plan.price === 0) {
+    if (!selectedPrice || selectedPrice.amount === 0) {
       return;
     }
 
-    setSelectedPlan(plan);
+    // Create a plan object with the selected price for the checkout modal
+    const planWithPrice = {
+      ...plan,
+      price: selectedPrice.amount,
+      stripePriceId: selectedPrice.stripePriceId,
+      billingInterval: selectedPrice.billingInterval,
+    };
+
+    setSelectedPlan(planWithPrice);
     setShowCheckout(true);
   };
 
@@ -330,10 +355,28 @@ export default function BillingPage() {
       features.push(`${plan.aiModel} AI model`);
     }
 
-    // Add features from database
-    plan.features.forEach((feature) => {
-      features.push(feature.name);
-    });
+    // Add feature flags
+    if (plan.figmaIntegration) {
+      features.push("Figma integration");
+    }
+    if (plan.masterMode) {
+      features.push("Master mode");
+    }
+    if (plan.prioritySupport) {
+      features.push("Priority support");
+    }
+    if (plan.advancedAnalytics) {
+      features.push("Advanced analytics");
+    }
+    if (plan.customBranding) {
+      features.push("Custom branding");
+    }
+    if (plan.exportToPDF) {
+      features.push("Export to PDF");
+    }
+    if (plan.premiumAnalyzers && plan.premiumAnalyzers.length > 0) {
+      features.push(`${plan.premiumAnalyzers.length} premium analyzers`);
+    }
 
     return features;
   };
@@ -433,7 +476,9 @@ export default function BillingPage() {
                         (p) => p.price > 0 && p.id !== subscription?.planId
                       );
                       if (paidPlans.length > 0) {
-                        handleUpgradePlan(paidPlans[0]);
+                        const plan = paidPlans[0];
+                        const monthlyPrice = plan.prices.find((p) => p.billingInterval === "month");
+                        handleUpgradePlan(plan, monthlyPrice);
                       }
                     }}
                   >
@@ -499,7 +544,9 @@ export default function BillingPage() {
                     // Find the first paid plan
                     const paidPlans = plans.filter((p) => p.price > 0);
                     if (paidPlans.length > 0) {
-                      handleUpgradePlan(paidPlans[0]);
+                      const plan = paidPlans[0];
+                      const monthlyPrice = plan.prices.find((p) => p.billingInterval === "month");
+                      handleUpgradePlan(plan, monthlyPrice);
                     }
                   }}
                 >
@@ -548,6 +595,28 @@ export default function BillingPage() {
                   const isPopular = index === 1; // Make the middle plan popular
                   const planFeatures = formatPlanFeatures(plan);
 
+                  // Get the price for the selected billing interval
+                  const selectedPrice = plan.prices.find(
+                    (p) => p.billingInterval === (isYearly ? "year" : "month")
+                  );
+                  const displayPrice = selectedPrice ? selectedPrice.amount : plan.price;
+                  const billingPeriod = isYearly ? "year" : "month";
+
+                  // For yearly plans, show the annual amount
+                  const finalDisplayPrice = isYearly ? displayPrice : displayPrice;
+
+                  // Calculate yearly savings for display
+                  const monthlyPrice = plan.prices.find((p) => p.billingInterval === "month");
+                  const yearlyPrice = plan.prices.find((p) => p.billingInterval === "year");
+                  const yearlySavings =
+                    monthlyPrice && yearlyPrice
+                      ? Math.round(
+                          ((monthlyPrice.amount * 12 - yearlyPrice.amount) /
+                            (monthlyPrice.amount * 12)) *
+                            100
+                        )
+                      : 0;
+
                   return (
                     <Card key={plan.id} className={`relative ${isPopular ? "border-primary" : ""}`}>
                       {isPopular && (
@@ -561,9 +630,16 @@ export default function BillingPage() {
                       <CardHeader className="text-center">
                         <CardTitle className="text-xl capitalize">{plan.name}</CardTitle>
                         <div className="text-2xl font-bold">
-                          ${plan.price}
-                          <span className="text-sm font-normal text-muted-foreground">/month</span>
+                          ${finalDisplayPrice}
+                          <span className="text-sm font-normal text-muted-foreground">
+                            /{billingPeriod}
+                          </span>
                         </div>
+                        {isYearly && yearlySavings > 0 && (
+                          <div className="text-sm text-green-600 font-medium">
+                            Save {yearlySavings}% annually
+                          </div>
+                        )}
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div className="space-y-2">
@@ -583,15 +659,15 @@ export default function BillingPage() {
                               ? "default"
                               : "outline"
                           }
-                          disabled={subscription?.planId === plan.id || plan.price === 0}
+                          disabled={subscription?.planId === plan.id || finalDisplayPrice === 0}
                           onClick={(e) => {
                             e.preventDefault();
-                            handleUpgradePlan(plan);
+                            handleUpgradePlan(plan, selectedPrice);
                           }}
                         >
                           {subscription?.planId === plan.id
                             ? "Current Plan"
-                            : plan.price === 0
+                            : finalDisplayPrice === 0
                             ? "Free Plan"
                             : "Select Plan"}
                         </Button>

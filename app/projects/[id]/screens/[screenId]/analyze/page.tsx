@@ -360,18 +360,18 @@ export default function ScreenAnalyzePage() {
 
     // Check plan restrictions
     if (planInfo) {
-      if (planInfo.usage.remainingQueries <= 0) {
+      if (planInfo.usage.remainingQueries <= 0 && planInfo.restrictions.maxQueries !== -1) {
         toast({
           title: "Query Limit Reached",
           description:
-            planInfo.restrictions.maxQueriesPerMonth === 0
+            planInfo.restrictions.maxQueries === 0
               ? "You've reached your monthly query limit. Upgrade your plan for more queries."
-              : `You've used all ${planInfo.usage.currentQueriesThisMonth} queries this month. Upgrade your plan for more queries.`,
+              : `You've used all ${planInfo.usage.currentQueries} queries this month. Upgrade your plan for more queries.`,
           variant: "destructive",
         });
 
         const shouldUpgrade = confirm(
-          `You've reached your monthly query limit of ${planInfo.usage.currentQueriesThisMonth} queries.\n\nWould you like to upgrade your plan for more queries?`
+          `You've reached your monthly query limit of ${planInfo.usage.currentQueries} queries.\n\nWould you like to upgrade your plan for more queries?`
         );
 
         if (shouldUpgrade) {
@@ -382,7 +382,7 @@ export default function ScreenAnalyzePage() {
         return;
       }
 
-      if (isMasterMode && !planInfo.restrictions.canUseMasterMode) {
+      if (isMasterMode && !planInfo.restrictions.masterMode) {
         toast({
           title: "Master Mode Not Available",
           description:
@@ -588,11 +588,14 @@ export default function ScreenAnalyzePage() {
                 <h3 className="text-xl font-bold font-krona-one">Analysis Configuration</h3>
                 {planInfo && (
                   <div className="text-sm text-muted-foreground">
-                    Queries this month: {planInfo.usage.currentQueriesThisMonth}/
-                    {planInfo.restrictions.maxQueriesPerMonth}
-                    {planInfo.usage.remainingQueries === 0 && (
-                      <span className="text-destructive ml-2">(Limit reached)</span>
-                    )}
+                    Queries this month: {planInfo.usage.currentQueries}/
+                    {planInfo.restrictions.maxQueries === -1
+                      ? "∞"
+                      : planInfo.restrictions.maxQueries}
+                    {planInfo.usage.remainingQueries === 0 &&
+                      planInfo.restrictions.maxQueries !== -1 && (
+                        <span className="text-destructive ml-2">(Limit reached)</span>
+                      )}
                   </div>
                 )}
               </div>
@@ -602,12 +605,10 @@ export default function ScreenAnalyzePage() {
                   <TabsTrigger value="context">Context Setup</TabsTrigger>
                   <TabsTrigger
                     value="master"
-                    disabled={planInfo && !planInfo.restrictions.canUseMasterMode}
-                    className={
-                      planInfo && !planInfo.restrictions.canUseMasterMode ? "opacity-50" : ""
-                    }
+                    disabled={planInfo && !planInfo.restrictions.masterMode}
+                    className={planInfo && !planInfo.restrictions.masterMode ? "opacity-50" : ""}
                   >
-                    Master Mode {planInfo && !planInfo.restrictions.canUseMasterMode && "(Premium)"}
+                    Master Mode {planInfo && !planInfo.restrictions.masterMode && "(Premium)"}
                   </TabsTrigger>
                 </TabsList>
 
@@ -838,7 +839,7 @@ export default function ScreenAnalyzePage() {
                                   disabled={
                                     topic.tier === "premium" &&
                                     planInfo &&
-                                    !planInfo.restrictions.canUsePremiumAnalyzers
+                                    planInfo.restrictions.premiumAnalyzers.length === 0
                                   }
                                 />
                                 <Label
@@ -846,7 +847,7 @@ export default function ScreenAnalyzePage() {
                                   className={`font-medium cursor-pointer font-quantico ${
                                     topic.tier === "premium" &&
                                     planInfo &&
-                                    !planInfo.restrictions.canUsePremiumAnalyzers
+                                    planInfo.restrictions.premiumAnalyzers.length === 0
                                       ? "opacity-50 cursor-not-allowed"
                                       : ""
                                   }`}
@@ -855,7 +856,7 @@ export default function ScreenAnalyzePage() {
                                     if (
                                       topic.tier === "premium" &&
                                       planInfo &&
-                                      !planInfo.restrictions.canUsePremiumAnalyzers
+                                      planInfo.restrictions.premiumAnalyzers.length === 0
                                     ) {
                                       toast({
                                         title: "Premium Feature",
@@ -870,7 +871,7 @@ export default function ScreenAnalyzePage() {
                                 >
                                   {topic.name}
                                   {topic.tier === "premium" && (
-                                    <span className="ml-2 text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full">
+                                    <span className="ml-2 text-xs bg-primary text-black px-2 py-1 rounded-full">
                                       Premium
                                     </span>
                                   )}
@@ -902,7 +903,7 @@ export default function ScreenAnalyzePage() {
                                             disabled={
                                               topic.tier === "premium" &&
                                               planInfo &&
-                                              !planInfo.restrictions.canUsePremiumAnalyzers
+                                              planInfo.restrictions.premiumAnalyzers.length === 0
                                             }
                                           />
                                           <Label
@@ -910,7 +911,7 @@ export default function ScreenAnalyzePage() {
                                             className={`font-medium cursor-pointer font-quantico ${
                                               topic.tier === "premium" &&
                                               planInfo &&
-                                              !planInfo.restrictions.canUsePremiumAnalyzers
+                                              planInfo.restrictions.premiumAnalyzers.length === 0
                                                 ? "opacity-50 cursor-not-allowed"
                                                 : ""
                                             }`}
@@ -919,7 +920,7 @@ export default function ScreenAnalyzePage() {
                                               if (
                                                 topic.tier === "premium" &&
                                                 planInfo &&
-                                                !planInfo.restrictions.canUsePremiumAnalyzers
+                                                planInfo.restrictions.premiumAnalyzers.length === 0
                                               ) {
                                                 return;
                                               }
@@ -946,7 +947,8 @@ export default function ScreenAnalyzePage() {
                                                 disabled={
                                                   topic.tier === "premium" &&
                                                   planInfo &&
-                                                  !planInfo.restrictions.canUsePremiumAnalyzers
+                                                  planInfo.restrictions.premiumAnalyzers.length ===
+                                                    0
                                                 }
                                               />
                                               <div>
@@ -955,7 +957,8 @@ export default function ScreenAnalyzePage() {
                                                   className={`font-medium cursor-pointer font-quantico ${
                                                     topic.tier === "premium" &&
                                                     planInfo &&
-                                                    !planInfo.restrictions.canUsePremiumAnalyzers
+                                                    planInfo.restrictions.premiumAnalyzers
+                                                      .length === 0
                                                       ? "opacity-50 cursor-not-allowed"
                                                       : ""
                                                   }`}

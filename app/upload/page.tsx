@@ -40,7 +40,7 @@ export default function UploadPage() {
   const [figmaUrl, setFigmaUrl] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState("upload");
+  const [activeTab, setActiveTab] = useState("figma");
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFigmaAuthenticated, setIsFigmaAuthenticated] = useState(false);
@@ -439,7 +439,7 @@ export default function UploadPage() {
 
               <TabsContent value="figma" className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Connect to Figma</Label>
+                  {!isFigmaAuthenticated && <Label>Connect to Figma</Label>}
 
                   {!isFigmaAuthenticated ? (
                     <div className="space-y-3">
@@ -447,9 +447,9 @@ export default function UploadPage() {
                         Connect your Figma account to import designs directly from Figma files.
                       </p>
                       <Button
+                        className="w-full"
                         onClick={handleFigmaLogin}
                         disabled={isFigmaAuthLoading}
-                        className="w-full"
                       >
                         {isFigmaAuthLoading ? (
                           <>
@@ -463,6 +463,43 @@ export default function UploadPage() {
                     </div>
                   ) : (
                     <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 border-green-500 rounded-full"></div>
+                          <span className="text-sm text-primary font-medium">
+                            Connected to Figma
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              const authData = localStorage.getItem("sb-localhost-auth-token");
+                              if (!authData) return;
+
+                              const { access_token } = JSON.parse(authData);
+
+                              const response = await fetch("/api/figma/revoke", {
+                                method: "POST",
+                                headers: {
+                                  Authorization: `Bearer ${access_token}`,
+                                },
+                              });
+
+                              if (response.ok) {
+                                setIsFigmaAuthenticated(false);
+                                setFigmaUrl("");
+                              }
+                            } catch (error) {
+                              console.error("Error revoking Figma connection:", error);
+                            }
+                          }}
+                          className="text-white !bg-red-400"
+                        >
+                          Disconnect
+                        </Button>
+                      </div>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
                           <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />

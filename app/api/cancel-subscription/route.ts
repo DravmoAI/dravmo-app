@@ -21,7 +21,11 @@ export async function POST(request: NextRequest) {
         status: "active",
       },
       include: {
-        plan: true,
+        planPrice: {
+          include: {
+            plan: true,
+          },
+        },
       },
     });
 
@@ -30,20 +34,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Don't allow canceling free plans
-    if (Number(currentSubscription.plan.price) === 0) {
+    if (currentSubscription.planPrice.amount === 0) {
       return NextResponse.json({ error: "Cannot cancel free plan" }, { status: 400 });
     }
 
     // Get the free plan
     const freePlan = await prisma.plan.findFirst({
       where: {
-        price: 0,
+        name: "Free",
       },
       include: {
-        planFeatures: {
-          include: {
-            feature: true,
-          },
+        prices: {
+          where: { billingInterval: "month" },
         },
       },
     });
@@ -108,10 +110,16 @@ export async function POST(request: NextRequest) {
           },
         });
 
+        // Get the free plan's monthly price
+        const freePlanPrice = freePlan.prices[0];
+        if (!freePlanPrice) {
+          throw new Error("Free plan price not found");
+        }
+
         // Create new free subscription
         const newSubscription = await tx.subscription.create({
           data: {
-            planId: freePlan.id,
+            planPriceId: freePlanPrice.id,
             userId,
             stripeSubId: null,
             autoRenew: false,
@@ -119,23 +127,7 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        // Remove old subscription features
-        await tx.subscriptionFeature.deleteMany({
-          where: {
-            subscriptionId: currentSubscription.id,
-          },
-        });
-
-        // Add free plan features
-        if (freePlan.planFeatures.length > 0) {
-          await tx.subscriptionFeature.createMany({
-            data: freePlan.planFeatures.map((planFeature) => ({
-              subscriptionId: newSubscription.id,
-              featureId: planFeature.featureId,
-              isEnabled: true,
-            })),
-          });
-        }
+        // No need to manage features as they are now part of the plan directly
 
         return {
           message:

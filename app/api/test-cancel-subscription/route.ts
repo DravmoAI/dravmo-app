@@ -24,7 +24,13 @@ export async function POST(request: NextRequest) {
     // Get the subscription from our database
     const dbSubscription = await prisma.subscription.findFirst({
       where: { stripeSubId: subscriptionId },
-      include: { plan: true },
+      include: {
+        planPrice: {
+          include: {
+            plan: true,
+          },
+        },
+      },
     });
 
     if (!dbSubscription) {
@@ -60,7 +66,7 @@ export async function POST(request: NextRequest) {
         id: dbSubscription.id,
         status: dbSubscription.status,
         autoRenew: dbSubscription.autoRenew,
-        planName: dbSubscription.plan.name,
+        planName: dbSubscription.planPrice.plan.name,
       },
     });
   } catch (error) {

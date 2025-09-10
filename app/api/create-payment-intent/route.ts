@@ -9,9 +9,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
-    const { planId } = await request.json();
+    const { planId, billingInterval = "month" } = await request.json();
 
-    console.log("Subscription creation request:", { planId });
+    console.log("Subscription creation request:", { planId, billingInterval });
 
     // Validate input
     if (!planId) {
@@ -42,13 +42,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid authentication" }, { status: 401 });
     }
 
-    // Get the plan details
+    // Get the plan details with the specific price for the billing interval
     const plan = await prisma.plan.findUnique({
       where: { id: planId },
+      include: {
+        prices: {
+          where: {
+            billingInterval: billingInterval,
+            isActive: true,
+          },
+        },
+      },
     });
 
-    if (!plan || !plan.stripePriceId) {
-      return NextResponse.json({ error: "Plan not found or not configured" }, { status: 404 });
+    console.log("Plan details:", plan);
+
+    if (!plan || !plan.prices.length) {
+      return NextResponse.json(
+        { error: "Plan not found or not configured for this billing interval" },
+        { status: 404 }
+      );
+    }
+
+    const planPrice = plan.prices[0];
+    if (!planPrice.stripePriceId) {
+      return NextResponse.json({ error: "Plan price not configured in Stripe" }, { status: 404 });
     }
 
     // Check if user already has an active subscription
@@ -58,19 +76,23 @@ export async function POST(request: NextRequest) {
         status: "active",
       },
       include: {
-        plan: true,
+        planPrice: {
+          include: {
+            plan: true,
+          },
+        },
       },
     });
 
     // If user has an active subscription, check if it's a free plan
     if (existingSubscription) {
-      const existingPlanPrice = Number(existingSubscription.plan.price);
-      const newPlanPrice = Number(plan.price);
+      const existingPlanPrice = existingSubscription.planPrice.amount;
+      const newPlanPrice = planPrice.amount;
 
       // Allow upgrade from free plan to paid plan
       if (existingPlanPrice === 0 && newPlanPrice > 0) {
         console.log(`User ${user.id} upgrading from free plan to paid plan ${plan.id}`);
-      } else if (existingSubscription.planId === plan.id) {
+      } else if (existingSubscription.planPrice.plan.id === plan.id) {
         return NextResponse.json(
           {
             error: "You are already subscribed to this plan",
@@ -126,7 +148,7 @@ export async function POST(request: NextRequest) {
       payment_method_types: ["card"],
       line_items: [
         {
-          price: plan.stripePriceId,
+          price: planPrice.stripePriceId,
           quantity: 1,
         },
       ],
@@ -136,11 +158,15 @@ export async function POST(request: NextRequest) {
       metadata: {
         userId: user.id,
         planId: planId,
+        planPriceId: planPrice.id,
+        billingInterval: billingInterval,
       },
       subscription_data: {
         metadata: {
           userId: user.id,
           planId: planId,
+          planPriceId: planPrice.id,
+          billingInterval: billingInterval,
         },
       },
     });
