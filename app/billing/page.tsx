@@ -85,6 +85,9 @@ export default function BillingPage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState(false);
+  const [cancelImmediate, setCancelImmediate] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
   const [isYearly, setIsYearly] = useState(false);
 
   useEffect(() => {
@@ -241,6 +244,7 @@ export default function BillingPage() {
     if (!subscription) return;
 
     setCancelLoading(true);
+    setCancelImmediate(immediate);
     try {
       const supabase = getSupabaseClient();
       const {
@@ -249,6 +253,7 @@ export default function BillingPage() {
 
       if (!user) {
         alert("You must be logged in to cancel your subscription.");
+        setCancelLoading(false);
         return;
       }
 
@@ -265,9 +270,13 @@ export default function BillingPage() {
 
       if (response.ok) {
         const result = await response.json();
-        alert(result.message);
 
-        // Refresh subscription and billing data
+        // Show success state
+        setCancelSuccess(true);
+        setCancelLoading(false);
+        setCancelError(null);
+
+        // Refresh subscription and billing data in background
         const fetchData = async () => {
           try {
             // Refresh subscription data
@@ -292,22 +301,28 @@ export default function BillingPage() {
         };
 
         await fetchData();
-        setShowCancelDialog(false);
       } else {
         const error = await response.json();
-        alert(`Error canceling subscription: ${error.error}`);
+        setCancelError(error.error || "Failed to cancel subscription. Please try again.");
+        setCancelLoading(false);
       }
     } catch (error) {
       console.error("Error canceling subscription:", error);
-      alert("An error occurred while canceling your subscription. Please try again.");
-    } finally {
+      setCancelError("An error occurred while canceling your subscription. Please try again.");
       setCancelLoading(false);
     }
   };
 
-  const handleUpdatePaymentMethod = () => {
-    // In a real app, this would redirect to Stripe customer portal
-    alert("Redirecting to payment method update...");
+  const handleCloseCancelDialog = () => {
+    setShowCancelDialog(false);
+    setCancelSuccess(false);
+    setCancelLoading(false);
+    setCancelError(null);
+  };
+
+  const handleRetryCancel = () => {
+    setCancelError(null);
+    setCancelLoading(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -410,8 +425,19 @@ export default function BillingPage() {
                     <h3 className="text-2xl font-bold capitalize">{subscription.planName} Plan</h3>
                     <p className="text-muted-foreground">
                       ${subscription.price}/{subscription.billingInterval}
-                      <br />
-                      Next billing: {formatDate(subscription.currentPeriodEnd)}
+                      {subscription.price > 0 && (
+                        <>
+                          <br />
+                          {subscription.autoRenew ? (
+                            <>Next billing: {formatDate(subscription.currentPeriodEnd)}</>
+                          ) : (
+                            <>
+                              Scheduled for cancellation:{" "}
+                              {formatDate(subscription.currentPeriodEnd)}
+                            </>
+                          )}
+                        </>
+                      )}
                     </p>
                   </div>
                   <div className="text-right">
@@ -471,66 +497,156 @@ export default function BillingPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button
-                    onClick={() => {
-                      // Find the next available paid plan
-                      const paidPlans = plans.filter(
-                        (p) => p.price > 0 && p.id !== subscription?.planId
-                      );
-                      if (paidPlans.length > 0) {
-                        const plan = paidPlans[0];
-                        const monthlyPrice = plan.prices.find((p) => p.billingInterval === "month");
-                        handleUpgradePlan(plan, monthlyPrice);
-                      }
-                    }}
-                  >
-                    Upgrade Plan
-                  </Button>
+                  {subscription.planName !== "Pro" && (
+                    <Button
+                      onClick={() => {
+                        // Find the next available paid plan
+                        const paidPlans = plans.filter(
+                          (p) => p.price > 0 && p.id !== subscription?.planId
+                        );
+                        if (paidPlans.length > 0) {
+                          const plan = paidPlans[0];
+                          const monthlyPrice = plan.prices.find(
+                            (p) => p.billingInterval === "month"
+                          );
+                          handleUpgradePlan(plan, monthlyPrice);
+                        }
+                      }}
+                    >
+                      Upgrade Plan
+                    </Button>
+                  )}
 
-                  <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline">Cancel Subscription</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="!min-w-[550px]">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
+                  {subscription && subscription.price > 0 ? (
+                    <AlertDialog open={showCancelDialog} onOpenChange={handleCloseCancelDialog}>
+                      <Button variant="outline" onClick={() => setShowCancelDialog(true)}>
+                        Cancel Subscription
+                      </Button>
+                      <AlertDialogContent className="!min-w-[550px]">
+                        {cancelSuccess ? (
+                          // Success State
+                          <>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-green-600 flex items-center gap-2">
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                Subscription Canceled Successfully
+                              </AlertDialogTitle>
+                              <AlertDialogDescription className="text-left">
+                                {cancelImmediate
+                                  ? "Your subscription has been canceled immediately and you've been downgraded to the free plan."
+                                  : "Your subscription has been scheduled for cancellation at the end of your current billing period. You'll continue to have access to paid features until then."}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
 
-                        <AlertDialogDescription className="text-left">
-                          Are you sure you want to cancel your subscription? You have two options:
-                          <br />
-                          <br />
-                          <strong>Cancel at period end:</strong> You'll continue to have access to
-                          paid features until the end of your current billing period, then be
-                          automatically downgraded to the free plan.
-                          <br />
-                          <br />
-                          <strong>Cancel immediately:</strong> Your subscription will be canceled
-                          right away and you'll be downgraded to the free plan immediately.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
+                            <AlertDialogFooter className="!justify-start gap-2">
+                              <Button variant="outline" onClick={handleCloseCancelDialog}>
+                                Close
+                              </Button>
+                            </AlertDialogFooter>
+                          </>
+                        ) : cancelError ? (
+                          // Error State
+                          <>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-red-600 flex items-center gap-2">
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                Failed to Cancel Subscription
+                              </AlertDialogTitle>
+                              <AlertDialogDescription className="text-left">
+                                {cancelError}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
 
-                      <AlertDialogFooter className="!justify-start">
-                        <AlertDialogCancel disabled={cancelLoading}>
-                          Keep Subscription
-                        </AlertDialogCancel>
-                        <Button
-                          variant="outline"
-                          onClick={() => handleCancelSubscription(false)}
-                          disabled={cancelLoading}
-                        >
-                          {cancelLoading ? "Canceling..." : "Cancel at Period End"}
-                        </Button>
+                            <AlertDialogFooter className="!justify-start gap-2">
+                              <Button variant="outline" onClick={handleCloseCancelDialog}>
+                                Close
+                              </Button>
+                              <Button
+                                onClick={handleRetryCancel}
+                                className="bg-primary hover:bg-primary/90"
+                              >
+                                Try Again
+                              </Button>
+                            </AlertDialogFooter>
+                          </>
+                        ) : (
+                          // Initial State or Loading State
+                          <>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                {cancelLoading
+                                  ? "Canceling Subscription..."
+                                  : "Cancel Subscription"}
+                              </AlertDialogTitle>
 
-                        <AlertDialogAction
-                          onClick={() => handleCancelSubscription(true)}
-                          disabled={cancelLoading}
-                          className="bg-destructive hover:bg-destructive/90 text-white"
-                        >
-                          {cancelLoading ? "Canceling..." : "Cancel Immediately"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                              {cancelLoading ? (
+                                <AlertDialogDescription className="text-left">
+                                  <div className="flex items-center gap-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                                    Please wait while we process your cancellation...
+                                  </div>
+                                </AlertDialogDescription>
+                              ) : (
+                                <AlertDialogDescription className="text-left">
+                                  Are you sure you want to cancel your subscription? You have two
+                                  options:
+                                  <br />
+                                  <br />
+                                  <strong>Cancel at period end:</strong> You'll continue to have
+                                  access to paid features until the end of your current billing
+                                  period, then be automatically downgraded to the free plan.
+                                  <br />
+                                  <br />
+                                  <strong>Cancel immediately:</strong> Your subscription will be
+                                  canceled right away and you'll be downgraded to the free plan
+                                  immediately.
+                                </AlertDialogDescription>
+                              )}
+                            </AlertDialogHeader>
+
+                            <AlertDialogFooter className="!justify-start">
+                              {cancelLoading ? null : (
+                                <>
+                                  <AlertDialogCancel disabled={cancelLoading}>
+                                    Keep Subscription
+                                  </AlertDialogCancel>
+                                  {subscription.autoRenew && (
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => handleCancelSubscription(false)}
+                                      disabled={cancelLoading}
+                                    >
+                                      Cancel at Period End
+                                    </Button>
+                                  )}
+
+                                  <Button
+                                    onClick={() => handleCancelSubscription(true)}
+                                    disabled={cancelLoading}
+                                    className="bg-destructive hover:bg-destructive/90 text-white"
+                                  >
+                                    Cancel Immediately
+                                  </Button>
+                                </>
+                              )}
+                            </AlertDialogFooter>
+                          </>
+                        )}
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  ) : null}
                 </div>
               </>
             ) : (
@@ -582,7 +698,7 @@ export default function BillingPage() {
           </span>
         </div>
 
-        <Card>
+        <Card id="plans-section">
           <CardHeader>
             <CardTitle>Available Plans</CardTitle>
           </CardHeader>

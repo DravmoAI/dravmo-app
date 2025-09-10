@@ -495,7 +495,7 @@ export default function UploadPage() {
                               console.error("Error revoking Figma connection:", error);
                             }
                           }}
-                          className="text-white !bg-red-400"
+                          className="text-white !bg-red-400 hover:!bg-red-500"
                         >
                           Disconnect
                         </Button>
