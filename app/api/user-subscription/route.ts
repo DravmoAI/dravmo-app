@@ -50,16 +50,33 @@ export async function GET(request: Request) {
       },
     });
 
+    // Calculate the correct next billing date based on billing interval
+    const calculateNextBillingDate = (createdAt: Date, billingInterval: string) => {
+      const nextBilling = new Date(createdAt);
+      if (billingInterval === "year") {
+        nextBilling.setFullYear(nextBilling.getFullYear() + 1);
+      } else {
+        nextBilling.setMonth(nextBilling.getMonth() + 1);
+      }
+      return nextBilling;
+    };
+
+    const nextBillingDate = calculateNextBillingDate(
+      subscription.createdAt,
+      subscription.planPrice.billingInterval
+    );
+
     // Transform the data to match the frontend interface
     const transformedSubscription = {
       id: subscription.id,
       planId: subscription.planPrice.plan.id,
       planName: subscription.planPrice.plan.name || "Unnamed Plan",
       price: subscription.planPrice.amount / 100, // Convert cents to dollars
+      billingInterval: subscription.planPrice.billingInterval, // Add billing interval
       status: subscription.status as "active" | "canceled" | "past_due",
       autoRenew: subscription.autoRenew,
       currentPeriodStart: subscription.createdAt.toISOString(),
-      currentPeriodEnd: subscription.updatedAt.toISOString(),
+      currentPeriodEnd: nextBillingDate.toISOString(),
       maxProjects: subscription.planPrice.plan.maxProjects,
       maxQueries: subscription.planPrice.plan.maxQueries,
       usedProjects: projectCount,

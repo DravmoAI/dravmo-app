@@ -28,6 +28,7 @@ interface Subscription {
   planId: string;
   planName: string;
   price: number;
+  billingInterval: "month" | "year";
   status: "active" | "canceled" | "past_due";
   autoRenew: boolean;
   currentPeriodStart: string;
@@ -408,8 +409,9 @@ export default function BillingPage() {
                   <div>
                     <h3 className="text-2xl font-bold capitalize">{subscription.planName} Plan</h3>
                     <p className="text-muted-foreground">
-                      ${subscription.price}/month
-                      {/* Next billing: {formatDate(subscription.currentPeriodEnd)} */}
+                      ${subscription.price}/{subscription.billingInterval}
+                      <br />
+                      Next billing: {formatDate(subscription.currentPeriodEnd)}
                     </p>
                   </div>
                   <div className="text-right">
