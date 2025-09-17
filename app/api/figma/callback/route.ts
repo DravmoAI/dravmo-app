@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const formData = new URLSearchParams({
       client_id: process.env.FIGMA_CLIENT_ID!,
       client_secret: process.env.FIGMA_CLIENT_SECRET!,
-      redirect_uri: process.env.REDIRECT_URI!,
+      redirect_uri: process.env.FIGMA_REDIRECT_URI!,
       code: code as string,
       grant_type: "authorization_code",
     });
