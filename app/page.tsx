@@ -17,7 +17,7 @@ export default function LandingPage() {
   const supabase = getSupabaseClient();
 
   const basicPlanFeatures = [
-    { label: "Unlimited projects", available: true },
+    { label: "3 projects", available: true },
     { label: "20 reviews/month", available: true, note: "" },
     { label: "Design persona setup", available: true },
     { label: "Layout analysis", available: true },
