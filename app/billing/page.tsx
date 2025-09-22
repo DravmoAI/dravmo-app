@@ -409,7 +409,7 @@ export default function BillingPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between ">
-              <CardTitle>Current Plan</CardTitle>
+              <CardTitle className="font-krona-one">Current Plan</CardTitle>
               {subscription && (
                 <Badge variant={getStatusColor(subscription.status)} className="capitalize">
                   {subscription.status}
@@ -417,12 +417,13 @@ export default function BillingPage() {
               )}
             </div>
           </CardHeader>
+
           <CardContent className="space-y-6">
             {subscription ? (
               <>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-2xl font-bold capitalize">{subscription.planName} Plan</h3>
+                    <h3 className="text-2xl font-bold capitalize font-quantico">{subscription.planName} Plan</h3>
                     <p className="text-muted-foreground">
                       ${subscription.price}/{subscription.billingInterval}
                       {subscription.price > 0 && (
@@ -700,7 +701,7 @@ export default function BillingPage() {
 
         <Card id="plans-section">
           <CardHeader>
-            <CardTitle>Available Plans</CardTitle>
+            <CardTitle className="font-krona-one">Available Plans</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -746,7 +747,7 @@ export default function BillingPage() {
                         </div>
                       )}
                       <CardHeader className="text-center">
-                        <CardTitle className="text-xl capitalize">{plan.name}</CardTitle>
+                        <CardTitle className="text-xl capitalize font-quantico">{plan.name}</CardTitle>
                         <div className="text-2xl font-bold">
                           ${finalDisplayPrice}
                           <span className="text-sm font-normal text-muted-foreground">
@@ -800,7 +801,7 @@ export default function BillingPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Transaction History</CardTitle>
+            <CardTitle className="font-krona-one">Transaction History</CardTitle>
           </CardHeader>
           <CardContent>
             {billingHistory.length === 0 ? (

@@ -371,7 +371,7 @@ export default function UploadPage() {
 			<LoadingProgressBar isPending={isPending} />
 			<div className="max-w-2xl mx-auto space-y-8">
 				<div className="text-center">
-					<h1 className="text-3xl font-bold">Upload Design</h1>
+					<h1 className="text-3xl font-bold font-krona-one">Upload Design</h1>
 					<p className="text-muted-foreground mt-2">
 						Connect from Figma or upload your design files to get AI-powered feedback
 					</p>
@@ -379,11 +379,11 @@ export default function UploadPage() {
 
 				<Card>
 					<CardHeader>
-						<CardTitle>Project Selection</CardTitle>
+						<CardTitle className="font-krona-one">Project Selection</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="space-y-2">
-							<Label htmlFor="project">Select Project</Label>
+							<Label htmlFor="project" className="font-quantico">Select Project</Label>
 							<Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
 								<SelectTrigger>
 									<SelectValue placeholder="Choose an existing project" />
@@ -408,7 +408,7 @@ export default function UploadPage() {
 								<div className="text-center text-sm text-muted-foreground">or</div>
 
 								<div className="space-y-2">
-									<Label htmlFor="newProject">Create New Project</Label>
+									<Label htmlFor="newProject" className="font-quantico">Create New Project</Label>
 									<Input
 										id="newProject"
 										placeholder="Enter new project name"
@@ -428,13 +428,13 @@ export default function UploadPage() {
 
 				<Card>
 					<CardHeader>
-						<CardTitle>Upload Method</CardTitle>
+						<CardTitle className="font-krona-one">Upload Method</CardTitle>
 					</CardHeader>
 					<CardContent>
 						<Tabs value={activeTab} onValueChange={setActiveTab}>
 							<TabsList className="grid w-full grid-cols-2">
-								<TabsTrigger value="figma">Figma URL</TabsTrigger>
-								<TabsTrigger value="upload">File Upload</TabsTrigger>
+								<TabsTrigger value="figma" className="font-quantico">Figma URL</TabsTrigger>
+								<TabsTrigger value="upload" className="font-quantico">File Upload</TabsTrigger>
 							</TabsList>
 
 							<TabsContent value="figma" className="space-y-4">
