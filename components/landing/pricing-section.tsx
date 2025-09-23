@@ -99,7 +99,7 @@ export function PricingSection({
                 {isPro ? "Design Professionals" : "Design Enthusiasts"}
               </h2>
               <div className="flex items-center justify-between gap-x-5 translate-y-2">
-                <p className="italic text-base font-normal text-[#5BD5AF]">Go Pro</p>
+                <p className="italic text-base font-normal text-[#5BD5AF]">{isPro ? "Go Lite" : "Go Pro"}</p>
                 <div className="checkbox">
                   <input
                     className="tgl select-none"
