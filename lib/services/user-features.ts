@@ -27,11 +27,21 @@ export class UserFeatureService {
       }
     });
 
-    if (!subscription) {
-      throw new Error("No active subscription found");
-    }
+    // Default free plan features for users without subscriptions
+    const defaultFreePlan = {
+      maxProjects: 3,
+      maxQueries: 10,
+      figmaIntegration: false,
+      masterMode: false,
+      prioritySupport: false,
+      advancedAnalytics: false,
+      customBranding: false,
+      exportToPDF: false,
+      premiumAnalyzers: [],
+      aiModel: "gpt-3.5-turbo"
+    };
 
-    const plan = subscription.planPrice.plan;
+    const plan = subscription?.planPrice.plan || defaultFreePlan;
     
     const overrides = await prisma.userFeatureOverride.findMany({
       where: { 
