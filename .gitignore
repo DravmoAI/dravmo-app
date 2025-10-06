@@ -27,3 +27,7 @@ yarn-error.log*
 next-env.d.ts
 
 volumes/
+test.http
+volumes/db/data
+volumes/storage
+docker-compose.override.yml

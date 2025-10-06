@@ -12,17 +12,20 @@ datasource db {
 }
 
 model Profile {
-    id        String   @id
-    fullName  String?  @map("full_name")
-    email     String   @unique
-    avatarUrl String?  @map("avatar_url")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+    id         String   @id
+    fullName   String?  @map("full_name")
+    email      String   @unique
+    avatarUrl  String?  @map("avatar_url")
+    figmaToken String?  @map("figma_token")
+    createdAt  DateTime @default(now()) @map("created_at")
+    updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
 
     // Relations
-    projects      Project[]
-    subscriptions Subscription[]
-    persona       Persona?
+    projects         Project[]
+    subscriptions    Subscription[]
+    transactions     Transaction[]
+    persona          Persona?
+    featureOverrides UserFeatureOverride[]
 
     @@map("profiles")
 }
@@ -272,6 +275,7 @@ model AnalyzerTopic {
     id          String @id @default(uuid())
     name        String
     description String @db.Text
+    tier        String @default("free") // "free" or "premium"
 
     // Relations
     analyzerSubtopics AnalyzerSubtopic[]
@@ -281,74 +285,96 @@ model AnalyzerTopic {
 }
 
 model Plan {
-    id            String  @id @default(uuid())
-    stripePriceId String  @map("stripe_price_id")
-    price         Decimal @db.Decimal(10, 2)
-    isModel       Boolean @map("is_model")
-    maxProjects   Int     @map("max_projects")
-    maxQueries    Int     @map("max_queries")
+    id                String   @id @default(uuid())
+    stripeProductId   String?  @map("stripe_product_id") // Stripe Product ID
+    name              String?  @map("name")
+    aiModel           String?  @map("ai_model")
+    maxProjects       Int      @map("max_projects")
+    maxQueries        Int      @map("max_queries")
+    
+    // Feature flags
+    figmaIntegration  Boolean  @default(false) @map("figma_integration")
+    masterMode        Boolean  @default(false) @map("master_mode")
+    prioritySupport   Boolean  @default(false) @map("priority_support")
+    advancedAnalytics Boolean  @default(false) @map("advanced_analytics")
+    customBranding    Boolean  @default(false) @map("custom_branding")
+    exportToPDF       Boolean  @default(false) @map("export_to_pdf")
+    
+    // Premium analyzers as array of topic names
+    premiumAnalyzers  String[] @default([]) @map("premium_analyzers")
 
     // Relations
-    subscriptions Subscription[]
-    planFeatures  PlanFeature[]
+    prices PlanPrice[] // Multiple prices per plan (monthly/yearly)
 
     @@map("plans")
 }
 
+model UserFeatureOverride {
+    id        String    @id @default(uuid())
+    userId    String    @map("user_id")
+    feature   String    // Feature name (e.g., "figmaIntegration", "maxProjects")
+    value     String    // JSON value (boolean, number, or array)
+    reason    String?   // Why this override was granted
+    expiresAt DateTime? @map("expires_at") // Optional expiration
+    createdAt DateTime  @default(now()) @map("created_at")
+    
+    // Relations
+    profile Profile @relation(fields: [userId], references: [id])
+    
+    @@unique([userId, feature])
+    @@map("user_feature_overrides")
+}
+
+model PlanPrice {
+    id            String   @id @default(uuid())
+    planId        String   @map("plan_id")
+    stripePriceId String   @unique @map("stripe_price_id") // Stripe Price ID
+    billingInterval String @map("billing_interval") // 'month' or 'year'
+    amount        Int      // Price in cents
+    currency      String   @default("usd")
+    isActive      Boolean  @default(true) @map("is_active")
+
+    // Relations
+    plan          Plan           @relation(fields: [planId], references: [id])
+    subscriptions Subscription[]
+
+    @@map("plan_prices")
+}
+
 model Subscription {
     id          String   @id @default(uuid())
-    planId      String   @map("plan_id")
+    planPriceId String   @map("plan_price_id") // Reference to PlanPrice instead of Plan
     userId      String   @map("user_id")
-    stripeSubId String   @map("stripe_sub_id")
+    stripeSubId String?  @map("stripe_sub_id")
     autoRenew   Boolean  @map("auto_renew")
     status      String
     createdAt   DateTime @default(now()) @map("created_at")
     updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
     // Relations
-    plan                 Plan                  @relation(fields: [planId], references: [id])
-    profile              Profile               @relation(fields: [userId], references: [id])
-    subscriptionFeatures SubscriptionFeature[]
+    planPrice    PlanPrice  @relation(fields: [planPriceId], references: [id])
+    profile      Profile    @relation(fields: [userId], references: [id])
+    transactions Transaction[]
 
     @@map("subscriptions")
 }
 
-model PlanFeature {
-    id        String @id @default(uuid())
-    planId    String @map("plan_id")
-    featureId String @map("feature_id")
-    category  String
+
+model Transaction {
+    id              String    @id @default(uuid())
+    userId          String    @map("user_id")
+    subscriptionId  String?   @map("subscription_id")
+    stripePaymentId String?   @map("stripe_payment_id") // payment_intent or charge id
+    stripeInvoiceId String?   @map("stripe_invoice_id")
+    amount          Decimal   @db.Decimal(10, 2)
+    currency        String    @default("usd")
+    status          String    // e.g. succeeded, pending, failed, refunded
+    description     String?
+    createdAt       DateTime  @default(now()) @map("created_at")
 
     // Relations
-    plan    Plan    @relation(fields: [planId], references: [id])
-    feature Feature @relation(fields: [featureId], references: [id])
+    user         Profile       @relation(fields: [userId], references: [id])
+    subscription Subscription? @relation(fields: [subscriptionId], references: [id])
 
-    @@map("plan_features")
-}
-
-model Feature {
-    id          String @id @default(uuid())
-    name        String
-    slug        String @unique
-    category    String
-    description String @db.Text
-
-    // Relations
-    planFeatures         PlanFeature[]
-    subscriptionFeatures SubscriptionFeature[]
-
-    @@map("features")
-}
-
-model SubscriptionFeature {
-    id             String  @id @default(uuid())
-    subscriptionId String  @map("subscription_id")
-    featureId      String  @map("feature_id")
-    isEnabled      Boolean @default(true) @map("is_enabled")
-
-    // Relations
-    subscription Subscription @relation(fields: [subscriptionId], references: [id])
-    feature      Feature      @relation(fields: [featureId], references: [id])
-
-    @@map("subscription_features")
+    @@map("transactions")
 }

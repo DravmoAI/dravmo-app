@@ -22,11 +22,11 @@ const navItems = [
     href: "/projects",
     icon: LayoutGrid,
   },
-  //   {
-  //     name: "Billing",
-  //     href: "/billing",
-  //     icon: CreditCard,
-  //   },
+  {
+    name: "Billing",
+    href: "/billing",
+    icon: CreditCard,
+  },
 ];
 
 export function MainNav() {

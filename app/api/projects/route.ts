@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { PlanRestrictionsService } from "@/lib/services/plan-restrictions";
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId")
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
 
     if (!userId) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
 
     const projects = await prisma.project.findMany({
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
       orderBy: {
         updatedAt: "desc",
       },
-    })
+    });
 
     // Transform the data to match the frontend interface
     const transformedProjects = projects.map((project) => ({
@@ -46,22 +47,35 @@ export async function GET(request: Request) {
               ?.createdAt.toISOString() || project.updatedAt.toISOString()
           : project.updatedAt.toISOString(),
       status: "active" as const,
-    }))
+    }));
 
-    return NextResponse.json({ projects: transformedProjects }, { status: 200 })
+    return NextResponse.json({ projects: transformedProjects }, { status: 200 });
   } catch (error) {
-    console.error("Error fetching projects:", error)
-    return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 })
+    console.error("Error fetching projects:", error);
+    return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { name, userId } = body
+    const body = await request.json();
+    const { name, userId } = body;
 
     if (!name || !userId) {
-      return NextResponse.json({ error: "Name and userId are required" }, { status: 400 })
+      return NextResponse.json({ error: "Name and userId are required" }, { status: 400 });
+    }
+
+    // Check if user can create a new project
+    const canCreate = await PlanRestrictionsService.canCreateProject(userId);
+    if (!canCreate.allowed) {
+      return NextResponse.json(
+        {
+          error: canCreate.reason,
+          code: "PROJECT_LIMIT_EXCEEDED",
+          upgradeRequired: canCreate.upgradeRequired,
+        },
+        { status: 403 }
+      );
     }
 
     const project = await prisma.project.create({
@@ -69,11 +83,11 @@ export async function POST(request: Request) {
         name,
         userId,
       },
-    })
+    });
 
-    return NextResponse.json({ project }, { status: 201 })
+    return NextResponse.json({ project }, { status: 201 });
   } catch (error) {
-    console.error("Error creating project:", error)
-    return NextResponse.json({ error: "Failed to create project" }, { status: 500 })
+    console.error("Error creating project:", error);
+    return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
   }
 }

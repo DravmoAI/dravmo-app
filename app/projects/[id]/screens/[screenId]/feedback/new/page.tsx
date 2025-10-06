@@ -1,33 +1,41 @@
-"use client"
+"use client";
 
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Download, Share2 } from "lucide-react"
-import Link from "next/link"
-import { useParams } from "next/navigation"
-import { useState, useEffect } from "react"
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Download, Share2 } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useTransition } from "react";
+import { LoadingProgressBar } from "@/components/loading-progress-bar";
 
 interface FeedbackItem {
-  title: string
-  description: string
-  severity: "high" | "medium" | "low"
+  title: string;
+  description: string;
+  severity: "high" | "medium" | "low";
 }
 
 interface FeedbackCategory {
-  title: string
-  items: FeedbackItem[]
+  title: string;
+  items: FeedbackItem[];
 }
 
 export default function NewFeedbackPage() {
-  const params = useParams()
-  const projectId = params.id as string
-  const screenId = params.screenId as string
-  const [activeTab, setActiveTab] = useState("feedback")
-  const [isLoading, setIsLoading] = useState(true)
-  const [feedbackData, setFeedbackData] = useState<Record<string, FeedbackCategory>>({})
+  const params = useParams();
+  const router = useRouter();
+  const projectId = params.id as string;
+  const screenId = params.screenId as string;
+  const [activeTab, setActiveTab] = useState("feedback");
+  const [isLoading, setIsLoading] = useState(true);
+  const [feedbackData, setFeedbackData] = useState<Record<string, FeedbackCategory>>({});
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     // Simulate loading time for analysis
@@ -102,17 +110,18 @@ export default function NewFeedbackPage() {
             },
           ],
         },
-      }
+      };
 
-      setFeedbackData(mockFeedbackData)
-      setIsLoading(false)
-    }, 2000)
+      setFeedbackData(mockFeedbackData);
+      setIsLoading(false);
+    }, 2000);
 
-    return () => clearTimeout(timer)
-  }, [])
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <DashboardLayout>
+      <LoadingProgressBar isPending={isPending} />
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -139,7 +148,9 @@ export default function NewFeedbackPage() {
             <div className="mb-6 flex gap-4 border-b">
               <button
                 className={`pb-2 px-1 ${
-                  activeTab === "feedback" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
+                  activeTab === "feedback"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
                 }`}
                 onClick={() => setActiveTab("feedback")}
               >
@@ -147,7 +158,9 @@ export default function NewFeedbackPage() {
               </button>
               <button
                 className={`pb-2 px-1 ${
-                  activeTab === "summary" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
+                  activeTab === "summary"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
                 }`}
                 onClick={() => setActiveTab("summary")}
               >
@@ -167,7 +180,9 @@ export default function NewFeedbackPage() {
                     <Accordion type="single" collapsible className="w-full">
                       {Object.entries(feedbackData).map(([key, category]) => (
                         <AccordionItem key={key} value={key}>
-                          <AccordionTrigger className="text-lg font-medium">{category.title}</AccordionTrigger>
+                          <AccordionTrigger className="text-lg font-medium">
+                            {category.title}
+                          </AccordionTrigger>
                           <AccordionContent>
                             <div className="space-y-4 pt-2">
                               {category.items.map((item, index) => (
@@ -179,13 +194,15 @@ export default function NewFeedbackPage() {
                                           item.severity === "high"
                                             ? "bg-destructive"
                                             : item.severity === "medium"
-                                              ? "bg-tertiary"
-                                              : "bg-primary"
+                                            ? "bg-tertiary"
+                                            : "bg-primary"
                                         }`}
                                       />
                                       <div>
                                         <h4 className="font-medium">{item.title}</h4>
-                                        <p className="text-muted-foreground text-sm">{item.description}</p>
+                                        <p className="text-muted-foreground text-sm">
+                                          {item.description}
+                                        </p>
                                       </div>
                                     </div>
                                   </CardContent>
@@ -205,9 +222,9 @@ export default function NewFeedbackPage() {
                       <CardContent className="p-6">
                         <h3 className="text-xl font-bold mb-4">Design Summary</h3>
                         <p className="text-muted-foreground mb-4">
-                          Your design shows strong potential with its vibrant color choices and modern aesthetic. The
-                          primary areas for improvement are in typography contrast, layout hierarchy, and interactive
-                          element affordances.
+                          Your design shows strong potential with its vibrant color choices and
+                          modern aesthetic. The primary areas for improvement are in typography
+                          contrast, layout hierarchy, and interactive element affordances.
                         </p>
                         <h4 className="font-bold mt-6 mb-2">Strengths</h4>
                         <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
@@ -263,5 +280,5 @@ export default function NewFeedbackPage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

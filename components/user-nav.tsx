@@ -116,12 +116,12 @@ export function UserNav() {
               <span>Profile</span>
             </Link>
           </DropdownMenuItem>
-          {/* <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild>
             <Link href="/billing" className="cursor-pointer">
               <CreditCard className="mr-2 h-4 w-4" />
               <span>Billing</span>
             </Link>
-          </DropdownMenuItem> */}
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/upload" className="cursor-pointer">
               <Upload className="mr-2 h-4 w-4" />
