@@ -25,6 +25,11 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+
+  //force to false when mounted
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
   // Check if user is already logged in
   useEffect(() => {
     const checkUser = async () => {
