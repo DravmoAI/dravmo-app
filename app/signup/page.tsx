@@ -59,6 +59,7 @@ export default function SignupPage() {
       ...prev,
       [name]: value,
     }));
+  
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
@@ -66,7 +67,22 @@ export default function SignupPage() {
         [name]: "",
       }));
     }
+  
+    //Clear confirmPassword error when both match
+    if (
+      (name === "password" || name === "confirmPassword") &&
+      formData.confirmPassword &&
+      (name === "confirmPassword" ? value : formData.confirmPassword) ===
+        (name === "password" ? value : formData.password)
+    ) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.confirmPassword;
+        return newErrors;
+      });
+    }
   };
+  
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -351,7 +367,7 @@ export default function SignupPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading || Object.keys(errors).length > 0 || !agreeToTerms}
+                disabled={isLoading || !agreeToTerms}
               >
                 {isLoading ? "Creating account..." : "Create account"}
               </Button>
