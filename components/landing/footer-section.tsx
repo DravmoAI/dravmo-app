@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 export function FooterSection() {
   return (
-    <footer className="relative font-roboto-flex w-full bg-[#0F1619] py-8 px-4 lg:px-8 flex items-center justify-between z-10">
+    <motion.footer initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, amount: 0.5 }} transition={{ duration: 0.5 }} className="relative font-roboto-flex w-full bg-[#0F1619] py-8 px-4 lg:px-8 flex items-center justify-between z-10">
       <Image
         src="/landing-page/dotted-line-footer.png"
         alt="Check"
@@ -32,6 +33,6 @@ export function FooterSection() {
           Contact
         </a> */}
       </div>
-    </footer>
+    </motion.footer>
   );
 }

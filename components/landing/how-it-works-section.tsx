@@ -1,10 +1,11 @@
 "use client"
 
 import Image from "next/image"
+import { motion } from "framer-motion"
 
 export function HowItWorksSection() {
   return (
-    <div id="how-it-works" className="flex flex-col items-center justify-center mt-[75px] lg:mt-[451px]">
+    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.5 }} id="how-it-works" className="flex flex-col items-center justify-center mt-[75px] lg:mt-[451px]">
 
       <h2 className="font-quantico font-normal text-[12px] lg:text-[20px] lg:leading-[20px] flex items-center text-center tracking-[0.25em] lg:tracking-[0.5em] uppercase lg:mb-2 bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
         take your design to the next level
@@ -99,6 +100,6 @@ export function HowItWorksSection() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

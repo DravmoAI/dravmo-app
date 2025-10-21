@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import { motion } from "framer-motion"
 const mastersNames = [
   "massimo vignelli",
   "Paul rand",
@@ -16,7 +17,7 @@ const mastersNames = [
 export function MasterModeSection() {
 
   return (
-    <div className="flex flex-col items-center justify-center mt-[53px] mb-[100px]">
+    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.5 }} className="flex flex-col items-center justify-center mt-[53px] mb-[100px]">
       <Image 
         src="/landing-page/dotted-line-master-mode-phone.png" 
         alt="" 
@@ -102,6 +103,6 @@ export function MasterModeSection() {
         height={1049} 
         className="w-[100%] lg:w-[42%] h-auto mx-auto mt-[63px]" 
       />
-    </div>
+    </motion.div>
   )
 }

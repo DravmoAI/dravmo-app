@@ -24,6 +24,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Stripe configuration error" }, { status: 500 });
     }
 
+    // Check if App URL is available
+    if (!process.env.NEXT_PUBLIC_APP_URL) {
+      console.error("NEXT_PUBLIC_APP_URL environment variable is not set");
+      return NextResponse.json({ error: "Application URL configuration error" }, { status: 500 });
+    }
+
     // Get user from Supabase auth
     const supabase = getSupabaseClient();
     const authHeader = request.headers.get("authorization");

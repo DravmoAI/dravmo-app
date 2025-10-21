@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { useState } from "react";
 
 interface PlanFeature {
@@ -24,7 +25,7 @@ export function PricingSection({
   const [isYearly, setIsYearly] = useState(true);
 
   return (
-    <div id="plans" className="flex flex-col items-center justify-center mt-[53px] mb-[100px] font-poppins">
+    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }} transition={{ duration: 0.5 }} id="plans" className="flex flex-col items-center justify-center mt-[53px] mb-[100px] font-poppins">
       <h2 className="font-quantico font-normal text-[12px] lg:text-[20px] lg:leading-[20px] flex items-center text-center lg:tracking-[0.5em] uppercase lg:mb-2 bg-gradient-to-t from-[#5BD5AF] to-[#84B9FF] bg-clip-text text-transparent">
         save 20% on yearly subscription
       </h2>
@@ -146,6 +147,6 @@ export function PricingSection({
           </ul>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
