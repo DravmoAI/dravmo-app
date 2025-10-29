@@ -65,11 +65,11 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0F1619]">
+    <div className="min-h-screen flex flex-col">
       <Navigation />
       <HeroSection />
 
-      <main className="">
+      <main>
         <Image
           src="/landing-page/rotated-dotted-line.png"
           alt="Dravmo"
