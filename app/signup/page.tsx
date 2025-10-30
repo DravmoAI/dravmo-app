@@ -19,7 +19,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export default function SignupPage() {
   const router = useRouter();
   const supabase = getSupabaseClient();
-
   const [formData, setFormData] = useState({
     email: "",
     lastName: "",
@@ -59,6 +58,7 @@ export default function SignupPage() {
       ...prev,
       [name]: value,
     }));
+  
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
@@ -66,7 +66,23 @@ export default function SignupPage() {
         [name]: "",
       }));
     }
+
+  
+    //Clear confirmPassword error when both match
+    if (
+      (name === "password" || name === "confirmPassword") &&
+      formData.confirmPassword && 
+      (name === "confirmPassword" ? value : formData.confirmPassword) ===
+        (name === "password" ? value : formData.password)
+    ) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.confirmPassword;
+        return newErrors;
+      });
+    }
   };
+  
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -100,21 +116,23 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (!validateForm()) {
       return;
     }
-
+  
     setIsLoading(true);
     setErrors({});
     setSuccess("");
-
+  
     try {
-      // 1. Create user with Supabase Auth
+      // 1. Create user with Supabase Auth. That's it!
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
+
+          
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
@@ -122,46 +140,20 @@ export default function SignupPage() {
           },
         },
       });
-
+  
       if (error) {
         setErrors({ general: error.message });
-        return;
+        return; // Stop here if signup failed
       }
-
+  
+      // 2. The database trigger will automatically create the profile.
+      //    We just need to show the success message to the user.
       if (data.user) {
-        // 2. Create profile in database
-        try {
-          const response = await fetch("/api/profile", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              id: data.user.id,
-              email: formData.email,
-              fullName: `${formData.firstName} ${formData.lastName}`,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to create profile");
-          }
-
-          // 3. Check if email confirmation is required
-          if (data.user.email_confirmed_at) {
-            // User is automatically confirmed, redirect to persona setup
-            router.push("/persona");
-          } else {
-            // User needs to confirm email
-            setSuccess(
-              "Please check your email and click the confirmation link to complete your registration."
-            );
-          }
-        } catch (profileError) {
-          console.error("Profile creation error:", profileError);
-          setErrors({ general: "Failed to create profile. Please try again." });
-        }
+          setSuccess(
+            "Please check your email and click the confirmation link to complete your registration."
+          );
       }
+  
     } catch (err) {
       setErrors({ general: "An unexpected error occurred. Please try again." });
     } finally {
@@ -351,7 +343,7 @@ export default function SignupPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading || Object.keys(errors).length > 0 || !agreeToTerms}
+                disabled={isLoading || !agreeToTerms}
               >
                 {isLoading ? "Creating account..." : "Create account"}
               </Button>
