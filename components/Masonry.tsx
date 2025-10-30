@@ -255,7 +255,7 @@ const Masonry: React.FC<MasonryProps> = ({
               <div className="color-overlay absolute inset-0 rounded-[10px] bg-gradient-to-tr from-pink-500/50 to-sky-500/50 opacity-0 pointer-events-none" />
             )}
             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-end justify-center p-4 z-10 opacity-0 hover:opacity-100 transition-opacity duration-300">
-              <span className="font-krona-one text-white text-lg text-center uppercase leading-tight">
+              <span className="font-krona-one text-[#97FFEF] hover:text-[#97FFEF] transition-colors text-lg text-center uppercase leading-tight">
                 {item.name}
               </span>
             </div>
