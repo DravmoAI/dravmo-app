@@ -9,6 +9,7 @@ import { DarkVeil } from "@/components/DarkVeil";
 import { DashboardNav } from "@/components/dashboard-nav";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { AccountSettings } from "@/components/account-settings";
 import { Input } from "@/components/ui/input";
 import { Send, Paperclip, Figma, HelpCircle, Lightbulb, Play, User, Sparkles } from "lucide-react";
 
@@ -244,14 +245,12 @@ export default function DashboardV2Page() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="text-center"
+                  className="text-center mb-6"
                 >
-                  <h1 className="text-3xl sm:text-5xl font-bold font-krona-one bg-gradient-to-br from-cyan-300 to-blue-500 bg-clip-text text-transparent">
+                  <h1 className="text-3xl sm:text-5xl font-bold font-krona-one bg-gradient-to-br from-cyan-500 to-green-300 bg-clip-text text-transparent">
                     Hello, {profile ? profile.fullName.split(" ")[0] : ""}!
                   </h1>
-                  <p className="mt-2 text-lg text-primary/80 font-quantico">
-                    Let's review your design like never before.
-                  </p>
+                  <AccountSettings />
                 </motion.div>
               ) : (
                 <div className="w-full max-w-4xl">
