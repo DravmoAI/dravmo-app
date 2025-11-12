@@ -6,11 +6,11 @@ import { IoIosColorPalette } from "react-icons/io";
 import { useEffect, useRef, useState } from "react";
 
 const cardItems = [
-  { text: "master mode", bg: "bg-transparent", textC: "text-white", icon: FaBrain, border: "border-[#65D5B2]" }, // Keep green
-  { text: "design persona", bg: "bg-transparent", textC: "text-white", icon: IoIosColorPalette, border: "border-[#84B9FF]" }, // New blue
-  { text: "instant design analysis", bg: "bg-transparent", textC: "text-white", icon: FaBolt, border: "border-[#A0DCFF]" }, // Existing light blue
-  { text: "figma integration", bg: "bg-transparent", textC: "text-white", icon: FaFigma, border: "border-[#97FFEF]" }, // New cyan
-  { text: "WCAG checks", bg: "bg-transparent", textC: "text-white", icon: FaUniversalAccess, border: "border-[#A0DCFF]" }, // Existing light blue
+  { text: "master mode", bg: "bg-[#65D5B2]", textC: "text-black", icon: FaBrain, border: "border-[#65D5B2]" }, // Keep green
+  { text: "design persona", bg: "bg-[#84B9FF]", textC: "text-black", icon: IoIosColorPalette, border: "border-[#84B9FF]" }, // New blue
+  { text: "instant design analysis", bg: "bg-[#A0DCFF]", textC: "text-black", icon: FaBolt, border: "border-[#A0DCFF]" }, // Existing light blue
+  { text: "figma integration", bg: "bg-[#97FFEF]", textC: "text-black", icon: FaFigma, border: "border-[#97FFEF]" }, // New cyan
+  { text: "WCAG checks", bg: "bg-[#A0DCFF]", textC: "text-black", icon: FaUniversalAccess, border: "border-[#A0DCFF]" }, // Existing light blue
 ];
 
 const floatingEmoji: Variants = {
@@ -37,14 +37,14 @@ const Card = ({ item }: { item: typeof cardItems[0] }) => {
 
   return (
     <motion.div
-      className={`flex flex-shrink-0 items-center justify-center p-6 lg:p-8 w-[250px] lg:w-auto lg:min-w-[220px] h-[100px] lg:h-[140px] rounded-2xl border-2 ${item.bg} ${item.border}`}
+      className={`flex flex-shrink-0 items-center justify-center p-6 lg:p-8 w-[250px] lg:w-auto lg:min-w-[220px] h-[100px] lg:h-[140px] rounded-2xl border-2 lg:bg-transparent ${item.bg} ${item.border}`}
       onHoverStart={handleHoverStart}
       onHoverEnd={handleHoverEnd}
       transition={{ type: "spring", stiffness: 300 }}
     >
       <div className="flex items-center gap-3 lg:gap-5">
         <span
-          className={`font-krona-one uppercase text-left lg:text-center text-lg lg:text-2xl lg:whitespace-nowrap ${item.textC}`}
+          className={`font-krona-one uppercase text-left lg:text-center text-lg lg:text-2xl lg:whitespace-nowrap ${item.textC} lg:text-white`}
         >
           {item.text}
         </span>

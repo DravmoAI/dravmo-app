@@ -5,7 +5,8 @@ import { FaDiscord } from "react-icons/fa";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useState } from "react"; // Import useState
+import { Loader2 } from "lucide-react"; // Import Loader2
 
 export function HeroSection() {
   const router = useRouter();
@@ -13,6 +14,8 @@ export function HeroSection() {
   const count = useMotionValue(0);
   const rounded = useTransform(count, (latest) => Math.round(latest));
   const displayText = useTransform(rounded, (latest) => text.slice(0, latest));
+
+  const [isBeginReviewLoading, setIsBeginReviewLoading] = useState(false); // New state for loading
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -31,6 +34,12 @@ export function HeroSection() {
     });
     return controls.stop;
   }, [count, text.length]);
+
+  const handleBeginReviewClick = () => {
+    setIsBeginReviewLoading(true);
+    router.push("/login");
+    // Note: setIsBeginReviewLoading(false) won't be called here because the page navigates.
+  };
 
   return (
     <header className="min-h-screen flex flex-col items-center justify-center text-center bg-cover bg-center bg-no-repeat relative px-4 overflow-hidden">
@@ -85,10 +94,15 @@ export function HeroSection() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="hidden lg:flex flex-col lg:flex-row items-center justify-center gap-y-4 lg:gap-y-0 lg:gap-x-[20px] -translate-y-12 lg:-translate-y-20 relative z-10 px-4">
         <Button
           variant="outline"
-          onClick={() => router.push("/login")}
+          onClick={handleBeginReviewClick} // Use the new handler
           className="w-[150px] h-[50px] bg-transparent border-[#97FFEF] border rounded-[30px] text-[#97FFEF] hover:bg-[#97FFEF] hover:text-[#0F1619] font-roboto-flex transition-colors shadow-[0_0_10px_3px_rgba(151,255,239,0.4)]"
+          disabled={isBeginReviewLoading} // Disable button when loading
         >
-          Begin Review
+          {isBeginReviewLoading ? ( // Show loader when loading
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            "Begin Review"
+          )}
         </Button>
         <Button
           variant="outline"
@@ -104,10 +118,15 @@ export function HeroSection() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="flex lg:hidden flex-col items-center justify-center gap-y-6 -translate-y-12 relative z-10 px-4">
         <Button
           variant="outline"
-          onClick={() => router.push("/login")}
+          onClick={handleBeginReviewClick} // Use the new handler
           className="w-[250px] h-[50px] bg-transparent border-[#97FFEF] border-2 rounded-[30px] text-[#97FFEF] font-roboto-flex hover:bg-[#97FFEF] hover:text-[#0F1619] transition-colors shadow-[0_0_10px_3px_rgba(151,255,239,0.4)]"
+          disabled={isBeginReviewLoading} // Disable button when loading
         >
-          Begin Review
+          {isBeginReviewLoading ? ( // Show loader when loading
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            "Begin Review"
+          )}
         </Button>
         <Button
           variant="outline"

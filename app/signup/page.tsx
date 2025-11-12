@@ -5,6 +5,7 @@ import Image from "next/image";
 
 import Link from "next/link";
 import { FcGoogle } from "react-icons/fc";
+import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { getSupabaseClient } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
 import { initStorageBuckets } from "@/lib/supabase-storage";
-import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function SignupPage() {
@@ -28,8 +29,9 @@ export default function SignupPage() {
   });
 
   const [success, setSuccess] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -121,7 +123,7 @@ export default function SignupPage() {
       return;
     }
   
-    setIsLoading(true);
+    setIsEmailLoading(true);
     setErrors({});
     setSuccess("");
   
@@ -157,14 +159,14 @@ export default function SignupPage() {
     } catch (err) {
       setErrors({ general: "An unexpected error occurred. Please try again." });
     } finally {
-      setIsLoading(false);
+      setIsEmailLoading(false);
     }
   };
 
   const handleLoginWithGoogle = async () => {
     setErrors({});
     setSuccess("");
-    setIsLoading(true);
+    setIsGoogleLoading(true);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -174,18 +176,20 @@ export default function SignupPage() {
     });
 
     if (error) setErrors({ general: error.message });
-    setIsLoading(false);
+    setIsGoogleLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0F1619] px-4 py-8">
-      {/* Background overlay image */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-full h-full bg-[url('/landing-page/dotted-line-2.png')] bg-no-repeat bg-center bg-contain"></div>
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
-        <Card>
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      <motion.div
+        className="w-full max-w-md relative z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
+        <Card
+          className="bg-transparent bg-gradient-to-b from-[rgba(145,187,242,0.1)] to-[rgba(13,27,42,0.1)] backdrop-blur-lg border-[#97FFEF]/25 shadow-[inset_0_1px_1px_0_rgba(247,237,226,0.05),_0_0_30px_5px_rgba(151,255,239,0.2)]"
+        >
           <CardHeader className="text-center">
             <div className="flex justify-center">
               <Link href="/" className="flex justify-center items-center gap-2">
@@ -226,7 +230,9 @@ export default function SignupPage() {
                     placeholder="John"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    className={errors.firstName ? "border-destructive" : ""}
+                    className={`${
+                      errors.firstName ? "border-destructive" : "border-white/10"
+                    } bg-black/20 focus:bg-black/30`}
                   />
                   {errors.firstName && (
                     <p className="text-xs text-destructive">{errors.firstName}</p>
@@ -240,7 +246,9 @@ export default function SignupPage() {
                     placeholder="Doe"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className={errors.lastName ? "border-destructive" : ""}
+                    className={`${
+                      errors.lastName ? "border-destructive" : "border-white/10"
+                    } bg-black/20 focus:bg-black/30`}
                   />
                   {errors.lastName && <p className="text-xs text-destructive">{errors.lastName}</p>}
                 </div>
@@ -255,7 +263,9 @@ export default function SignupPage() {
                   placeholder="john@example.com"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={errors.email ? "border-destructive" : ""}
+                  className={`${
+                    errors.email ? "border-destructive" : "border-white/10"
+                  } bg-black/20 focus:bg-black/30`}
                 />
                 {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
@@ -270,7 +280,9 @@ export default function SignupPage() {
                     placeholder="Create a password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={errors.password ? "border-destructive" : ""}
+                    className={`${
+                      errors.password ? "border-destructive" : "border-white/10"
+                    } bg-black/20 focus:bg-black/30`}
                   />
                   <Button
                     type="button"
@@ -295,7 +307,9 @@ export default function SignupPage() {
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={errors.confirmPassword ? "border-destructive" : ""}
+                    className={`${
+                      errors.confirmPassword ? "border-destructive" : "border-white/10"
+                    } bg-black/20 focus:bg-black/30`}
                   />
                   <Button
                     type="button"
@@ -326,6 +340,7 @@ export default function SignupPage() {
                       setErrors((prev) => ({ ...prev, terms: "" }));
                     }
                   }}
+                  className="border-white/20"
                 />
                 <Label htmlFor="terms" className="text-sm leading-none">
                   I agree to the{" "}
@@ -343,18 +358,26 @@ export default function SignupPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading || !agreeToTerms}
+                disabled={isEmailLoading || isGoogleLoading || !agreeToTerms}
               >
-                {isLoading ? "Creating account..." : "Create account"}
+                {isEmailLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create account"}
               </Button>
             </form>
 
             <div>
               <h5 className="text-center mt-2">Or</h5>
               <div className="flex items-center justify-center mt-4">
-                <Button variant="outline" className="w-full" onClick={handleLoginWithGoogle}>
-                  <FcGoogle className="h-4 w-4 mr-2 inline" />
-                  Sign up with Google
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleLoginWithGoogle}
+                  disabled={isEmailLoading || isGoogleLoading}
+                >
+                  {isGoogleLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <><FcGoogle className="h-4 w-4 mr-2 inline" /> Sign up with Google</>
+                  )}
                 </Button>
               </div>
             </div>
@@ -367,7 +390,7 @@ export default function SignupPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 }

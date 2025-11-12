@@ -2,7 +2,9 @@
 
 import Image from "next/image"
 import { motion } from "framer-motion";
+import { useAnimation, useInView } from "framer-motion";
 import Masonry from "../Masonry";
+import { useEffect, useRef, useState } from "react";
 
 const mastersNames = [
   "Massimo Vignelli",
@@ -33,6 +35,64 @@ const mastersData = mastersNames.map((name, index) => {
   };
 });
 
+const MasterCard = ({ item }: { item: typeof mastersData[0] }) => {
+  return (
+    <a
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="relative flex-shrink-0 w-[250px] h-[350px] rounded-2xl overflow-hidden group"
+    >
+      <Image
+        src={item.img}
+        alt={item.name}
+        fill
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+      />
+      <div className="absolute inset-0 bg-black bg-opacity-40 flex items-end justify-center p-4 z-10 transition-opacity duration-300">
+        <span className="font-krona-one text-[#97FFEF] transition-colors text-lg text-center uppercase leading-tight">
+          {item.name}
+        </span>
+      </div>
+    </a>
+  );
+};
+
+function MasterCarousel() {
+  const scrollControls = useAnimation();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      const scrollWidth = scrollRef.current.scrollWidth / 2;
+      scrollControls.start({
+        x: [0, -scrollWidth],
+        transition: {
+          x: {
+            repeat: Infinity,
+            repeatType: "loop",
+            duration: 40, // Slower duration for a smoother scroll
+            ease: "linear",
+          },
+        },
+      });
+    }
+  }, [scrollControls]);
+
+  return (
+    <div className="w-full overflow-hidden py-8">
+      <motion.div
+        ref={scrollRef}
+        animate={scrollControls}
+        className="flex gap-6"
+      >
+        {[...mastersData, ...mastersData].map((item, index) => <MasterCard item={item} key={`${item.id}-${index}`} />)}
+      </motion.div>
+    </div>
+  );
+}
+
 export function MasterModeSection() {
 
   return (
@@ -61,11 +121,15 @@ export function MasterModeSection() {
         10 AI mentors each with turn-key playbooks and brain of a master designer
       </h4>
 
+
       {/* Masonry Grid */}
-      <div className="w-full max-w-6xl mx-auto mt-10 px-4 h-[600px]">
+      <div className="w-full max-w-6xl mx-auto mt-10 px-4 h-[600px] hidden lg:block">
         <Masonry items={mastersData} animateFrom="bottom" />
       </div>
 
+      <div className="w-full lg:hidden mt-4">
+        <MasterCarousel />
+      </div>
       
     </motion.div>
   )

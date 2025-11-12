@@ -361,10 +361,21 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .pc-card:hover .pc-step-number,
+  .pc-card.active .pc-step-number {
+    transform: translateY(15px) scale(1.05) translate(-2px, -2px);
+  }
+}
+
 @media (max-width: 768px) {
   .pc-card {
     height: 70svh;
-    max-height: 450px;
+    font-size: 64px;
+    bottom: 0.5rem;
+    right: 1rem;
+    /* Adjust transform for smaller screens */
+    transform: translateY(15px);
   }
 
   .pc-details {
@@ -383,8 +394,6 @@
     font-size: 64px;
     bottom: 0.5rem;
     right: 1rem;
-    /* Adjust transform for smaller screens */
-    transform: translateY(15px);
   }
 
 }
@@ -408,13 +417,6 @@
     top: -8px;
   }
 
-}
-
-@media (max-width: 1024px) {
-  .pc-card:hover .pc-step-number,
-  .pc-card.active .pc-step-number {
-    transform: translateY(15px) scale(1.05) translate(-2px, -2px);
-  }
 }
 
 @media (max-width: 320px) {
