@@ -5,7 +5,8 @@ import type React from "react";
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,9 +23,16 @@ export default function LoginPage() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+
+  //force to false when mounted
+  useEffect(() => {
+    setIsEmailLoading(false);
+    setIsGoogleLoading(false);
+  }, []);
   // Check if user is already logged in
   useEffect(() => {
     const checkUser = async () => {
@@ -61,7 +69,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setIsLoading(true);
+    setIsEmailLoading(true);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -104,12 +112,12 @@ export default function LoginPage() {
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsEmailLoading(false);
     }
   };
 
   const handleLoginWithGoogle = async () => {
-    setIsLoading(true);
+    setIsGoogleLoading(true);
     console.log("Initiating Google OAuth login...", window.location.origin);
 
     const { error, data } = await supabase.auth.signInWithOAuth({
@@ -127,18 +135,20 @@ export default function LoginPage() {
 
     if (error) setError(error.message);
 
-    setIsLoading(false);
+    setIsGoogleLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0F1619] px-4 py-8 relative">
-      {/* Background overlay image */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-full h-full bg-[url('/landing-page/dotted-line-2.png')] bg-no-repeat bg-center bg-contain"></div>
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
-        <Card>
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative">
+      <motion.div
+        className="w-full max-w-md relative z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
+        <Card
+          className="bg-transparent bg-gradient-to-b from-[rgba(145,187,242,0.1)] to-[rgba(13,27,42,0.1)] backdrop-blur-lg border-[#97FFEF]/25 shadow-[inset_0_1px_1px_0_rgba(247,237,226,0.05),_0_0_30px_5px_rgba(151,255,239,0.2)]"
+        >
           <CardHeader className="text-center">
             <div className="flex justify-center">
               <Link href="/" className="flex justify-center items-center gap-2">
@@ -152,7 +162,7 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
+            <CardTitle className="text-2xl">Welcome!</CardTitle>
             <CardDescription>Sign in to your account</CardDescription>
           </CardHeader>
           <CardContent>
@@ -172,6 +182,7 @@ export default function LoginPage() {
                   placeholder="john@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="bg-black/20 border-white/10 focus:bg-black/30"
                   required
                 />
               </div>
@@ -191,6 +202,7 @@ export default function LoginPage() {
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="bg-black/20 border-white/10 focus:bg-black/30"
                     required
                   />
                   <Button
@@ -205,17 +217,25 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign in"}
+              <Button type="submit" className="w-full" disabled={isEmailLoading || isGoogleLoading}>
+                {isEmailLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
               </Button>
             </form>
 
             <div>
               <h5 className="text-center mt-2">Or</h5>
               <div className="flex items-center justify-center mt-4">
-                <Button variant="outline" className="w-full" onClick={handleLoginWithGoogle}>
-                  <FcGoogle className="h-4 w-4 mr-2 inline" />
-                  Sign in with Google
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleLoginWithGoogle}
+                  disabled={isEmailLoading || isGoogleLoading}
+                >
+                  {isGoogleLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <><FcGoogle className="h-4 w-4 mr-2 inline" /> Sign in with Google</>
+                  )}
                 </Button>
               </div>
             </div>
@@ -228,7 +248,7 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 }

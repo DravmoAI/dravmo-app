@@ -1,5 +1,4 @@
 "use client";
-
 import Image from "next/image";
 import { Navigation } from "@/components/landing/navigation";
 import { HeroSection } from "@/components/landing/hero-section";
@@ -9,7 +8,14 @@ import { FeaturesSection } from "@/components/landing/features-section";
 import { MasterModeSection } from "@/components/landing/master-mode-section";
 import { HowItWorksSection } from "@/components/landing/how-it-works-section";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getSupabaseClient } from "@/lib/supabase";
+
 export default function LandingPage() {
+  const router = useRouter();
+  const supabase = getSupabaseClient();
+
   const basicPlanFeatures = [
     { label: "3 projects", available: true },
     { label: "20 reviews/month", available: true, note: "" },

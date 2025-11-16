@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Noto_Sans, Roboto, Quantico, Roboto_Flex, Krona_One, Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { DarkVeil } from "@/components/DarkVeil";
 
 const notoSans = Noto_Sans({
   subsets: ["latin"],
@@ -55,9 +56,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${notoSans.variable} ${roboto.variable} ${quantico.variable} ${robotoFlex.variable} ${kronaOne.variable} ${poppins.variable} font-sans`}
+        className={`${notoSans.variable} ${roboto.variable} ${quantico.variable} ${robotoFlex.variable} ${kronaOne.variable} ${poppins.variable} font-sans bg-black`}
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <div className="fixed top-0 left-0 w-full h-full -z-10">
+            <DarkVeil
+              hueShift={50}
+              speed={0.5}
+              resolutionScale={1.2}
+            />
+          </div>
           {children}
         </ThemeProvider>
       </body>

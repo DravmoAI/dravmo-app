@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -93,55 +94,61 @@ export function UserNav() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+      <DropdownMenuTrigger asChild className="transition-all duration-300 hover:bg-white/10 rounded-lg">
+        <Button variant="ghost" className="flex items-center gap-3 px-3 py-2 h-auto">
           <Avatar className="h-8 w-8">
             <AvatarImage src={profile?.avatarUrl || "/placeholder-user.jpg"} alt={displayName} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
+          <span className="text-white font-quantico font-medium text-sm hidden md:inline">{displayName}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
+      <DropdownMenuContent 
+        className="w-56 border-none" 
+        align="end" 
+        forceMount
+        asChild
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          style={{
+            background: "rgba(25, 35, 39, 0.7)",
+            backdropFilter: "blur(12px)",
+            borderRadius: "var(--radius)",
+          }}
+        >
+          <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{displayName}</p>
+            <p className="text-sm font-medium leading-none font-quantico">{displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild className="focus:bg-white/10 focus:text-white">
             <Link href="/profile" className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild className="focus:bg-white/10 focus:text-white">
             <Link href="/billing" className="cursor-pointer">
               <CreditCard className="mr-2 h-4 w-4" />
               <span>Billing</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/upload" className="cursor-pointer">
-              <Upload className="mr-2 h-4 w-4" />
-              <span>Upload</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/projects" className="cursor-pointer">
-              <LayoutGrid className="mr-2 h-4 w-4" />
-              <span>Projects</span>
-            </Link>
-          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild className="focus:bg-destructive/80 focus:text-white">
           <Link href="/logout" className="cursor-pointer">
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </Link>
         </DropdownMenuItem>
+        </motion.div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

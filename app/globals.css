@@ -1,61 +1,83 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+ 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 160 63% 60%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 217 54% 11%;
-    --secondary-foreground: 0 0% 98%;
-    --tertiary: 55 98% 49%;
-    --tertiary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 160 63% 60%;
-    --radius: 0.5rem;
+    --background: oklch(0.08 0 0);
+    --foreground: oklch(0.98 0 0);
+    --card: oklch(0.12 0 0);
+    --card-foreground: oklch(0.98 0 0);
+    --popover: oklch(0.08 0 0);
+    --popover-foreground: oklch(0.98 0 0);
+    --primary: oklch(0.42 0.15 262);
+    --primary-foreground: oklch(0.98 0 0);
+    --secondary: oklch(0.15 0 0);
+    --secondary-foreground: oklch(0.98 0 0);
+    --muted: oklch(0.25 0 0);
+    --muted-foreground: oklch(0.68 0 0);
+    --accent: oklch(0.48 0.2 263);
+    --accent-foreground: oklch(0.08 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.98 0 0);
+    --border: oklch(0.2 0 0);
+    --input: oklch(0.15 0 0);
+    --ring: oklch(0.48 0.2 263);
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.696 0.17 162.48);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.12 0 0);
+    --sidebar-foreground: oklch(0.98 0 0);
+    --sidebar-primary: oklch(0.48 0.2 263);
+    --sidebar-primary-foreground: oklch(0.98 0 0);
+    --sidebar-accent: oklch(0.2 0 0);
+    --sidebar-accent-foreground: oklch(0.98 0 0);
+    --sidebar-border: oklch(0.2 0 0);
+    --sidebar-ring: oklch(0.48 0.2 263);
   }
-
+ 
   .dark {
-    --background: 240 6% 8%;
-    --foreground: 0 0% 98%;
-    --card: 240 6% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 6% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 160 63% 60%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 217 54% 11%;
-    --secondary-foreground: 0 0% 98%;
-    --tertiary: 55 98% 49%;
-    --tertiary-foreground: 240 5.9% 10%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 160 63% 60%;
+    --background: oklch(0.08 0 0);
+    --foreground: oklch(0.98 0 0);
+    --card: oklch(0.12 0 0);
+    --card-foreground: oklch(0.98 0 0);
+    --popover: oklch(0.08 0 0);
+    --popover-foreground: oklch(0.98 0 0);
+    --primary: oklch(0.42 0.15 262);
+    --primary-foreground: oklch(0.98 0 0);
+    --secondary: oklch(0.15 0 0);
+    --secondary-foreground: oklch(0.98 0 0);
+    --muted: oklch(0.25 0 0);
+    --muted-foreground: oklch(0.68 0 0);
+    --accent: oklch(0.48 0.2 263);
+    --accent-foreground: oklch(0.08 0 0);
+    --destructive: oklch(0.396 0.141 25.723);
+    --destructive-foreground: oklch(0.98 0 0);
+    --border: oklch(0.2 0 0);
+    --input: oklch(0.15 0 0);
+    --ring: oklch(0.48 0.2 263);
+    --chart-1: oklch(0.488 0.243 264.376);
+    --chart-2: oklch(0.696 0.17 162.48);
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+    --sidebar: oklch(0.12 0 0);
+    --sidebar-foreground: oklch(0.98 0 0);
+    --sidebar-primary: oklch(0.48 0.2 263);
+    --sidebar-primary-foreground: oklch(0.98 0 0);
+    --sidebar-accent: oklch(0.2 0 0);
+    --sidebar-accent-foreground: oklch(0.98 0 0);
+    --sidebar-border: oklch(0.2 0 0);
+    --sidebar-ring: oklch(0.48 0.2 263);
   }
 }
-
+ 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
@@ -72,6 +94,98 @@
   span,
   div {
     @apply font-roboto;
+  }
+}
+
+@layer components {
+  /* Add smooth drawer animations */
+  @keyframes slideInDrawer {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeInBackdrop {
+    from {
+      opacity: 0;
+      backdrop-filter: blur(0px);
+    }
+    to {
+      opacity: 1;
+      backdrop-filter: blur(4px);
+    }
+  }
+
+  @keyframes slideInContent {
+    from {
+      transform: translateY(8px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Added smooth animations for drawer interactions */
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideOutRight {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Billing page specific utility animations */
+  .animate-slide-in-right {
+    animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
   }
 }
 
@@ -249,4 +363,46 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+/* Custom Scrollbar */
+/* For Webkit-based browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0d1b2a; /* A dark color from your palette for the track */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #3df5f5; /* The light blue from your feature cards */
+  border-radius: 10px;
+  border: 2px solid #0d1b2a;
+  box-shadow: 0 0 10px 0 #3df5f5; /* Glow effect */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #3df5f5; /* A slightly lighter blue for hover */
+  box-shadow: 0 0 15px 0 #a0dcff; /* A bit more glow on hover */
+}
+
+/* For Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #3df5f5 #0d1b2a; /* thumb and track color */
+}
+
+/* Masonry Item Hover Style */
+.masonry-item a .overlay h3 {
+  transition: color 0.3s ease;
+}
+
+.masonry-item a:hover .overlay h3 {
+  background: linear-gradient(to top, #5BD5AF, #84B9FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
 }
